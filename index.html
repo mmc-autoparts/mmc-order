@@ -3,10 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Malaysia Motor Company - Special Order Cloud System</title>
+    <title>Malaysia Motor Company - Secure Cloud Portal</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
+        /* Passcode Lockscreen Overlay Styles */
+        #lockScreen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(240, 242, 245, 0.98); z-index: 9999; display: flex; justify-content: center; align-items: center; }
+        .lock-box { background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); text-align: center; max-width: 360px; width: 100%; }
+        .lock-box h3 { margin-top: 0; color: #1a1a1a; font-family: sans-serif; }
+        .lock-box input { padding: 12px; font-size: 18px; text-align: center; width: 100%; box-sizing: border-box; border: 2px solid #ccc; border-radius: 4px; margin-bottom: 15px; letter-spacing: 5px; }
+        .lock-btn { background-color: #0866ff; color: white; border: none; padding: 12px; font-weight: bold; border-radius: 4px; cursor: pointer; width: 100%; font-size: 16px; }
+        .lock-btn:hover { background-color: #0050d1; }
+        .error-msg { color: red; font-size: 13px; margin-top: -10px; margin-bottom: 10px; display: none; font-weight: bold; }
+
+        /* Core Application UI (Hidden until authenticated) */
+        #mainApp { display: none; }
+        
         body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; }
         .container { max-width: 1250px; margin: auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         h2 { color: #1a1a1a; margin-top: 0; border-bottom: 2px solid #e4e6eb; padding-bottom: 10px; }
@@ -61,7 +73,17 @@
 </head>
 <body>
 
-<div class="container">
+<div id="lockScreen">
+    <div class="lock-box">
+        <h3>🔒 MMC Secure System</h3>
+        <p style="color: #666; font-size: 14px; margin-bottom: 20px;">Enter Shop Passcode to Access</p>
+        <input type="password" id="passcodeField" placeholder="••••" maxlength="6" onkeydown="if(event.key==='Enter') verifyPasscode()">
+        <div id="errorMessage" class="error-msg">Wrong Passcode! Try again.</div>
+        <button class="lock-btn" onclick="verifyPasscode()">Unlock Dashboard</button>
+    </div>
+</div>
+
+<div id="mainApp" class="container">
     <h2>
         <a href="https://console.firebase.google.com/project/malaysia-motor-preorder/database/malaysia-motor-preorder-default-rtdb/data/~2F" target="_blank" title="Open Firebase Cloud Database">
             Malaysia Motor Company - Special Orders Portal 🌐
@@ -118,13 +140,11 @@
 
     <div class="top-controls">
         <input type="text" id="searchInput" class="search-bar" placeholder="🔍 Search Name, Part ID, Chassis or Staff...">
-        
         <select id="viewFilter" onchange="renderTable()" style="font-weight: bold; color: #0866ff; width: auto;">
             <option value="active">Active Orders Only</option>
             <option value="history">Completed History</option>
             <option value="all">All Records</option>
         </select>
-
         <button class="export-btn" onclick="exportCSV()">📥 Download Excel Backup</button>
     </div>
 
@@ -151,6 +171,19 @@
 </div>
 
 <script>
+    // 🔒 Passcode verification matching your exact request
+    function verifyPasscode() {
+        const input = document.getElementById('passcodeField').value;
+        if (input === '3113') {
+            document.getElementById('lockScreen').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
+            initializeFirebase(); 
+        } else {
+            document.getElementById('errorMessage').style.display = 'block';
+            document.getElementById('passcodeField').value = '';
+        }
+    }
+
     const firebaseConfig = {
         apiKey: "YOUR_API_KEY",
         authDomain: "malaysia-motor-preorder.firebaseapp.com",
@@ -161,27 +194,32 @@
         appId: "YOUR_APP_ID"
     };
     
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-
+    let db;
     let orders = [];
     let editingId = null; 
     let currentPhotoBase64 = null; 
+
+    function initializeFirebase() {
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.database();
+            
+            db.ref('orders').on('value', (snapshot) => {
+                orders = [];
+                snapshot.forEach((childSnapshot) => {
+                    orders.push({ id: childSnapshot.key, ...childSnapshot.val() });
+                });
+                orders.sort((a,b) => b.timestamp - a.timestamp);
+                renderTable();
+            });
+        }
+    }
 
     function calcBalance() {
         const total = parseFloat(document.getElementById('totalPrice').value) || 0;
         const deposit = parseFloat(document.getElementById('deposit').value) || 0;
         document.getElementById('balance').value = Math.max(0, total - deposit);
     }
-
-    db.ref('orders').on('value', (snapshot) => {
-        orders = [];
-        snapshot.forEach((childSnapshot) => {
-            orders.push({ id: childSnapshot.key, ...childSnapshot.val() });
-        });
-        orders.sort((a,b) => b.timestamp - a.timestamp);
-        renderTable();
-    });
 
     document.getElementById('searchInput').addEventListener('input', renderTable);
 
