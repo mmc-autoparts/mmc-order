@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Malaysia Motor Company - Special Order Cloud System</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; }
+        .container { max-width: 1250px; margin: auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h2 { color: #1a1a1a; margin-top: 0; border-bottom: 2px solid #e4e6eb; padding-bottom: 10px; }
+        h2 a { color: #1a1a1a; text-decoration: none; }
+        h2 a:hover { color: #0866ff; text-decoration: underline; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+        input, select { padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; width: 100%; box-sizing: border-box;}
+        .col-span-2 { grid-column: span 2; }
+        .col-span-4 { grid-column: span 4; }
+        
+        .button-group { display: flex; gap: 10px; grid-column: span 4; }
+        button.add-btn { background-color: #0866ff; color: white; border: none; padding: 12px; font-weight: bold; border-radius: 4px; cursor: pointer; width: 100%; font-size: 16px;}
+        button.add-btn:hover { background-color: #0050d1; }
+        button.cancel-btn { background-color: #6c757d; color: white; border: none; padding: 12px; font-weight: bold; border-radius: 4px; cursor: pointer; width: 30%; font-size: 16px; display: none;}
+        button.cancel-btn:hover { background-color: #5a6268; }
+
+        .top-controls { display: flex; gap: 10px; align-items: center; margin-top: 30px; margin-bottom: 15px; }
+        .search-bar { padding: 10px; width: 320px; border-radius: 20px; border: 1px solid #ccc; }
+        .export-btn { background-color: #107c41; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-left: auto; }
+        
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th, td { padding: 12px; border-bottom: 1px solid #eee; text-align: left; vertical-align: top;}
+        th { background-color: #f8f9fa; color: #333; }
+        
+        .status-btn { padding: 6px 12px; border: none; border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 12px; width: 100%; margin-bottom: 5px;}
+        .status-waiting { background-color: #fff3cd; color: #856404; }
+        .status-arrived { background-color: #d4edda; color: #155724; }
+        .status-completed { background-color: #e2e3e5; color: #383d41; cursor: default;}
+        
+        .wa-btn { background-color: #25D366; color: white; text-decoration: none; padding: 6px; border-radius: 4px; font-weight: bold; display: block; text-align: center; font-size: 11px; margin-bottom: 4px;}
+        .wa-btn-receipt { background-color: #128C7E; }
+        
+        .action-btns { display: flex; gap: 6px; justify-content: center; }
+        .delete-btn { color: #dc3545; background: #ffe6e6; border: none; cursor: pointer; font-size: 14px; padding: 6px 8px; border-radius: 4px; font-weight: bold; }
+        .delete-btn:hover { background: #ffcccc; }
+        .edit-btn { color: #0056b3; background: #e6f0ff; border: none; cursor: pointer; font-size: 14px; padding: 6px 8px; border-radius: 4px; font-weight: bold; }
+        .edit-btn:hover { background: #cce0ff; }
+        .complete-btn { color: #155724; background: #d4edda; border: none; cursor: pointer; font-size: 14px; padding: 6px 8px; border-radius: 4px; font-weight: bold; }
+        .complete-btn:hover { background: #c3e6cb; }
+
+        .ref-badge { background-color: #e9ecef; padding: 3px 6px; border-radius: 4px; font-family: monospace; font-weight: bold; color: #495057; font-size: 13px;}
+        .staff-badge { background-color: #e6f7ff; color: #0050b3; border: 1px solid #91d5ff; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; display: inline-block; margin-top: 4px; }
+        .notes-text { font-size: 12px; color: #6c757d; font-style: italic; margin-top: 4px;}
+        .mono-text { font-family: monospace; font-size: 13px; color: #495057; }
+
+        .photo-preview-container { display: flex; align-items: center; gap: 10px; background: #f8f9fa; padding: 8px; border-radius: 4px; border: 1px dashed #ccc;}
+        .photo-thumbnail { width: 50px; height: 50px; object-fit: cover; border-radius: 4px; cursor: pointer; border: 1px solid #ccc; margin-top: 5px; transition: transform 0.2s;}
+        .photo-thumbnail:hover { transform: scale(1.1); box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        #photoModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; text-align: center; cursor: pointer; }
+        #modalImg { max-width: 90%; max-height: 90%; margin-top: 5vh; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>
+        <a href="https://console.firebase.google.com/project/malaysia-motor-preorder/database/malaysia-motor-preorder-default-rtdb/data/~2F" target="_blank" title="Open Firebase Cloud Database">
+            Malaysia Motor Company - Special Orders Portal 🌐
+        </a>
+    </h2>
+    
+    <div class="form-grid">
+        <input type="text" id="custName" placeholder="Customer Name">
+        <input type="text" id="custPhone" placeholder="WhatsApp Number (e.g., 60123456789)">
+        <input type="text" id="carModel" placeholder="Car Model (e.g., Honda Civic)">
+        <input type="text" id="chassisNumber" placeholder="Chassis No (e.g., FC1)">
+        
+        <input type="text" id="partDesc" placeholder="Part Needed (e.g., Lower Arm)">
+        <input type="text" id="partNumber" placeholder="Part ID / OEM No (e.g., 51350-TBA-A00)">
+        <input type="text" id="supplier" placeholder="Supplier">
+        <div>
+            <small style="color: #666; font-size: 11px; display:block; margin-bottom:2px;">Target ETA Date</small>
+            <input type="date" id="etaDate">
+        </div>
+
+        <div style="display:flex; gap: 5px;" class="col-span-2">
+            <input type="number" id="totalPrice" placeholder="Total Price (RM)" oninput="calcBalance()">
+            <input type="number" id="deposit" placeholder="Deposit Paid (RM)" oninput="calcBalance()">
+            <input type="number" id="balance" placeholder="Balance Due (RM)" readonly style="background-color: #e9ecef;">
+        </div>
+        <div>
+            <small style="color: #666; font-size: 11px; display:block; margin-bottom:2px;">Order Taken By Staff</small>
+            <select id="orderByStaff">
+                <option value="">-- Select Staff --</option>
+                <option value="Hock">Hock</option>
+                <option value="Kelvin">Kelvin</option>
+                <option value="Nana">Nana</option>
+                <option value="Adi">Adi</option>
+                <option value="Khairul">Khairul</option>
+                <option value="Lun">Lun</option>
+            </select>
+        </div>
+        <input type="text" id="remarks" placeholder="Internal Remarks (Optional)">
+
+        <div class="col-span-4 photo-preview-container">
+            <div style="flex: 1;">
+                <small style="color: #666; font-size: 12px; display:block; margin-bottom:2px;">📷 Take Photo or Upload Part Image (Auto-syncs to cloud)</small>
+                <input type="file" id="photoInput" accept="image/*" capture="environment" onchange="compressAndPreview(event)" style="border:none; padding:0;">
+            </div>
+            <img id="photoPreview" style="display:none; max-height:60px; border-radius:4px; border:1px solid #ccc;">
+            <button id="removePhotoBtn" style="display:none; color:red; background:none; border:none; cursor:pointer; font-weight:bold;" onclick="removePhoto(event)">✖ Remove Image</button>
+        </div>
+        
+        <div class="button-group">
+            <button class="add-btn" id="mainBtn" onclick="saveOrUpdateOrder()">Save & Sync Order to Cloud</button>
+            <button class="cancel-btn" id="cancelBtn" onclick="cancelEdit()">Cancel Edit</button>
+        </div>
+    </div>
+
+    <div class="top-controls">
+        <input type="text" id="searchInput" class="search-bar" placeholder="🔍 Search Name, Part ID, Chassis or Staff...">
+        
+        <select id="viewFilter" onchange="renderTable()" style="font-weight: bold; color: #0866ff; width: auto;">
+            <option value="active">Active Orders Only</option>
+            <option value="history">Completed History</option>
+            <option value="all">All Records</option>
+        </select>
+
+        <button class="export-btn" onclick="exportCSV()">📥 Download Excel Backup</button>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Order ID</th>
+                <th>Customer Details</th>
+                <th>Car & Chassis</th>
+                <th>Part Details</th>
+                <th>Supplier / ETA</th>
+                <th>Financials</th>
+                <th style="width: 100px;">Status</th>
+                <th style="width: 100px;">WhatsApp</th>
+                <th style="width: 110px; text-align:center;">Actions</th>
+            </tr>
+        </thead>
+        <tbody id="orderTableBody"></tbody>
+    </table>
+</div>
+
+<div id="photoModal" onclick="closePhoto()">
+    <img id="modalImg" src=""><div style="color:white; margin-top:10px;">Click anywhere to close full preview</div>
+</div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "YOUR_API_KEY",
+        authDomain: "malaysia-motor-preorder.firebaseapp.com",
+        databaseURL: "https://malaysia-motor-preorder-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "malaysia-motor-preorder",
+        storageBucket: "malaysia-motor-preorder.appspot.com",
+        messagingSenderId: "YOUR_SENDER_ID",
+        appId: "YOUR_APP_ID"
+    };
+    
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    let orders = [];
+    let editingId = null; 
+    let currentPhotoBase64 = null; 
+
+    function calcBalance() {
+        const total = parseFloat(document.getElementById('totalPrice').value) || 0;
+        const deposit = parseFloat(document.getElementById('deposit').value) || 0;
+        document.getElementById('balance').value = Math.max(0, total - deposit);
+    }
+
+    db.ref('orders').on('value', (snapshot) => {
+        orders = [];
+        snapshot.forEach((childSnapshot) => {
+            orders.push({ id: childSnapshot.key, ...childSnapshot.val() });
+        });
+        orders.sort((a,b) => b.timestamp - a.timestamp);
+        renderTable();
+    });
+
+    document.getElementById('searchInput').addEventListener('input', renderTable);
+
+    function compressAndPreview(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = new Image();
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                const MAX_WIDTH = 400; const MAX_HEIGHT = 400;
+                let width = img.width; let height = img.height;
+                if (width > height) { if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; } } 
+                else { if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; } }
+                canvas.width = width; canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                currentPhotoBase64 = canvas.toDataURL('image/jpeg', 0.5); 
+                document.getElementById('photoPreview').src = currentPhotoBase64;
+                document.getElementById('photoPreview').style.display = 'block';
+                document.getElementById('removePhotoBtn').style.display = 'inline-block';
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function removePhoto(e) {
+        if(e) e.preventDefault();
+        currentPhotoBase64 = null;
+        document.getElementById('photoInput').value = '';
+        document.getElementById('photoPreview').style.display = 'none';
+        document.getElementById('removePhotoBtn').style.display = 'none';
+    }
+
+    function showPhoto(src) { document.getElementById('modalImg').src = src; document.getElementById('photoModal').style.display = 'block'; }
+    function closePhoto() { document.getElementById('photoModal').style.display = 'none'; }
+
+    function editOrder(id) {
+        const order = orders.find(o => o.id === id);
+        document.getElementById('custName').value = order.name || '';
+        document.getElementById('custPhone').value = order.phone || '';
+        document.getElementById('carModel').value = order.car || '';
+        document.getElementById('chassisNumber').value = order.chassis || '';
+        document.getElementById('partDesc').value = order.part || '';
+        document.getElementById('partNumber').value = order.partNo || '';
+        document.getElementById('supplier').value = order.supplier || '';
+        document.getElementById('etaDate').value = order.eta || '';
+        document.getElementById('totalPrice').value = order.total || '';
+        document.getElementById('deposit').value = order.deposit || '';
+        document.getElementById('balance').value = order.balance || '';
+        document.getElementById('orderByStaff').value = order.staff || '';
+        document.getElementById('remarks').value = order.remarks || '';
+
+        if (order.photo) {
+            currentPhotoBase64 = order.photo;
+            document.getElementById('photoPreview').src = currentPhotoBase64;
+            document.getElementById('photoPreview').style.display = 'block';
+            document.getElementById('removePhotoBtn').style.display = 'inline-block';
+        } else {
+            removePhoto();
+        }
+
+        editingId = id;
+        document.getElementById('mainBtn').innerText = "Confirm Update Data (Cloud)";
+        document.getElementById('mainBtn').style.backgroundColor = "#28a745"; 
+        document.getElementById('cancelBtn').style.display = "block";
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function cancelEdit() {
+        editingId = null;
+        document.getElementById('mainBtn').innerText = "Save & Sync Order to Cloud";
+        document.getElementById('mainBtn').style.backgroundColor = "#0866ff";
+        document.getElementById('cancelBtn').style.display = "none";
+        document.querySelectorAll('input').forEach(input => { if(input.id !== 'searchInput') input.value = ''; });
+        document.getElementById('orderByStaff').value = '';
+        removePhoto();
+    }
+
+    async function saveOrUpdateOrder() {
+        const name = document.getElementById('custName').value;
+        const phone = document.getElementById('custPhone').value.replace(/[^0-9]/g, '');
+        const car = document.getElementById('carModel').value;
+        const chassis = document.getElementById('chassisNumber').value;
+        const part = document.getElementById('partDesc').value;
+        const partNo = document.getElementById('partNumber').value;
+        const supplier = document.getElementById('supplier').value;
+        const eta = document.getElementById('etaDate').value;
+        const total = document.getElementById('totalPrice').value || "0";
+        const deposit = document.getElementById('deposit').value || "0";
+        const balance = document.getElementById('balance').value || "0";
+        const staff = document.getElementById('orderByStaff').value;
+        const remarks = document.getElementById('remarks').value;
+
+        if(!name || !part) return alert("Please fill in at least Customer Name and Part Needed.");
+
+        if (editingId) {
+            await db.ref('orders/' + editingId).update({
+                name, phone, car, chassis, part, partNo, supplier, eta, total, deposit, balance, staff, remarks, photo: currentPhotoBase64
+            });
+            cancelEdit();
+        } else {
+            const counterRef = db.ref('orderCounter');
+            const snapshot = await counterRef.transaction((currentValue) => {
+                return (currentValue || 1000) + 1;
+            });
+            const nextNum = snapshot.snapshot.val();
+            const refNo = 'MMC-' + nextNum;
+
+            const dateStr = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+            
+            await db.ref('orders').push({
+                refNo, date: dateStr, name, phone, car, chassis, part, partNo, supplier, eta, total, deposit, balance, staff, remarks, status: 'waiting', photo: currentPhotoBase64, timestamp: Date.now()
+            });
+            
+            document.querySelectorAll('input').forEach(input => { if(input.id !== 'searchInput') input.value = ''; });
+            document.getElementById('orderByStaff').value = '';
+            removePhoto();
+        }
+    }
+
+    async function toggleStatus(id) {
+        const order = orders.find(o => o.id === id);
+        if(order.status === 'completed') return; 
+        const newStatus = order.status === 'waiting' ? 'arrived' : 'waiting';
+        await db.ref('orders/' + id).update({ status: newStatus });
+    }
+
+    async function markCompleted(id) {
+        if(confirm("Confirm item collected and balance cleared? This will hide the order into History.")){
+            await db.ref('orders/' + id).update({ status: 'completed' });
+        }
+    }
+
+    async function restoreOrder(id) {
+        await db.ref('orders/' + id).update({ status: 'arrived' });
+    }
+
+    async function deleteOrder(id) {
+        if(confirm("Are you absolutely sure you want to delete this order from the cloud?")) {
+            await db.ref('orders/' + id).remove();
+        }
+    }
+
+    function exportCSV() {
+        if(orders.length === 0) return alert("No data available to export.");
+        let csvContent = "data:text/csv;charset=utf-8,\uFEFFRef No,Order Date,Handled By,Customer Name,Phone,Car Model,Chassis No,Part,Part No ID,Supplier,ETA,Total,Deposit,Balance,Status,Remarks\n";
+        orders.forEach(o => {
+            const row = `"${o.refNo}","${o.date}","${o.staff || ''}","${o.name}","${o.phone}","${o.car || ''}","${o.chassis || ''}","${o.part}","${o.partNo || ''}","${o.supplier}","${o.eta}","${o.total}","${o.deposit}","${o.balance}","${o.status}","${o.remarks}"`;
+            csvContent += row + "\n";
+        });
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `MMC_Cloud_Database_${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    function renderTable() {
+        const tbody = document.getElementById('orderTableBody');
+        tbody.innerHTML = '';
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        const viewFilter = document.getElementById('viewFilter').value;
+
+        let filteredOrders = orders;
+        if (viewFilter === 'active') { filteredOrders = orders.filter(o => o.status !== 'completed'); } 
+        else if (viewFilter === 'history') { filteredOrders = orders.filter(o => o.status === 'completed'); }
+
+        filteredOrders = filteredOrders.filter(o => 
+            o.name.toLowerCase().includes(searchTerm) || 
+            (o.car && o.car.toLowerCase().includes(searchTerm)) || 
+            (o.chassis && o.chassis.toLowerCase().includes(searchTerm)) || 
+            o.part.toLowerCase().includes(searchTerm) ||
+            (o.partNo && o.partNo.toLowerCase().includes(searchTerm)) ||
+            (o.refNo && o.refNo.toLowerCase().includes(searchTerm)) ||
+            (o.staff && o.staff.toLowerCase().includes(searchTerm))
+        );
+
+        filteredOrders.forEach(order => {
+            const carText = order.car ? order.car + ' ' : '';
+            const chassisText = order.chassis ? '(' + order.chassis + ') ' : '';
+            const partNoText = order.partNo ? ' [ID: ' + order.partNo + ']' : '';
+            
+            const msgReceipt = `🧾 *MALAYSIA MOTOR COMPANY - RECEIPT*\n\nHi ${order.name}, your special order has been confirmed!\n\n*Order ID:* ${order.refNo}\n*Item:* ${carText}${chassisText}${order.part}${partNoText}\n*Total:* RM${order.total}\n*Deposit Paid:* RM${order.deposit}\n*Balance Due:* RM${order.balance}\n\nWe will update you once your part has arrived. Thank you!\n(Handled by: ${order.staff || '-'})`;
+            const msgUpdate = order.status === 'arrived' 
+                ? `📦 *ITEM ARRIVED!*\n\nHi ${order.name}, good news! Your preorder item (*${order.refNo}*) has safely arrived at our shop.\n\n*Balance due to collect:* RM${order.balance}\n\nYou can come down for installation or collection anytime. Thank you!` 
+                : `⏳ *SPECIAL ORDER UPDATE*\n\nHi ${order.name}, this is an update regarding your order (*${order.refNo}*). The part is currently being processed by our supplier. We will notify you immediately once it reaches our counter. Thanks for your patience!`;
+            
+            const linkReceipt = order.phone ? `https://wa.me/${order.phone}?text=${encodeURIComponent(msgReceipt)}` : '#';
+            const linkUpdate = order.phone ? `https://wa.me/${order.phone}?text=${encodeURIComponent(msgUpdate)}` : '#';
+
+            let statusHtml = order.status === 'completed' 
+                ? `<button class="status-btn status-completed">📦 Collected</button>`
+                : `<button class="status-btn ${order.status === 'waiting' ? 'status-waiting' : 'status-arrived'}" onclick="toggleStatus('${order.id}')">${order.status === 'waiting' ? '⏳ Waiting Supplier' : '✅ Stock Arrived'}</button>`;
+
+            const photoHtml = order.photo ? `<img src="${order.photo}" class="photo-thumbnail" onclick="showPhoto('${order.photo}')">` : '';
+
+            const tr = document.createElement('tr');
+            tr.style.opacity = order.status === 'completed' ? '0.7' : '1';
+
+            tr.innerHTML = `
+                <td><span class="ref-badge">${order.refNo || 'N/A'}</span><br><small>${order.date}</small><br>${order.staff ? `<span class="staff-badge">👤 ${order.staff}</span>` : ''}</td>
+                <td><strong>${order.name}</strong><br><small>${order.phone}</small></td>
+                <td><strong>${order.car || '-'}</strong><br><small class="mono-text">${order.chassis || ''}</small></td>
+                <td><strong>${order.part}</strong><br><small class="mono-text">${order.partNo || ''}</small><br>${photoHtml}</td>
+                <td><strong>${order.supplier}</strong><br><small>ETA: ${order.eta || '-'}</small><div class="notes-text">${order.remarks ? '📝 ' + order.remarks : ''}</div></td>
+                <td><small>Total: RM${order.total}</small><br><small>Paid: RM${order.deposit}</small><br><strong>Bal: RM${order.balance}</strong></td>
+                <td>${statusHtml}</td>
+                <td>
+                    ${order.phone && order.status !== 'completed' ? `
+                        <a href="${linkReceipt}" target="_blank" class="wa-btn wa-btn-receipt">📄 Receipt</a>
+                        <a href="${linkUpdate}" target="_blank" class="wa-btn">💬 Notify Status</a>
+                    ` : (order.status === 'completed' ? '<small>Closed</small>' : '<small>No Phone</small>')}
+                </td>
+                <td>
+                    <div class="action-btns">
+                        ${order.status !== 'completed' ? `<button class="complete-btn" onclick="markCompleted('${order.id}')">✔️ Done</button>` : `<button class="edit-btn" onclick="restoreOrder('${order.id}')">⏪ Return</button>`}
+                        <button class="edit-btn" onclick="editOrder('${order.id}')">✏️</button>
+                        <button class="delete-btn" onclick="deleteOrder('${order.id}')">✖</button>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+</script>
+</body>
+</html>
