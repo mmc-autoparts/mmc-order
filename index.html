@@ -681,6 +681,9 @@
         }
     }
 
+    // ==========================================
+    // UPDATED PDF GENERATOR (No "100% Original" & changed to "Order List")
+    // ==========================================
     function printOrder(id) {
         const order = orders.find(o => o.id === id);
         if(!order) return;
@@ -709,12 +712,11 @@
         printWindow.document.write(`
             <html>
             <head>
-                <title>Invoice - ${order.refNo}</title>
+                <title>Order List - ${order.refNo}</title>
                 <style>
                     body { font-family: Arial, sans-serif; padding: 30px; color: #1a1a1a; max-width: 800px; margin: auto; }
                     .header { text-align: center; border-bottom: 2px solid #1a1a1a; padding-bottom: 20px; margin-bottom: 30px; }
                     .logo { font-size: 28px; font-weight: bold; letter-spacing: 1px;}
-                    .badge { border: 2px solid #1a1a1a; display: inline-block; padding: 4px 10px; font-size: 11px; font-weight: bold; margin-top: 10px; border-radius: 4px;}
                     .info-grid { display: flex; justify-content: space-between; margin-bottom: 30px; }
                     .info-box { background: #f8f9fa; padding: 15px; border-radius: 6px; width: 45%; border: 1px solid #eee; }
                     .info-box p { margin: 5px 0; font-size: 14px; }
@@ -731,10 +733,9 @@
             <body onload="window.print(); window.close();">
                 <div class="header">
                     <div class="logo">MALAYSIA MOTOR COMPANY</div>
-                    <div class="badge">✔️ 100% ORIGINAL PARTS GUARANTEED</div>
                 </div>
                 
-                <h2 style="text-align:center; margin-bottom:30px;">INVOICE / PACKING LIST</h2>
+                <h2 style="text-align:center; margin-bottom:30px;">ORDER LIST / PACKING LIST</h2>
                 
                 <div class="info-grid">
                     <div class="info-box">
@@ -743,7 +744,7 @@
                         <p><strong>Car Details:</strong> ${order.car || '-'} ${order.chassis ? '('+order.chassis+')' : ''}</p>
                     </div>
                     <div class="info-box">
-                        <p><strong>Invoice No:</strong> ${order.refNo}</p>
+                        <p><strong>Order No:</strong> ${order.refNo}</p>
                         <p><strong>Date:</strong> ${order.date}</p>
                         <p><strong>Served By:</strong> ${order.staff || '-'}</p>
                         <p><strong>Status:</strong> ${order.status === 'completed' ? 'Collected' : 'Pending Fulfillment'}</p>
@@ -774,7 +775,7 @@
                 </div>
 
                 <div class="footer">
-                    Thank you for choosing Malaysia Motor Company. Please retain this invoice for your records.<br>
+                    Thank you for choosing Malaysia Motor Company. Please retain this list for your records.<br>
                     ${order.remarks ? 'Internal Remarks: ' + order.remarks : ''}
                 </div>
             </body>
