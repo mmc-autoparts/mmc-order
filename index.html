@@ -91,7 +91,7 @@
         button.main-save-btn { background-color: #2563eb; color: white; border: none; padding: 14px; font-weight: bold; border-radius: 6px; cursor: pointer; width: 100%; font-size: 16px; box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2); transition: background 0.2s;}
         button.cancel-btn { background-color: #64748b; color: white; border: none; padding: 14px; font-weight: bold; border-radius: 6px; cursor: pointer; width: 30%; font-size: 16px; display: none;}
         
-        .top-controls { display: flex; gap: 12px; align-items: center; margin-top: 35px; margin-bottom: 18px; flex-wrap: wrap;}
+        .top-controls { display: flex; gap: 12px; align-items: center; margin-top: 25px; margin-bottom: 18px; flex-wrap: wrap;}
         .search-bar { padding: 12px 15px; width: 320px; border-radius: 20px; border: 1px solid #cbd5e1; box-sizing: border-box; box-shadow: inset 0 1px 2px rgba(0,0,0,0.02);}
         #exportBtn { background-color: #059669; color: white; border: none; padding: 12px 18px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-left: auto; display: none; white-space: nowrap; box-shadow: 0 2px 4px rgba(5, 150, 105, 0.2);}
         
@@ -117,7 +117,7 @@
         .print-btn { color: #334155; background: #e2e8f0; border: 1px solid #cbd5e1;}
         .pdf-btn { color: #b91c1c; background: #fee2e2; border: 1px solid #fecaca;}
         
-        .wa-btn { color: #fff; text-decoration: none; padding: 8px; border-radius: 4px; font-weight: 700; display: block; text-align: center; font-size: 12px; margin-bottom: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); transition: opacity 0.2s;}
+        .wa-btn { color: #fff; text-decoration: none; padding: 8px; border-radius: 4px; font-weight: 700; display: block; text-align: center; font-size: 12px; margin-bottom: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); transition: opacity 0.2s; cursor: pointer; border: none;}
         .wa-btn:hover { opacity: 0.85; }
         .wa-btn-receipt { background-color: #0ea5e9; }
         .wa-btn-arrived { background-color: #22c55e; }
@@ -126,12 +126,13 @@
         .ref-badge { background-color: #e2e8f0; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-weight: 700; color: #334155; font-size: 13px;}
         .staff-badge { background-color: #dbeafe; color: #1d4ed8; border: 1px solid #bfdbfe; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; display: inline-block; margin-top: 6px; }
 
-        /* RESTOCK UI SPECIFICS */
+        /* BOSS DASHBOARDS & RESTOCK UI */
+        .stats-dashboard { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px;}
+        .stat-card { background: white; padding: 20px; border-radius: 10px; border: 1px solid #cbd5e1; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.02);}
+        .stat-card h4 { margin: 0 0 8px 0; color: #64748b; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;}
+        .stat-card p { margin: 0; font-size: 26px; font-weight: 900; color: #0f172a;}
+        
         .restock-row { display: grid; grid-template-columns: 2fr 1.5fr 1fr 1fr 80px 80px 100px; gap: 10px; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 15px; align-items: end;}
-        .stats-dashboard { display: none; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px;}
-        .stat-card { background: white; padding: 15px; border-radius: 8px; border: 1px solid #cbd5e1; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02);}
-        .stat-card h4 { margin: 0 0 5px 0; color: #64748b; font-size: 12px; text-transform: uppercase;}
-        .stat-card p { margin: 0; font-size: 24px; font-weight: 900; color: #0f172a;}
         .custom-date-group { display: none; gap: 10px; align-items: center;}
 
         /* Modals */
@@ -180,10 +181,17 @@
 
     <div class="tabs-nav">
         <button class="tab-btn active" onclick="switchTab('ordersTab', this)">📝 Preorder Management</button>
-        <button class="tab-btn" onclick="switchTab('restockTab', this)">📦 Restock Register (Low Stock)</button>
+        <button class="tab-btn" onclick="switchTab('restockTab', this)">📦 Restock Register</button>
     </div>
     
     <div id="ordersTab" class="tab-content active">
+        
+        <div id="bossPreorderDashboard" class="stats-dashboard" style="display:none; background:#f8fafc; padding:20px; border-radius:10px; border:2px solid #e2e8f0; margin-bottom:25px;">
+             <div class="stat-card"><h4>💰 Total Sales (All Time)</h4><p id="b_totalSales" style="color:#059669;">RM 0.00</p></div>
+             <div class="stat-card" style="border-left:4px solid #ef4444;"><h4>⚠️ Pending Balance (Uncollected)</h4><p id="b_pendingBal" style="color:#ef4444;">RM 0.00</p></div>
+             <div class="stat-card" style="border-left:4px solid #3b82f6;"><h4>📦 Completed Orders</h4><p id="b_completed" style="color:#3b82f6;">0</p></div>
+        </div>
+
         <div class="form-grid">
             <div><span class="label-text">Customer Name</span><input type="text" id="custName" placeholder="Name"></div>
             <div><span class="label-text">WhatsApp Number</span><input type="text" id="custPhone" placeholder="60123456789"></div>
@@ -244,6 +252,13 @@
     </div>
 
     <div id="restockTab" class="tab-content">
+        
+        <div id="rStatsDashboard" class="stats-dashboard">
+            <div class="stat-card"><h4>📋 Total Items Added</h4><p id="s_total">0</p></div>
+            <div class="stat-card" style="border-left:4px solid #ef4444;"><h4>⏳ Not Yet Ordered</h4><p id="s_notYet" style="color:#ef4444;">0</p></div>
+            <div class="stat-card" style="border-left:4px solid #10b981;"><h4>📦 Already Ordered</h4><p id="s_ordered" style="color:#10b981;">0</p></div>
+        </div>
+
         <div style="background: #eef2ff; padding: 20px; border-radius: 8px; border: 1px solid #c7d2fe; margin-bottom: 25px;">
             <h3 style="margin-top:0; color:#3730a3;">Scanner Input (Auto Add)</h3>
             <p style="font-size:13px; color:#4f46e5; margin-top:-5px; margin-bottom:15px;">Use physical scanner gun on the code box, or press 🔳 for camera. It auto-saves immediately.</p>
@@ -264,21 +279,21 @@
             </div>
         </div>
 
-        <div class="top-controls" style="background:#f8fafc; padding:15px; border-radius:8px; border:1px solid #e2e8f0;">
+        <div class="top-controls" style="background:#f8fafc; padding:15px; border-radius:8px; border:1px solid #e2e8f0; align-items:center;">
             <input type="text" id="rSearchInput" class="search-bar" placeholder="🔍 Search Part, Code, Brand, Supp..." oninput="filterRestock()">
             
             <select id="rViewFilter" onchange="filterRestock()" style="font-weight: bold; color: #2563eb; padding: 12px; border-radius: 8px; border:1px solid #cbd5e1;">
                 <option value="active">Active List (Not Yet)</option>
                 <option value="history">Ordered History</option>
-                <option value="summary">Daily Summary (All)</option>
+                <option value="all">View All Data</option>
             </select>
 
             <select id="rDateFilter" onchange="toggleCustomDate()" style="font-weight: bold; padding: 12px; border-radius: 8px; border:1px solid #cbd5e1;">
-                <option value="all">All Dates</option>
-                <option value="today">Today</option>
+                <option value="today">Today's Data</option>
                 <option value="yesterday">Yesterday</option>
                 <option value="week">This Week</option>
                 <option value="month">This Month</option>
+                <option value="all">All Dates</option>
                 <option value="custom">Custom Range...</option>
             </select>
 
@@ -287,16 +302,12 @@
                 <input type="date" id="rEndDate" onchange="filterRestock()">
             </div>
 
-            <div id="rPrintGroup" style="display:none; margin-left:auto; gap:10px;">
-                <button class="print-btn" onclick="printRestock()" style="padding:10px 20px;">🖨️ Print</button>
-                <button class="pdf-btn" onclick="savePdfRestock()" style="padding:10px 20px;">📄 PDF Export</button>
+            <div style="margin-left:auto; display:flex; gap:10px; flex-wrap:wrap;">
+                <button class="print-btn" onclick="printRestock()" style="padding:10px 15px; border-radius:6px; font-weight:bold;">🖨️ Print Summary</button>
+                <button class="pdf-btn" onclick="savePdfRestock()" style="padding:10px 15px; border-radius:6px; font-weight:bold;">📄 PDF Export</button>
+                <button class="wa-btn wa-btn-arrived" onclick="sendBossReport('60194482580', 'Hock')" style="margin:0; padding:10px 15px; border-radius:6px; font-size:13px;">📲 Boss Hock</button>
+                <button class="wa-btn wa-btn-arrived" onclick="sendBossReport('60164401970', 'Kelvin')" style="margin:0; padding:10px 15px; border-radius:6px; font-size:13px;">📲 Boss Kelvin</button>
             </div>
-        </div>
-
-        <div id="rStatsDashboard" class="stats-dashboard">
-            <div class="stat-card"><h4>Total Items Added</h4><p id="s_total">0</p></div>
-            <div class="stat-card" style="border-left:4px solid #f59e0b;"><h4>Not Yet Ordered</h4><p id="s_notYet">0</p></div>
-            <div class="stat-card" style="border-left:4px solid #10b981;"><h4>Ordered</h4><p id="s_ordered">0</p></div>
         </div>
 
         <div class="table-responsive">
@@ -375,6 +386,8 @@
             isAdmin = (user.email.toLowerCase() === BOSS_EMAIL.toLowerCase());
             document.getElementById('exportBtn').style.display = isAdmin ? 'block' : 'none';
             document.getElementById('adminBadge').style.display = isAdmin ? 'inline-block' : 'none';
+            document.getElementById('bossPreorderDashboard').style.display = isAdmin ? 'grid' : 'none';
+            
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('mainApp').style.display = 'block';
             document.getElementById('loginError').style.display = 'none';
@@ -456,7 +469,7 @@
         }
         new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg').play().catch(e => {});
         closeScanner();
-        if(isAutoSubmit) setTimeout(addRestockItem, 300); // Auto submit delay
+        if(isAutoSubmit) setTimeout(addRestockItem, 300);
     }
 
     function closeScanner() {
@@ -629,12 +642,28 @@
         const search = document.getElementById('searchInput').value.toLowerCase();
         const view = document.getElementById('viewFilter').value;
 
+        // Admin Boss Dashboard Logic
+        let sumSales = 0, sumBal = 0, sumComp = 0;
+
         let filtered = orders.filter(o => {
+            // Dashboard calculations
+            sumSales += parseFloat(o.total) || 0;
+            if(o.status !== 'completed') sumBal += parseFloat(o.balance) || 0;
+            if(o.status === 'completed') sumComp++;
+
+            // Table Filter
             if (view === 'active' && o.status === 'completed') return false;
             if (view === 'history' && o.status !== 'completed') return false;
             const itemMatch = (o.items||[]).some(i => (i.part||'').toLowerCase().includes(search) || (i.partNo||'').toLowerCase().includes(search));
             return (o.name||'').toLowerCase().includes(search) || (o.car||'').toLowerCase().includes(search) || (o.refNo||'').toLowerCase().includes(search) || itemMatch;
         });
+
+        // Update Boss Dashboard UI
+        if(isAdmin) {
+            document.getElementById('b_totalSales').innerText = "RM " + sumSales.toFixed(2);
+            document.getElementById('b_pendingBal').innerText = "RM " + sumBal.toFixed(2);
+            document.getElementById('b_completed').innerText = sumComp;
+        }
 
         filtered.forEach(order => {
             let partsHtml = `<ul class="table-item-list">`;
@@ -646,8 +675,8 @@
             });
             partsHtml += `</ul>`;
 
-            const waMsgArr = `*MALAYSIA MOTOR COMPANY*\n\nPelanggan yang dihormati ${order.name},\nBerita baik! Pesanan anda (${order.refNo}) telah selamat tiba. Baki bayaran: RM${order.balance}. Anda dialu-alukan untuk mengambilnya. Terima kasih!\n\nDear ${order.name},\nGood news! Your order (${order.refNo}) has arrived. Balance due: RM${order.balance}. You are welcome to collect it. Thank you!`;
-            const waMsgNot = `*MALAYSIA MOTOR COMPANY*\n\nPelanggan yang dihormati ${order.name},\nKami memohon maaf, barang pesanan anda (${order.refNo}) kehabisan stok. Sila hubungi kami untuk pemulangan deposit (RM${order.deposit}). Harap maaf atas kesulitan.\n\nDear ${order.name},\nWe apologize, your ordered item (${order.refNo}) is out of stock. Please contact us for a deposit refund (RM${order.deposit}). Sorry for the inconvenience.`;
+            const waMsgArr = `*MALAYSIA MOTOR COMPANY*\n\nPelanggan yang dihormati ${order.name},\nBerita baik! Pesanan anda (${order.refNo}) telah selamat tiba. Baki bayaran: RM${order.balance}. Anda dialu-alukan untuk mengambilnya pada bila-bila masa. Terima kasih!\n\nDear ${order.name},\nGood news! Your order (${order.refNo}) has arrived. Balance due: RM${order.balance}. You are welcome to collect it. Thank you!`;
+            const waMsgNot = `*MALAYSIA MOTOR COMPANY*\n\nPelanggan yang dihormati ${order.name},\nKami memohon maaf, barang pesanan anda (${order.refNo}) kehabisan stok. Sila hubungi kami untuk pemulangan deposit (RM${order.deposit}). Harap maaf atas segala kesulitan.\n\nDear ${order.name},\nWe apologize, your ordered item (${order.refNo}) is out of stock. Please contact us for a deposit refund (RM${order.deposit}). Sorry for the inconvenience.`;
             
             const tr = document.createElement('tr');
             tr.style.opacity = order.status === 'completed' ? '0.6' : '1';
@@ -682,12 +711,12 @@
     function savePdfOrder(id) { const o = orders.find(x=>x.id===id); if(o){ document.getElementById('pdfContainer').innerHTML = getInvoiceHTML(o); html2pdf().set({margin:10, filename:`${o.refNo}_List.pdf`, jsPDF:{format:'a4'}}).from(document.getElementById('invoiceBody')).save().then(()=>document.getElementById('pdfContainer').innerHTML=''); } }
 
     // ==========================================
-    // RESTOCK SYSTEM V28
+    // RESTOCK SYSTEM V29
     // ==========================================
     async function addRestockItem() {
         const part = document.getElementById('r_part').value;
         const code = document.getElementById('r_code').value;
-        if(!part && !code) return; // Prevent empty scan loops
+        if(!part && !code) return; 
 
         const payload = {
             part: part, code: code, brand: document.getElementById('r_brand').value, supp: document.getElementById('r_supp').value,
@@ -697,7 +726,6 @@
         };
         await db.ref('restock').push(payload);
         
-        // Reset fields
         ['r_part','r_code','r_brand','r_supp','r_onHand','r_needOrder'].forEach(id => document.getElementById(id).value = '');
     }
 
@@ -714,9 +742,6 @@
         const view = document.getElementById('rViewFilter').value;
         const datePreset = document.getElementById('rDateFilter').value;
         
-        document.getElementById('rStatsDashboard').style.display = view === 'summary' ? 'grid' : 'none';
-        document.getElementById('rPrintGroup').style.display = view === 'summary' ? 'flex' : 'none';
-
         // Date Logic
         let startTs = 0, endTs = Number.MAX_SAFE_INTEGER;
         const now = new Date();
@@ -739,7 +764,7 @@
             return (i.part||'').toLowerCase().includes(search) || (i.code||'').toLowerCase().includes(search) || (i.brand||'').toLowerCase().includes(search) || (i.supp||'').toLowerCase().includes(search);
         });
 
-        // Update Stats
+        // Update Stats Dashboard (Always visible)
         let tAdd=0, tNot=0, tOrd=0;
         filtered.forEach(i => { tAdd++; if(i.status==='Ordered') tOrd++; else tNot++; });
         document.getElementById('s_total').innerText = tAdd;
@@ -747,12 +772,17 @@
         document.getElementById('s_ordered').innerText = tOrd;
         window.currentRestockPrintData = filtered; // Save for PDF
 
-        // Render
+        // Render Table
         const tbody = document.getElementById('restockTableBody'); tbody.innerHTML = '';
         filtered.forEach(item => {
             let actionHtml = '';
-            if (item.status === 'Not Yet') actionHtml = `<button class="complete-btn" onclick="markRestockOrdered('${item.id}')" style="width:100%;">✔️ Done</button>`;
-            if (isAdmin) actionHtml += `<button class="delete-btn" onclick="deleteRestock('${item.id}')" style="width:100%; margin-top:4px;">✖ Del</button>`;
+            // The Done Button Fix: Shows as long as it's not strictly 'Ordered'
+            if (item.status !== 'Ordered') {
+                actionHtml += `<button class="complete-btn" onclick="markRestockOrdered('${item.id}')" style="width:100%;">✔️ Done</button>`;
+            }
+            if (isAdmin) {
+                actionHtml += `<button class="delete-btn" onclick="deleteRestock('${item.id}')" style="width:100%; margin-top:4px;">✖ Del</button>`;
+            }
             
             const tr = document.createElement('tr');
             tr.style.opacity = item.status === 'Ordered' ? '0.6' : '1';
@@ -771,6 +801,24 @@
         });
     }
 
+    // Boss Daily WhatsApp Report Sender
+    function sendBossReport(phone, bossName) {
+        const todayStr = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+        let notYetText = ''; let ordText = '';
+        let notYetCount = 0; let ordCount = 0;
+        
+        restockItems.forEach(i => {
+            if(i.date === todayStr) {
+               const details = `- ${i.part||''} ${i.code?`[${i.code}]`:''} ${i.brand?`(${i.brand})`:''} - Need: ${i.needOrderQty||0}\n`;
+               if(i.status !== 'Ordered') { notYetText += details; notYetCount++; }
+               else { ordText += details; ordCount++; }
+            }
+        });
+
+        const text = `📊 *MMC DAILY RESTOCK REPORT*\nTo: Boss ${bossName}\n📅 Date: ${todayStr}\n\n*🔴 PENDING ORDER (Not Yet): ${notYetCount}*\n${notYetText || '- None -'}\n\n*🟢 ALREADY ORDERED: ${ordCount}*\n${ordText || '- None -'}`;
+        window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank');
+    }
+
     // Print & PDF for Restock Summary
     function getRestockHTML() {
         const data = window.currentRestockPrintData || [];
@@ -783,6 +831,21 @@
     function printRestock() { const p = window.open('','_blank'); p.document.write(getRestockHTML()); p.document.close(); p.onload=()=>p.print(); }
     function savePdfRestock() { document.getElementById('pdfContainer').innerHTML = getRestockHTML(); html2pdf().set({margin:10, filename:`Restock_Summary.pdf`, jsPDF:{format:'a4', orientation:'landscape'}}).from(document.getElementById('rInvoiceBody')).save().then(()=>document.getElementById('pdfContainer').innerHTML=''); }
 
+    function exportCSV() {
+        if(!isAdmin) return;
+        if(orders.length === 0) return alert("No data available to export.");
+        let csvContent = "data:text/csv;charset=utf-8,\uFEFFRef No,Order Date,Handled By,Customer Name,Phone,Car Model,Chassis No,All Parts,Total,Deposit,Balance,Status,Remarks\n";
+        orders.forEach(o => {
+            let allPartsText = o.items ? o.items.map(i => `${i.qty || 1}x ${i.part || i.partNo} (RM${i.subTotal})`).join(" + ") : "";
+            const row = `"${o.refNo}","${o.date}","${o.staff || ''}","${o.name}","${o.phone}","${o.car || ''}","${o.chassis || ''}","${allPartsText}","${o.total}","${o.deposit}","${o.balance}","${o.status}","${o.remarks}"`;
+            csvContent += row + "\n";
+        });
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `MMC_Cloud_Database_${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link); link.click(); document.body.removeChild(link);
+    }
 </script>
 </body>
 </html>
