@@ -7,6 +7,8 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    
     <style>
         /* Base Styles */
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #eef2f5; margin: 0; padding: 20px; }
@@ -35,15 +37,13 @@
         .finance-group > div { flex: 1; }
 
         /* =========================================
-           POS-STYLE TABLE GRID WITH QTY & PRICE
+           POS-STYLE TABLE GRID WITH QTY & SCANNER
            ========================================= */
         .items-wrapper { border: 1px solid #b3b3b3; border-radius: 4px; margin-bottom: 20px; grid-column: span 4; overflow: hidden; background: #fff;}
         .items-header-bar { display: flex; justify-content: space-between; align-items: center; padding: 8px 15px; background-color: #e9ecef; border-bottom: 1px solid #b3b3b3;}
         .items-header-bar h3 { margin: 0; font-size: 15px; color: #333; display: flex; align-items: center; gap: 8px;}
         .add-item-btn { background-color: #28a745; color: white; border: none; padding: 6px 12px; font-weight: bold; border-radius: 3px; cursor: pointer; font-size: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.2);}
-        .add-item-btn:hover { background-color: #218838; }
-
-        /* Updated 10-Column Grid Layout */
+        
         .pos-table-header { display: grid; grid-template-columns: 35px 2fr 1.5fr 1.2fr 60px 80px 90px 110px 80px 40px; gap: 6px; background: #f4f5f7; padding: 8px 10px; border-bottom: 1px solid #ccc; font-weight: bold; font-size: 12px; color: #555;}
         .pos-table-row { display: grid; grid-template-columns: 35px 2fr 1.5fr 1.2fr 60px 80px 90px 110px 80px 40px; gap: 6px; padding: 6px 10px; border-bottom: 1px solid #eee; align-items: start;}
         .pos-table-row:hover { background-color: #f8faff; }
@@ -53,18 +53,19 @@
         .pos-input:focus { border-color: #0866ff !important; outline: none; box-shadow: 0 0 0 2px rgba(8,102,255,0.2);}
         .readonly-input { background-color: #e9ecef; color: #495057; font-weight: bold;}
         
-        .remove-row-btn { color: white; background: #dc3545; border: none; height: 35px; width: 100%; border-radius: 3px; font-weight: bold; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center;}
-        .remove-row-btn:hover { background: #c82333; }
+        /* Barcode Scanner Button Styles */
+        .input-group { display: flex; gap: 4px; }
+        .scan-btn { background: #1a1a1a; color: white; border: none; border-radius: 3px; width: 40px; height: 35px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.2);}
+        .scan-btn:hover { background: #333; }
 
-        .photo-upload-btn { display: flex; align-items: center; justify-content: center; gap: 5px; background: #e0e6ed; border: 1px solid #c0c6cc; height: 35px; border-radius: 3px; cursor: pointer; font-size: 12px; font-weight: bold; color: #333;}
-        .photo-upload-btn:hover { background: #d0d6dc; }
+        .remove-row-btn { color: white; background: #dc3545; border: none; height: 35px; width: 100%; border-radius: 3px; font-weight: bold; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center;}
         
+        .photo-upload-btn { display: flex; align-items: center; justify-content: center; gap: 5px; background: #e0e6ed; border: 1px solid #c0c6cc; height: 35px; border-radius: 3px; cursor: pointer; font-size: 12px; font-weight: bold; color: #333;}
         .row-gallery { grid-column: 2 / -1; display: flex; gap: 8px; flex-wrap: wrap; padding-top: 5px; }
         .photo-wrapper { position: relative; display: inline-block; }
         .photo-thumbnail { width: 45px; height: 45px; object-fit: cover; border-radius: 3px; cursor: pointer; border: 1px solid #aaa; }
         .remove-single-btn { position: absolute; top: -6px; right: -6px; background: #dc3545; color: white; border: none; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center;}
 
-        /* Desktop: This trick keeps QTY/PRICE in the main grid */
         .mobile-grid-3 { display: contents; } 
         .mobile-label { display: none; font-size: 11px; color: #666; font-weight: bold; margin-bottom: 2px;}
 
@@ -85,20 +86,28 @@
         .status-waiting { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba;}
         .status-arrived { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb;}
         .status-completed { background-color: #e2e3e5; color: #383d41; cursor: default;}
-        .wa-btn { background-color: #25D366; color: white; text-decoration: none; padding: 6px; border-radius: 3px; font-weight: bold; display: block; text-align: center; font-size: 11px; margin-bottom: 4px;}
-        .wa-btn-receipt { background-color: #128C7E; }
+        
         .action-btns { display: flex; gap: 4px; justify-content: center; flex-wrap: wrap;}
-        .delete-btn, .edit-btn, .complete-btn { border: none; cursor: pointer; font-size: 12px; padding: 6px 8px; border-radius: 3px; font-weight: bold; }
+        .delete-btn, .edit-btn, .complete-btn, .print-btn { border: none; cursor: pointer; font-size: 12px; padding: 6px 8px; border-radius: 3px; font-weight: bold; display: flex; align-items: center; gap: 4px;}
         .delete-btn { color: #dc3545; background: #ffe6e6; }
         .edit-btn { color: #0056b3; background: #e6f0ff; }
         .complete-btn { color: #155724; background: #d4edda; }
+        .print-btn { color: #333; background: #e2e3e5; border: 1px solid #ccc;}
+        
+        .wa-btn { background-color: #25D366; color: white; text-decoration: none; padding: 6px; border-radius: 3px; font-weight: bold; display: block; text-align: center; font-size: 11px; margin-bottom: 4px;}
+        
         .ref-badge { background-color: #e9ecef; padding: 3px 6px; border-radius: 4px; font-family: monospace; font-weight: bold; color: #495057; font-size: 12px;}
         .staff-badge { background-color: #e6f7ff; color: #0050b3; border: 1px solid #91d5ff; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; display: inline-block; margin-top: 4px; }
         .table-item-list { margin: 0; padding-left: 15px; }
         .table-item-list li { margin-bottom: 6px; border-bottom: 1px dashed #eee; padding-bottom: 6px;}
 
+        /* Modals */
         #photoModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; text-align: center; cursor: pointer; }
         #modalImg { max-width: 90%; max-height: 90%; margin-top: 5vh; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+        
+        #barcodeModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; flex-direction: column; align-items: center; justify-content: center; }
+        .barcode-container { background: white; padding: 15px; border-radius: 8px; width: 95%; max-width: 450px; text-align: center; }
+
         #adminBadge { display: none; background: #28a745; color: white; padding: 4px 8px; border-radius: 15px; font-size: 11px; font-weight: bold; vertical-align: middle; margin-left: 10px;}
 
         /* 📱 SMART MOBILE FALLBACK */
@@ -111,17 +120,11 @@
             .form-grid { display: flex; flex-direction: column; gap: 12px; }
             .finance-group { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
             
-            /* Destroy the table layout for mobile */
             .pos-table-header { display: none; }
-            .pos-table-row { 
-                display: flex; flex-direction: column; gap: 8px; 
-                border: 1px solid #0866ff; border-radius: 6px; padding: 12px; margin: 10px;
-                background: #fdfdfd; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            }
+            .pos-table-row { display: flex; flex-direction: column; gap: 8px; border: 1px solid #0866ff; border-radius: 6px; padding: 12px; margin: 10px; background: #fdfdfd; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
             .mobile-label { display: block; } 
             .row-num { display: none; }
             
-            /* The clever trick to make QTY and PRICE sit together on mobile */
             .mobile-grid-3 { display: grid; grid-template-columns: 1fr 1.5fr 1.5fr; gap: 8px; }
             .mobile-grid-3 > div { display: flex; flex-direction: column; }
 
@@ -256,12 +259,11 @@
             <thead>
                 <tr>
                     <th style="width:100px;">Doc No.</th>
-                    <th style="width:180px;">Customer / Car</th>
+                    <th style="width:170px;">Customer / Car</th>
                     <th>Ordered Parts Details</th>
                     <th style="width:120px;">Financials</th>
                     <th style="width:100px;">Status</th>
-                    <th style="width:90px;">WhatsApp</th>
-                    <th style="width:120px; text-align:center;">Actions</th>
+                    <th style="width:160px; text-align:center;">Actions</th>
                 </tr>
             </thead>
             <tbody id="orderTableBody"></tbody>
@@ -271,6 +273,15 @@
 
 <div id="photoModal" onclick="closePhoto()">
     <img id="modalImg" src=""><div style="color:white; margin-top:10px;">Click anywhere to close</div>
+</div>
+
+<div id="barcodeModal">
+    <div class="barcode-container">
+        <h3 style="margin-top:0; color:#333;">📷 Scan Part Barcode</h3>
+        <p style="font-size:12px; color:#666; margin-top:-10px;">Point camera at the Honda/Toyota OEM label.</p>
+        <div id="qr-reader" style="width:100%; min-height:250px;"></div>
+        <button onclick="closeScanner()" style="margin-top:15px; padding:12px; background:#dc3545; color:white; border:none; border-radius:4px; width:100%; font-weight:bold; cursor:pointer;">Cancel Scan</button>
+    </div>
 </div>
 
 <script>
@@ -299,6 +310,9 @@
     
     let itemMapIdCounter = 0;
     let itemPhotosMap = {}; 
+    
+    let html5QrcodeScanner = null;
+    let targetBarcodeRowId = null;
 
     auth.onAuthStateChanged((user) => {
         if (user) {
@@ -342,7 +356,6 @@
         });
     }
 
-    // AUTO-CALCULATION LOGIC
     function calcRowTotal(rowId) {
         const row = document.getElementById(rowId);
         if(!row) return;
@@ -370,9 +383,39 @@
     }
     document.getElementById('searchInput').addEventListener('input', renderTable);
 
-    // ==========================================
-    // ERP-STYLE TABLE LOGIC (WITH QTY & PRICE)
-    // ==========================================
+    function openScanner(rowId) {
+        targetBarcodeRowId = rowId;
+        document.getElementById('barcodeModal').style.display = 'flex';
+        
+        html5QrcodeScanner = new Html5Qrcode("qr-reader");
+        const config = { fps: 10, qrbox: { width: 250, height: 100 } }; 
+        
+        html5QrcodeScanner.start({ facingMode: "environment" }, config, onScanSuccess)
+        .catch(err => {
+            alert("Camera access denied or error: " + err);
+            closeScanner();
+        });
+    }
+
+    function onScanSuccess(decodedText, decodedResult) {
+        if (targetBarcodeRowId) {
+            const row = document.getElementById(targetBarcodeRowId);
+            if (row) {
+                row.querySelector('.i-partNo').value = decodedText;
+            }
+        }
+        const audio = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
+        audio.play().catch(e => {});
+        closeScanner();
+    }
+
+    function closeScanner() {
+        document.getElementById('barcodeModal').style.display = 'none';
+        if (html5QrcodeScanner) {
+            html5QrcodeScanner.stop().then(ignore => {}).catch(err => console.log(err));
+        }
+    }
+
     function updateRowNumbers() {
         const rows = document.querySelectorAll('.pos-table-row');
         rows.forEach((row, index) => {
@@ -397,10 +440,15 @@
                 <span class="mobile-label">Part Needed</span>
                 <input type="text" class="i-part pos-input" placeholder="Part Desc" value="${data ? data.part : ''}">
             </div>
+            
             <div>
                 <span class="mobile-label">Item Code / OEM No</span>
-                <input type="text" class="i-partNo pos-input" placeholder="OEM Code" value="${data && data.partNo ? data.partNo : ''}">
+                <div class="input-group">
+                    <input type="text" class="i-partNo pos-input" placeholder="OEM Code" value="${data && data.partNo ? data.partNo : ''}">
+                    <button type="button" class="scan-btn" onclick="openScanner('${currentId}')" title="Scan Barcode">🔳</button>
+                </div>
             </div>
+            
             <div>
                 <span class="mobile-label">Supplier</span>
                 <input type="text" class="i-supplier pos-input" placeholder="Supplier" value="${data && data.supplier ? data.supplier : ''}">
@@ -443,14 +491,14 @@
         container.insertAdjacentHTML('beforeend', html);
         renderGalleryUI(currentId);
         updateRowNumbers();
-        if(data) calcRowTotal(currentId); // Calc total when loading edit
+        if(data) calcRowTotal(currentId); 
     }
 
     function removeItemBlock(id) {
         document.getElementById(id).remove();
         delete itemPhotosMap[id];
         updateRowNumbers();
-        calcGrandTotal(); // Re-calculate grand total if row is deleted
+        calcGrandTotal(); 
         
         const container = document.getElementById('dynamicItemsContainer');
         if (container.children.length === 0) {
@@ -513,9 +561,6 @@
     function showPhoto(src) { document.getElementById('modalImg').src = src; document.getElementById('photoModal').style.display = 'block'; }
     function closePhoto() { document.getElementById('photoModal').style.display = 'none'; }
 
-    // ==========================================
-    // DATABASE SAVE & EDIT
-    // ==========================================
     function editOrder(id) {
         const order = orders.find(o => o.id === id);
         document.getElementById('custName').value = order.name || '';
@@ -538,7 +583,7 @@
             let oldPhotos = [];
             if (order.photos) oldPhotos = [...order.photos];
             else if (order.photo) oldPhotos.push(order.photo);
-            itemsToLoad.push({ part: order.part, partNo: order.partNo, supplier: order.supplier, eta: order.eta, photos: oldPhotos, qty: '1' });
+            itemsToLoad.push({ part: order.part, partNo: order.partNo, supplier: order.supplier, eta: order.eta, photos: oldPhotos, qty: '1', unitPrice: order.total, subTotal: order.total });
         }
 
         if(itemsToLoad.length === 0) addNewItemBlock();
@@ -623,19 +668,118 @@
         const newStatus = order.status === 'waiting' ? 'arrived' : 'waiting';
         await db.ref('orders/' + id).update({ status: newStatus });
     }
-
     async function markCompleted(id) {
         if(confirm("Confirm item collected and balance cleared? This will hide the order into History.")){
             await db.ref('orders/' + id).update({ status: 'completed' });
         }
     }
-
     async function restoreOrder(id) { await db.ref('orders/' + id).update({ status: 'arrived' }); }
     async function deleteOrder(id) {
         if(!isAdmin) return alert("You do not have permission to delete orders.");
         if(confirm("Are you absolutely sure you want to delete this order from the cloud?")) {
             await db.ref('orders/' + id).remove();
         }
+    }
+
+    function printOrder(id) {
+        const order = orders.find(o => o.id === id);
+        if(!order) return;
+        
+        let itemsToDisplay = order.items || [];
+        if (itemsToDisplay.length === 0 && order.part) {
+            itemsToDisplay.push({ part: order.part, partNo: order.partNo, qty: '1', unitPrice: order.total, subTotal: order.total });
+        }
+
+        let itemsHtml = '';
+        itemsToDisplay.forEach((item, index) => {
+            itemsHtml += `
+                <tr>
+                    <td style="text-align:center;">${index + 1}</td>
+                    <td style="text-align:center;"><div class="check-box"></div></td>
+                    <td><strong>${item.part || 'N/A'}</strong></td>
+                    <td>${item.partNo || '-'}</td>
+                    <td style="text-align:center;">${item.qty || '1'}</td>
+                    <td style="text-align:right;">RM ${parseFloat(item.unitPrice || 0).toFixed(2)}</td>
+                    <td style="text-align:right;"><strong>RM ${parseFloat(item.subTotal || 0).toFixed(2)}</strong></td>
+                </tr>
+            `;
+        });
+
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+            <html>
+            <head>
+                <title>Invoice - ${order.refNo}</title>
+                <style>
+                    body { font-family: Arial, sans-serif; padding: 30px; color: #1a1a1a; max-width: 800px; margin: auto; }
+                    .header { text-align: center; border-bottom: 2px solid #1a1a1a; padding-bottom: 20px; margin-bottom: 30px; }
+                    .logo { font-size: 28px; font-weight: bold; letter-spacing: 1px;}
+                    .badge { border: 2px solid #1a1a1a; display: inline-block; padding: 4px 10px; font-size: 11px; font-weight: bold; margin-top: 10px; border-radius: 4px;}
+                    .info-grid { display: flex; justify-content: space-between; margin-bottom: 30px; }
+                    .info-box { background: #f8f9fa; padding: 15px; border-radius: 6px; width: 45%; border: 1px solid #eee; }
+                    .info-box p { margin: 5px 0; font-size: 14px; }
+                    table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+                    th, td { border: 1px solid #ccc; padding: 12px; text-align: left; font-size: 14px;}
+                    th { background: #f4f5f7; }
+                    .check-box { width: 16px; height: 16px; border: 1px solid #666; display: inline-block; border-radius: 2px; }
+                    .totals { text-align: right; font-size: 15px; }
+                    .totals p { margin: 5px 0; }
+                    .footer { margin-top: 50px; font-size: 12px; text-align: center; color: #777; border-top: 1px solid #eee; padding-top: 20px;}
+                    @media print { body { padding: 0; } }
+                </style>
+            </head>
+            <body onload="window.print(); window.close();">
+                <div class="header">
+                    <div class="logo">MALAYSIA MOTOR COMPANY</div>
+                    <div class="badge">✔️ 100% ORIGINAL PARTS GUARANTEED</div>
+                </div>
+                
+                <h2 style="text-align:center; margin-bottom:30px;">INVOICE / PACKING LIST</h2>
+                
+                <div class="info-grid">
+                    <div class="info-box">
+                        <p><strong>Customer Name:</strong> ${order.name}</p>
+                        <p><strong>Contact:</strong> ${order.phone || '-'}</p>
+                        <p><strong>Car Details:</strong> ${order.car || '-'} ${order.chassis ? '('+order.chassis+')' : ''}</p>
+                    </div>
+                    <div class="info-box">
+                        <p><strong>Invoice No:</strong> ${order.refNo}</p>
+                        <p><strong>Date:</strong> ${order.date}</p>
+                        <p><strong>Served By:</strong> ${order.staff || '-'}</p>
+                        <p><strong>Status:</strong> ${order.status === 'completed' ? 'Collected' : 'Pending Fulfillment'}</p>
+                    </div>
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width:5%; text-align:center;">No.</th>
+                            <th style="width:5%; text-align:center;">Pack</th>
+                            <th style="width:40%;">Part Description</th>
+                            <th style="width:20%;">Item Code</th>
+                            <th style="width:5%; text-align:center;">QTY</th>
+                            <th style="width:10%; text-align:right;">U.Price</th>
+                            <th style="width:15%; text-align:right;">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${itemsHtml}
+                    </tbody>
+                </table>
+
+                <div class="totals">
+                    <p>Total Amount: <strong>RM ${parseFloat(order.total || 0).toFixed(2)}</strong></p>
+                    <p>Deposit Paid: RM ${parseFloat(order.deposit || 0).toFixed(2)}</p>
+                    <p style="font-size: 18px; margin-top: 10px;">Balance Due: <strong style="color: #d9534f;">RM ${parseFloat(order.balance || 0).toFixed(2)}</strong></p>
+                </div>
+
+                <div class="footer">
+                    Thank you for choosing Malaysia Motor Company. Please retain this invoice for your records.<br>
+                    ${order.remarks ? 'Internal Remarks: ' + order.remarks : ''}
+                </div>
+            </body>
+            </html>
+        `);
     }
 
     function exportCSV() {
@@ -649,7 +793,6 @@
             } else if(o.part) {
                 allPartsText = o.part; 
             }
-
             const row = `"${o.refNo}","${o.date}","${o.staff || ''}","${o.name}","${o.phone}","${o.car || ''}","${o.chassis || ''}","${allPartsText}","${o.total}","${o.deposit}","${o.balance}","${o.status}","${o.remarks}"`;
             csvContent += row + "\n";
         });
@@ -701,7 +844,6 @@
                 const supText = item.supplier ? ` • Supp: ${item.supplier}` : '';
                 const etaText = item.eta ? ` • ETA: ${item.eta}` : '';
                 
-                // Add subtotal text to the right side
                 let priceDetails = "";
                 if (parseFloat(item.subTotal) > 0) {
                     priceDetails = `<span style="float:right; font-size:12px; color:#495057;">@ RM${item.unitPrice || 0} = <b style="color:#1a1a1a;">RM${item.subTotal}</b></span>`;
@@ -716,7 +858,6 @@
                 
                 partsHtml += `<li><div>${qtyText}<strong>${partDesc}</strong>${partNoText}${priceDetails}</div><small style="color:#666;">${supText} ${etaText}</small>${photoHtml}</li>`;
                 
-                // Format for WhatsApp Receipt
                 const waPrice = item.subTotal > 0 ? ` (RM${item.subTotal})` : '';
                 simplePartsListForWa.push(`- ${item.qty || 1}x ${partDesc} ${item.partNo ? '['+item.partNo+']' : ''}${waPrice}`);
             });
@@ -750,10 +891,13 @@
                 <td><small style="color:#666;">Total: RM${order.total}</small><br><small style="color:#666;">Paid: RM${order.deposit}</small><br><strong style="font-size:14px; margin-top:4px; display:inline-block;">Bal: RM${order.balance}</strong></td>
                 <td>${statusHtml}</td>
                 <td>
-                    ${order.phone && order.status !== 'completed' ? `
-                        <a href="${linkReceipt}" target="_blank" class="wa-btn wa-btn-receipt">📄 Receipt</a>
-                        <a href="${linkUpdate}" target="_blank" class="wa-btn">💬 Notify Status</a>
-                    ` : (order.status === 'completed' ? '<small style="color:#aaa;">Closed</small>' : '<small style="color:#aaa;">No Phone</small>')}
+                    <div class="action-btns" style="flex-direction:column; align-items:stretch;">
+                        ${order.phone && order.status !== 'completed' ? `
+                            <a href="${linkReceipt}" target="_blank" class="wa-btn wa-btn-receipt">📄 WA Receipt</a>
+                            <a href="${linkUpdate}" target="_blank" class="wa-btn">💬 WA Update</a>
+                        ` : (order.status === 'completed' ? '<small style="color:#aaa; text-align:center;">Closed</small>' : '<small style="color:#aaa; text-align:center;">No Phone</small>')}
+                        <button class="print-btn" onclick="printOrder('${order.id}')" style="justify-content:center; margin-top:4px;">🖨️ Print / PDF</button>
+                    </div>
                 </td>
                 <td>
                     <div class="action-btns">
