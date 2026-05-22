@@ -33,7 +33,7 @@
 
         /* Main App & Header */
         #mainApp { display: none; }
-        .container { max-width: 1400px; margin: auto; background: white; padding: 25px 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); box-sizing: border-box; border: 1px solid #e2e8f0;}
+        .container { max-width: 1450px; margin: auto; background: white; padding: 25px 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); box-sizing: border-box; border: 1px solid #e2e8f0;}
         .header-flex { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 15px;}
         h2 { color: #0f172a; margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.5px;}
         .logout-btn { background-color: #ef4444; color: white; border: none; padding: 10px 18px; border-radius: 6px; cursor: pointer; font-weight: bold; white-space: nowrap; transition: background 0.2s;}
@@ -79,39 +79,34 @@
         .scan-btn:hover { background: #0f172a; }
 
         .remove-row-btn { color: #ef4444; background: #fee2e2; border: 1px solid #fecaca; height: 38px; width: 100%; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; transition: all 0.2s;}
-        .remove-row-btn:hover { background: #fca5a5; color: #b91c1c;}
         
         .photo-upload-btn { display: flex; align-items: center; justify-content: center; gap: 5px; background: #f8fafc; border: 1px solid #cbd5e1; height: 38px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 700; color: #475569; transition: background 0.2s;}
-        .photo-upload-btn:hover { background: #e2e8f0; }
         .row-gallery { grid-column: 2 / -1; display: flex; gap: 8px; flex-wrap: wrap; padding-top: 6px; }
         .photo-wrapper { position: relative; display: inline-block; }
         .photo-thumbnail { width: 48px; height: 48px; object-fit: cover; border-radius: 4px; cursor: pointer; border: 1px solid #cbd5e1; box-shadow: 0 1px 2px rgba(0,0,0,0.05);}
         .remove-single-btn { position: absolute; top: -6px; right: -6px; background: #ef4444; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 10px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);}
 
-        .mobile-grid-3 { display: contents; } 
-        .mobile-label { display: none; font-size: 11px; color: #64748b; font-weight: 700; margin-bottom: 4px; text-transform: uppercase;}
-
         /* Buttons & Controls */
         .button-group { display: flex; gap: 12px; grid-column: span 4; margin-top: 10px;}
         button.main-save-btn { background-color: #2563eb; color: white; border: none; padding: 14px; font-weight: bold; border-radius: 6px; cursor: pointer; width: 100%; font-size: 16px; box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2); transition: background 0.2s;}
-        button.main-save-btn:hover { background-color: #1d4ed8; }
         button.cancel-btn { background-color: #64748b; color: white; border: none; padding: 14px; font-weight: bold; border-radius: 6px; cursor: pointer; width: 30%; font-size: 16px; display: none;}
         
-        .top-controls { display: flex; gap: 12px; align-items: center; margin-top: 35px; margin-bottom: 18px; }
-        .search-bar { padding: 12px 15px; width: 350px; border-radius: 20px; border: 1px solid #cbd5e1; box-sizing: border-box; box-shadow: inset 0 1px 2px rgba(0,0,0,0.02);}
+        .top-controls { display: flex; gap: 12px; align-items: center; margin-top: 35px; margin-bottom: 18px; flex-wrap: wrap;}
+        .search-bar { padding: 12px 15px; width: 320px; border-radius: 20px; border: 1px solid #cbd5e1; box-sizing: border-box; box-shadow: inset 0 1px 2px rgba(0,0,0,0.02);}
         #exportBtn { background-color: #059669; color: white; border: none; padding: 12px 18px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-left: auto; display: none; white-space: nowrap; box-shadow: 0 2px 4px rgba(5, 150, 105, 0.2);}
         
         /* Table Bottom */
         .table-responsive { width: 100%; overflow-x: auto; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.02);}
         table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 1050px; }
-        th, td { padding: 14px 16px; border-bottom: 1px solid #e2e8f0; text-align: left; vertical-align: top;}
+        th, td { padding: 14px 16px; border-bottom: 1px solid #e2e8f0; text-align: left; vertical-align: middle;}
         th { background-color: #f8fafc; color: #334155; font-weight: 700; border-bottom: 2px solid #cbd5e1; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px;}
         
-        .status-btn { padding: 8px 12px; border: none; border-radius: 20px; cursor: pointer; font-weight: 700; font-size: 12px; width: 100%; margin-bottom: 6px; transition: transform 0.1s;}
-        .status-btn:active { transform: scale(0.95); }
+        .status-btn { padding: 8px 12px; border: none; border-radius: 20px; font-weight: 700; font-size: 12px; width: 100%; margin-bottom: 6px; text-align: center;}
+        .status-btn.clickable { cursor: pointer; transition: transform 0.1s;}
+        .status-btn.clickable:active { transform: scale(0.95); }
         .status-waiting { background-color: #fef3c7; color: #b45309; border: 1px solid #fde68a;}
         .status-arrived { background-color: #d1fae5; color: #047857; border: 1px solid #a7f3d0;}
-        .status-completed { background-color: #f1f5f9; color: #64748b; cursor: default; border: 1px solid #e2e8f0;}
+        .status-completed { background-color: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0;}
         
         .action-btns { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap;}
         .action-btns button { border: none; cursor: pointer; font-size: 12px; padding: 8px 10px; border-radius: 4px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 4px; flex: 1; min-width: 60px; transition: opacity 0.2s;}
@@ -130,50 +125,37 @@
         
         .ref-badge { background-color: #e2e8f0; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-weight: 700; color: #334155; font-size: 13px;}
         .staff-badge { background-color: #dbeafe; color: #1d4ed8; border: 1px solid #bfdbfe; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; display: inline-block; margin-top: 6px; }
-        .table-item-list { margin: 0; padding-left: 15px; }
-        .table-item-list li { margin-bottom: 8px; border-bottom: 1px dashed #e2e8f0; padding-bottom: 8px;}
 
-        /* Restock UI Specifics */
-        .restock-row { display: grid; grid-template-columns: 2fr 1.5fr 1fr 1fr 100px; gap: 10px; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 15px; align-items: end;}
+        /* RESTOCK UI SPECIFICS */
+        .restock-row { display: grid; grid-template-columns: 2fr 1.5fr 1fr 1fr 80px 80px 100px; gap: 10px; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 15px; align-items: end;}
+        .stats-dashboard { display: none; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px;}
+        .stat-card { background: white; padding: 15px; border-radius: 8px; border: 1px solid #cbd5e1; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02);}
+        .stat-card h4 { margin: 0 0 5px 0; color: #64748b; font-size: 12px; text-transform: uppercase;}
+        .stat-card p { margin: 0; font-size: 24px; font-weight: 900; color: #0f172a;}
+        .custom-date-group { display: none; gap: 10px; align-items: center;}
 
         /* Modals */
         #photoModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.9); z-index: 1000; text-align: center; cursor: pointer; }
         #modalImg { max-width: 90%; max-height: 90%; margin-top: 5vh; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
-        
         #barcodeModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.95); z-index: 2000; flex-direction: column; align-items: center; justify-content: center; }
-        .barcode-container { background: white; padding: 20px; border-radius: 12px; width: 95%; max-width: 450px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);}
-
+        .barcode-container { background: white; padding: 20px; border-radius: 12px; width: 95%; max-width: 450px; text-align: center; }
         #adminBadge { display: none; background: #10b981; color: white; padding: 5px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; vertical-align: middle; margin-left: 10px;}
+        #pdfContainer { position: absolute; left: -9999px; top: 0; width: 1000px; background: white; }
 
-        /* PDF Hidden Container */
-        #pdfContainer { position: absolute; left: -9999px; top: 0; width: 800px; background: white; }
-
-        /* 📱 SMART MOBILE FALLBACK */
         @media (max-width: 800px) {
-            body { padding: 5px; background-color: #f1f5f9; }
+            body { padding: 5px; }
             .container { padding: 15px; border-radius: 8px;}
-            .header-flex { flex-direction: column; align-items: stretch; gap: 12px; }
-            .logout-btn { width: 100%; padding: 14px;}
-            #adminBadge { display: block; width: fit-content; margin: 8px 0 0 0; }
+            .header-flex { flex-direction: column; gap: 12px; }
             .form-grid { display: flex; flex-direction: column; gap: 15px; }
             .finance-group { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
-            
             .pos-table-header { display: none; }
-            .pos-table-row { display: flex; flex-direction: column; gap: 10px; border: 2px solid #bfdbfe; border-radius: 8px; padding: 15px; margin: 10px 0; background: #fff; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
-            .mobile-label { display: block; } 
-            .row-num { display: none; }
-            
+            .pos-table-row { display: flex; flex-direction: column; gap: 10px; border: 2px solid #bfdbfe; border-radius: 8px; padding: 15px; margin: 10px 0; background: #fff; }
+            .mobile-label { display: block; } .row-num { display: none; }
             .mobile-grid-3 { display: grid; grid-template-columns: 1fr 1.5fr 1.5fr; gap: 10px; }
             .mobile-grid-3 > div { display: flex; flex-direction: column; }
-
-            .row-gallery { padding-top: 12px; border-top: 1px dashed #cbd5e1; margin-top: 8px; }
-            .remove-row-btn { margin-top: 10px; padding: 12px;}
-            
-            .top-controls { flex-direction: column; align-items: stretch; margin-top: 25px; }
-            .search-bar, #viewFilter, #exportBtn { width: 100%; padding: 14px;}
-            .button-group { flex-direction: column; }
-            button.main-save-btn, button.cancel-btn { width: 100%; }
+            .top-controls { flex-direction: column; align-items: stretch;}
             .restock-row { display: flex; flex-direction: column; }
+            .stats-dashboard { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -183,14 +165,8 @@
     <div class="login-box">
         <h3>🔐 MMC Staff Login</h3>
         <p style="color: #64748b; font-size: 14px; margin-bottom: 25px;">Please sign in to access cloud records.</p>
-        <div class="login-field">
-            <label>Username</label>
-            <input type="text" id="authEmail" class="login-input" placeholder="e.g. staff" onkeydown="if(event.key==='Enter') document.getElementById('authPassword').focus()">
-        </div>
-        <div class="login-field">
-            <label>Password</label>
-            <input type="password" id="authPassword" class="login-input" placeholder="••••••••" onkeydown="if(event.key==='Enter') loginSystem()">
-        </div>
+        <div class="login-field"><label>Username</label><input type="text" id="authEmail" class="login-input" placeholder="e.g. staff" onkeydown="if(event.key==='Enter') document.getElementById('authPassword').focus()"></div>
+        <div class="login-field"><label>Password</label><input type="password" id="authPassword" class="login-input" placeholder="••••••••" onkeydown="if(event.key==='Enter') loginSystem()"></div>
         <div id="loginError" class="error-msg">Login failed. Check username or password.</div>
         <button class="login-btn" onclick="loginSystem()">Secure Login</button>
     </div>
@@ -198,10 +174,7 @@
 
 <div id="mainApp" class="container">
     <div class="header-flex">
-        <h2>
-            Malaysia Motor Company - Secure Portal
-            <span id="adminBadge">👑 Boss View</span>
-        </h2>
+        <h2>Malaysia Motor Company - Secure Portal <span id="adminBadge">👑 Boss View</span></h2>
         <button class="logout-btn" onclick="logoutSystem()">🔒 Logout</button>
     </div>
 
@@ -212,78 +185,37 @@
     
     <div id="ordersTab" class="tab-content active">
         <div class="form-grid">
-            <div>
-                <span class="label-text">Customer Name</span>
-                <input type="text" id="custName" placeholder="Name">
-            </div>
-            <div>
-                <span class="label-text">WhatsApp Number</span>
-                <input type="text" id="custPhone" placeholder="60123456789">
-            </div>
-            <div>
-                <span class="label-text">Car Model</span>
-                <input type="text" id="carModel" placeholder="e.g. Honda Civic">
-            </div>
-            <div>
-                <span class="label-text">Chassis No.</span>
-                <input type="text" id="chassisNumber" placeholder="e.g. FC1">
-            </div>
+            <div><span class="label-text">Customer Name</span><input type="text" id="custName" placeholder="Name"></div>
+            <div><span class="label-text">WhatsApp Number</span><input type="text" id="custPhone" placeholder="60123456789"></div>
+            <div><span class="label-text">Car Model</span><input type="text" id="carModel" placeholder="e.g. Honda Civic"></div>
+            <div><span class="label-text">Chassis No.</span><input type="text" id="chassisNumber" placeholder="e.g. FC1"></div>
             
             <div class="items-wrapper">
                 <div class="items-header-bar">
                     <h3>📋 Order Items List</h3>
                     <button type="button" class="add-item-btn" onclick="addNewItemBlock()">➕ Add Row</button>
                 </div>
-                
                 <div class="pos-table-header">
-                    <div style="text-align:center;">No.</div>
-                    <div>Part Desc</div>
-                    <div>Item Code</div>
-                    <div>Brand</div>
-                    <div>Supplier</div>
-                    <div>QTY</div>
-                    <div>U.Price</div>
-                    <div>Total</div>
-                    <div>ETA</div>
-                    <div style="text-align:center;">Photos</div>
-                    <div style="text-align:center;">Del</div>
+                    <div style="text-align:center;">No.</div><div>Part Desc</div><div>Item Code</div><div>Brand</div><div>Supplier</div><div>QTY</div><div>U.Price</div><div>Total</div><div>ETA</div><div style="text-align:center;">Photos</div><div style="text-align:center;">Del</div>
                 </div>
-
                 <div id="dynamicItemsContainer"></div>
             </div>
 
             <div class="col-span-2 finance-group">
-                <div>
-                    <span class="label-text">Grand Total (RM)</span>
-                    <input type="number" id="totalPrice" placeholder="0.00" oninput="calcBalance()" class="readonly-input">
-                </div>
-                <div>
-                    <span class="label-text">Deposit (RM)</span>
-                    <input type="number" id="deposit" placeholder="0.00" oninput="calcBalance()">
-                </div>
-                <div>
-                    <span class="label-text">Balance (RM)</span>
-                    <input type="number" id="balance" placeholder="0.00" readonly class="readonly-input">
-                </div>
+                <div><span class="label-text">Grand Total (RM)</span><input type="number" id="totalPrice" placeholder="0.00" oninput="calcBalance()" class="readonly-input"></div>
+                <div><span class="label-text">Deposit (RM)</span><input type="number" id="deposit" placeholder="0.00" oninput="calcBalance()"></div>
+                <div><span class="label-text">Balance (RM)</span><input type="number" id="balance" placeholder="0.00" readonly class="readonly-input"></div>
             </div>
 
             <div>
                 <span class="label-text">Handled By Staff</span>
                 <select id="orderByStaff">
-                    <option value="">-- Select --</option>
-                    <option value="Hock">Hock</option>
-                    <option value="Kelvin">Kelvin</option>
-                    <option value="Nana">Nana</option>
-                    <option value="Adi">Adi</option>
-                    <option value="Khairul">Khairul</option>
-                    <option value="Sani">Sani</option>
-                    <option value="Lun">Lun</option>
+                    <option value="">-- Select --</option><option value="Hock">Hock</option><option value="Kelvin">Kelvin</option>
+                    <option value="Nana">Nana</option><option value="Adi">Adi</option><option value="Khairul">Khairul</option>
+                    <option value="Sani">Sani</option><option value="Lun">Lun</option>
                 </select>
             </div>
-            <div>
-                <span class="label-text">Internal Remarks</span>
-                <input type="text" id="remarks" placeholder="Optional notes...">
-            </div>
+            <div><span class="label-text">Internal Remarks</span><input type="text" id="remarks" placeholder="Optional notes..."></div>
             
             <div class="button-group">
                 <button class="main-save-btn" id="mainBtn" onclick="saveOrUpdateOrder()">💾 Save Document & Sync</button>
@@ -304,15 +236,7 @@
         <div class="table-responsive">
             <table>
                 <thead>
-                    <tr>
-                        <th style="width:110px;">Doc No.</th>
-                        <th style="width:180px;">Customer / Car</th>
-                        <th>Ordered Parts Details</th>
-                        <th style="width:130px;">Financials</th>
-                        <th style="width:110px;">Status</th>
-                        <th style="width:160px; text-align:center;">WhatsApp Notify</th>
-                        <th style="width:150px; text-align:center;">Actions</th>
-                    </tr>
+                    <tr><th style="width:110px;">Doc No.</th><th style="width:180px;">Customer / Car</th><th>Ordered Parts Details</th><th style="width:130px;">Financials</th><th style="width:110px;">Status</th><th style="width:160px; text-align:center;">WhatsApp Notify</th><th style="width:150px; text-align:center;">Actions</th></tr>
                 </thead>
                 <tbody id="orderTableBody"></tbody>
             </table>
@@ -321,42 +245,73 @@
 
     <div id="restockTab" class="tab-content">
         <div style="background: #eef2ff; padding: 20px; border-radius: 8px; border: 1px solid #c7d2fe; margin-bottom: 25px;">
-            <h3 style="margin-top:0; color:#3730a3;">Scanner Input (Low Stock)</h3>
-            <p style="font-size:13px; color:#4f46e5; margin-top:-5px; margin-bottom:15px;">Scan an empty box or key in details to add to the Boss's restock list.</p>
+            <h3 style="margin-top:0; color:#3730a3;">Scanner Input (Auto Add)</h3>
+            <p style="font-size:13px; color:#4f46e5; margin-top:-5px; margin-bottom:15px;">Use physical scanner gun on the code box, or press 🔳 for camera. It auto-saves immediately.</p>
             <div class="restock-row">
+                <div><span class="label-text">Part Description</span><input type="text" id="r_part" placeholder="e.g. Brake Pad"></div>
                 <div>
-                    <span class="label-text">Part Description</span>
-                    <input type="text" id="r_part" placeholder="e.g. Brake Pad">
-                </div>
-                <div>
-                    <span class="label-text">Item Code / OEM No</span>
+                    <span class="label-text">Item Code / OEM</span>
                     <div class="input-group">
-                        <input type="text" id="r_code" placeholder="OEM Code">
-                        <button type="button" class="scan-btn" onclick="openScanner('r_code')" title="Scan">🔳</button>
+                        <input type="text" id="r_code" placeholder="OEM Code" onkeypress="if(event.key==='Enter') addRestockItem()">
+                        <button type="button" class="scan-btn" onclick="openScanner('r_code', false, true)" title="Scan">🔳</button>
                     </div>
                 </div>
-                <div>
-                    <span class="label-text">Brand</span>
-                    <input type="text" id="r_brand" placeholder="e.g. TRW">
-                </div>
-                <div>
-                    <span class="label-text">Supplier</span>
-                    <input type="text" id="r_supp" placeholder="e.g. Emerald">
-                </div>
+                <div><span class="label-text">Brand</span><input type="text" id="r_brand" placeholder="e.g. TRW"></div>
+                <div><span class="label-text">Supplier</span><input type="text" id="r_supp" placeholder="e.g. Emerald"></div>
+                <div><span class="label-text">On Hand Qty</span><input type="number" id="r_onHand" placeholder="0"></div>
+                <div><span class="label-text">Need Order Qty</span><input type="number" id="r_needOrder" placeholder="0"></div>
                 <button class="add-item-btn" onclick="addRestockItem()" style="height:42px; width:100%;">➕ Add</button>
             </div>
+        </div>
+
+        <div class="top-controls" style="background:#f8fafc; padding:15px; border-radius:8px; border:1px solid #e2e8f0;">
+            <input type="text" id="rSearchInput" class="search-bar" placeholder="🔍 Search Part, Code, Brand, Supp..." oninput="filterRestock()">
+            
+            <select id="rViewFilter" onchange="filterRestock()" style="font-weight: bold; color: #2563eb; padding: 12px; border-radius: 8px; border:1px solid #cbd5e1;">
+                <option value="active">Active List (Not Yet)</option>
+                <option value="history">Ordered History</option>
+                <option value="summary">Daily Summary (All)</option>
+            </select>
+
+            <select id="rDateFilter" onchange="toggleCustomDate()" style="font-weight: bold; padding: 12px; border-radius: 8px; border:1px solid #cbd5e1;">
+                <option value="all">All Dates</option>
+                <option value="today">Today</option>
+                <option value="yesterday">Yesterday</option>
+                <option value="week">This Week</option>
+                <option value="month">This Month</option>
+                <option value="custom">Custom Range...</option>
+            </select>
+
+            <div id="customDateGroup" class="custom-date-group">
+                <input type="date" id="rStartDate" onchange="filterRestock()"> <span style="font-weight:bold;">to</span>
+                <input type="date" id="rEndDate" onchange="filterRestock()">
+            </div>
+
+            <div id="rPrintGroup" style="display:none; margin-left:auto; gap:10px;">
+                <button class="print-btn" onclick="printRestock()" style="padding:10px 20px;">🖨️ Print</button>
+                <button class="pdf-btn" onclick="savePdfRestock()" style="padding:10px 20px;">📄 PDF Export</button>
+            </div>
+        </div>
+
+        <div id="rStatsDashboard" class="stats-dashboard">
+            <div class="stat-card"><h4>Total Items Added</h4><p id="s_total">0</p></div>
+            <div class="stat-card" style="border-left:4px solid #f59e0b;"><h4>Not Yet Ordered</h4><p id="s_notYet">0</p></div>
+            <div class="stat-card" style="border-left:4px solid #10b981;"><h4>Ordered</h4><p id="s_ordered">0</p></div>
         </div>
 
         <div class="table-responsive">
             <table>
                 <thead>
                     <tr>
-                        <th>Date Added</th>
-                        <th>Part Description</th>
+                        <th style="width:100px;">Date Added</th>
+                        <th style="width:250px;">Part Description</th>
                         <th>Item Code / OEM</th>
                         <th>Brand</th>
-                        <th>Supplier Target</th>
-                        <th style="text-align:center; width: 120px;">Actions</th>
+                        <th>Supplier</th>
+                        <th style="text-align:center; width:80px;">On Hand</th>
+                        <th style="text-align:center; width:90px;">Need Order</th>
+                        <th style="text-align:center; width:100px;">Status</th>
+                        <th style="text-align:center; width: 100px;">Action</th>
                     </tr>
                 </thead>
                 <tbody id="restockTableBody"></tbody>
@@ -365,19 +320,15 @@
     </div>
 </div>
 
-<div id="photoModal" onclick="closePhoto()">
-    <img id="modalImg" src=""><div style="color:white; margin-top:15px; font-weight:bold; letter-spacing:1px;">Click anywhere to close</div>
-</div>
-
+<div id="photoModal" onclick="closePhoto()"><img id="modalImg" src=""><div style="color:white; margin-top:15px; font-weight:bold;">Click to close</div></div>
 <div id="barcodeModal">
     <div class="barcode-container">
-        <h3 style="margin-top:0; color:#0f172a; font-weight:800;">📷 Scan Barcode</h3>
-        <p style="font-size:13px; color:#64748b; margin-top:-10px;">Point camera at the label.</p>
+        <h3 style="margin-top:0;">📷 Scan Barcode</h3>
+        <p style="font-size:13px; color:#64748b;">Point camera at the label.</p>
         <div id="qr-reader" style="width:100%; min-height:250px; border-radius:8px; overflow:hidden;"></div>
-        <button onclick="closeScanner()" style="margin-top:20px; padding:14px; background:#ef4444; color:white; border:none; border-radius:6px; width:100%; font-weight:bold; cursor:pointer; font-size:15px;">Cancel Scan</button>
+        <button onclick="closeScanner()" style="margin-top:20px; padding:14px; background:#ef4444; color:white; border:none; border-radius:6px; width:100%; font-weight:bold;">Cancel Scan</button>
     </div>
 </div>
-
 <div id="pdfContainer"></div>
 
 <script>
@@ -404,13 +355,12 @@
     let editingId = null; 
     let isDataLoaded = false;
     let isAdmin = false; 
-    
     let itemMapIdCounter = 0;
     let itemPhotosMap = {}; 
-    
     let html5QrcodeScanner = null;
     let targetBarcodeFieldId = null; 
     let isRowScanner = false; 
+    let isAutoSubmit = false;
 
     // TAB SWITCHER
     function switchTab(tabId, btnElement) {
@@ -422,38 +372,25 @@
 
     auth.onAuthStateChanged((user) => {
         if (user) {
-            if (user.email.toLowerCase() === BOSS_EMAIL.toLowerCase()) {
-                isAdmin = true;
-                document.getElementById('exportBtn').style.display = 'block';
-                document.getElementById('adminBadge').style.display = 'inline-block';
-            } else {
-                isAdmin = false;
-                document.getElementById('exportBtn').style.display = 'none';
-                document.getElementById('adminBadge').style.display = 'none';
-            }
+            isAdmin = (user.email.toLowerCase() === BOSS_EMAIL.toLowerCase());
+            document.getElementById('exportBtn').style.display = isAdmin ? 'block' : 'none';
+            document.getElementById('adminBadge').style.display = isAdmin ? 'inline-block' : 'none';
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('mainApp').style.display = 'block';
             document.getElementById('loginError').style.display = 'none';
             
-            if (!isDataLoaded) { 
-                loadDatabaseData(); 
-                loadRestockData();
-                addNewItemBlock(); 
-            } else { 
-                renderTable(); 
-            }
+            if (!isDataLoaded) { loadDatabaseData(); loadRestockData(); addNewItemBlock(); }
         } else {
             document.getElementById('loginScreen').style.display = 'flex';
             document.getElementById('mainApp').style.display = 'none';
-            isAdmin = false; orders = []; restockItems = [];
         }
     });
 
     function loginSystem() {
         let email = document.getElementById('authEmail').value.trim();
         if (email !== '' && !email.includes('@')) email = email + '@mmc.com';
-        const password = document.getElementById('authPassword').value;
-        auth.signInWithEmailAndPassword(email, password).catch(() => { document.getElementById('loginError').style.display = 'block'; });
+        auth.signInWithEmailAndPassword(email, document.getElementById('authPassword').value)
+            .catch(() => document.getElementById('loginError').style.display = 'block');
     }
     function logoutSystem() { auth.signOut(); }
 
@@ -461,9 +398,7 @@
         isDataLoaded = true;
         db.ref('orders').on('value', (snapshot) => {
             orders = [];
-            snapshot.forEach((childSnapshot) => {
-                orders.push({ id: childSnapshot.key, ...childSnapshot.val() });
-            });
+            snapshot.forEach(child => orders.push({ id: child.key, ...child.val() }));
             orders.sort((a,b) => b.timestamp - a.timestamp);
             renderTable();
         });
@@ -472,11 +407,9 @@
     function loadRestockData() {
         db.ref('restock').on('value', (snapshot) => {
             restockItems = [];
-            snapshot.forEach((childSnapshot) => {
-                restockItems.push({ id: childSnapshot.key, ...childSnapshot.val() });
-            });
+            snapshot.forEach(child => restockItems.push({ id: child.key, ...child.val() }));
             restockItems.sort((a,b) => b.timestamp - a.timestamp);
-            renderRestockTable();
+            filterRestock();
         });
     }
 
@@ -485,17 +418,13 @@
         if(!row) return;
         const qty = parseFloat(row.querySelector('.i-qty').value) || 0;
         const price = parseFloat(row.querySelector('.i-unitPrice').value) || 0;
-        const sub = qty * price;
-        row.querySelector('.i-subTotal').value = sub > 0 ? sub.toFixed(2) : '';
+        row.querySelector('.i-subTotal').value = (qty * price) > 0 ? (qty * price).toFixed(2) : '';
         calcGrandTotal();
     }
 
     function calcGrandTotal() {
         let grand = 0;
-        document.querySelectorAll('.pos-table-row').forEach(row => {
-            const sub = parseFloat(row.querySelector('.i-subTotal').value) || 0;
-            grand += sub;
-        });
+        document.querySelectorAll('.pos-table-row').forEach(row => grand += parseFloat(row.querySelector('.i-subTotal').value) || 0);
         document.getElementById('totalPrice').value = grand > 0 ? grand.toFixed(2) : '';
         calcBalance();
     }
@@ -507,44 +436,38 @@
     }
     document.getElementById('searchInput').addEventListener('input', renderTable);
 
-    function openScanner(targetId, isRow = false) {
+    function openScanner(targetId, isRow = false, autoSubmit = false) {
         targetBarcodeFieldId = targetId;
         isRowScanner = isRow;
+        isAutoSubmit = autoSubmit;
         document.getElementById('barcodeModal').style.display = 'flex';
-        
         html5QrcodeScanner = new Html5Qrcode("qr-reader");
-        const config = { fps: 10, qrbox: { width: 250, height: 100 } }; 
-        
-        html5QrcodeScanner.start({ facingMode: "environment" }, config, onScanSuccess)
-        .catch(err => { alert("Camera access denied or error."); closeScanner(); });
+        html5QrcodeScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 100 } }, onScanSuccess)
+        .catch(() => { alert("Camera access denied."); closeScanner(); });
     }
 
-    function onScanSuccess(decodedText, decodedResult) {
+    function onScanSuccess(decodedText) {
         if (targetBarcodeFieldId) {
             if(isRowScanner) {
-                const row = document.getElementById(targetBarcodeFieldId);
-                if (row) row.querySelector('.i-partNo').value = decodedText;
+                document.getElementById(targetBarcodeFieldId).querySelector('.i-partNo').value = decodedText;
             } else {
                 document.getElementById(targetBarcodeFieldId).value = decodedText;
             }
         }
-        const audio = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
-        audio.play().catch(e => {});
+        new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg').play().catch(e => {});
         closeScanner();
+        if(isAutoSubmit) setTimeout(addRestockItem, 300); // Auto submit delay
     }
 
     function closeScanner() {
         document.getElementById('barcodeModal').style.display = 'none';
-        if (html5QrcodeScanner) {
-            html5QrcodeScanner.stop().then(ignore => {}).catch(err => console.log(err));
-        }
+        if (html5QrcodeScanner) html5QrcodeScanner.stop().catch(e => console.log(e));
     }
 
     function updateRowNumbers() {
-        const rows = document.querySelectorAll('.pos-table-row');
-        rows.forEach((row, index) => {
+        document.querySelectorAll('.pos-table-row').forEach((row, idx) => {
             const numDiv = row.querySelector('.row-num');
-            if (numDiv) numDiv.innerText = index + 1;
+            if (numDiv) numDiv.innerText = idx + 1;
         });
     }
 
@@ -552,72 +475,36 @@
         itemMapIdCounter++;
         const currentId = 'item_row_' + itemMapIdCounter;
         itemPhotosMap[currentId] = data && data.photos ? [...data.photos] : [];
-
-        const container = document.getElementById('dynamicItemsContainer');
-        const isFirst = container.children.length === 0;
+        const isFirst = document.getElementById('dynamicItemsContainer').children.length === 0;
 
         const html = `
         <div class="pos-table-row" id="${currentId}">
             <div class="row-num">0</div>
-            
-            <div>
-                <span class="mobile-label">Part Needed</span>
-                <input type="text" class="i-part pos-input" placeholder="Part Desc" value="${data ? data.part : ''}">
-            </div>
-            
+            <div><span class="mobile-label">Part Needed</span><input type="text" class="i-part pos-input" placeholder="Part Desc" value="${data ? data.part : ''}"></div>
             <div>
                 <span class="mobile-label">Item Code / OEM No</span>
                 <div class="input-group">
                     <input type="text" class="i-partNo pos-input" placeholder="OEM Code" value="${data && data.partNo ? data.partNo : ''}">
-                    <button type="button" class="scan-btn" onclick="openScanner('${currentId}', true)" title="Scan Barcode">🔳</button>
+                    <button type="button" class="scan-btn" onclick="openScanner('${currentId}', true)">🔳</button>
                 </div>
             </div>
-            
-            <div>
-                <span class="mobile-label">Brand</span>
-                <input type="text" class="i-brand pos-input" placeholder="Brand" value="${data && data.brand ? data.brand : ''}">
-            </div>
-
-            <div>
-                <span class="mobile-label">Supplier</span>
-                <input type="text" class="i-supplier pos-input" placeholder="Supplier" value="${data && data.supplier ? data.supplier : ''}">
-            </div>
-
+            <div><span class="mobile-label">Brand</span><input type="text" class="i-brand pos-input" placeholder="Brand" value="${data && data.brand ? data.brand : ''}"></div>
+            <div><span class="mobile-label">Supplier</span><input type="text" class="i-supplier pos-input" placeholder="Supplier" value="${data && data.supplier ? data.supplier : ''}"></div>
             <div class="mobile-grid-3">
-                <div>
-                    <span class="mobile-label">Qty</span>
-                    <input type="number" class="i-qty pos-input" placeholder="1" value="${data && data.qty ? data.qty : '1'}" oninput="calcRowTotal('${currentId}')" style="text-align:center;">
-                </div>
-                <div>
-                    <span class="mobile-label">U.Price (RM)</span>
-                    <input type="number" class="i-unitPrice pos-input" placeholder="0.00" value="${data && data.unitPrice ? data.unitPrice : ''}" oninput="calcRowTotal('${currentId}')">
-                </div>
-                <div>
-                    <span class="mobile-label">Total (RM)</span>
-                    <input type="number" class="i-subTotal pos-input readonly-input" placeholder="0.00" value="${data && data.subTotal ? data.subTotal : ''}" readonly>
-                </div>
+                <div><span class="mobile-label">Qty</span><input type="number" class="i-qty pos-input" placeholder="1" value="${data && data.qty ? data.qty : '1'}" oninput="calcRowTotal('${currentId}')" style="text-align:center;"></div>
+                <div><span class="mobile-label">U.Price (RM)</span><input type="number" class="i-unitPrice pos-input" placeholder="0.00" value="${data && data.unitPrice ? data.unitPrice : ''}" oninput="calcRowTotal('${currentId}')"></div>
+                <div><span class="mobile-label">Total (RM)</span><input type="number" class="i-subTotal pos-input readonly-input" placeholder="0.00" value="${data && data.subTotal ? data.subTotal : ''}" readonly></div>
             </div>
-
-            <div>
-                <span class="mobile-label">ETA Date</span>
-                <input type="date" class="i-eta pos-input" value="${data && data.eta ? data.eta : ''}">
-            </div>
-            
+            <div><span class="mobile-label">ETA Date</span><input type="date" class="i-eta pos-input" value="${data && data.eta ? data.eta : ''}"></div>
             <div style="display:flex; justify-content:center; align-items:center;">
-                <label class="photo-upload-btn">
-                    📷 <span id="count_${currentId}">${itemPhotosMap[currentId].length}</span>/5
+                <label class="photo-upload-btn">📷 <span id="count_${currentId}">${itemPhotosMap[currentId].length}</span>/5
                     <input type="file" accept="image/*" multiple onchange="processItemPhotos(event, '${currentId}')" style="display:none;">
                 </label>
             </div>
-            
-            <div>
-                ${!isFirst || data !== null ? `<button type="button" class="remove-row-btn" onclick="removeItemBlock('${currentId}')" title="Delete Row">✖</button>` : `<div style="height:35px;"></div>`}
-            </div>
-            
+            <div>${!isFirst || data !== null ? `<button type="button" class="remove-row-btn" onclick="removeItemBlock('${currentId}')">✖</button>` : `<div style="height:35px;"></div>`}</div>
             <div id="gallery_${currentId}" class="row-gallery"></div>
         </div>`;
-        
-        container.insertAdjacentHTML('beforeend', html);
+        document.getElementById('dynamicItemsContainer').insertAdjacentHTML('beforeend', html);
         renderGalleryUI(currentId);
         updateRowNumbers();
         if(data) calcRowTotal(currentId); 
@@ -626,36 +513,26 @@
     function removeItemBlock(id) {
         document.getElementById(id).remove();
         delete itemPhotosMap[id];
-        updateRowNumbers();
-        calcGrandTotal(); 
-        
-        const container = document.getElementById('dynamicItemsContainer');
-        if (container.children.length === 0) {
-            addNewItemBlock();
-        }
+        updateRowNumbers(); calcGrandTotal(); 
+        if (document.getElementById('dynamicItemsContainer').children.length === 0) addNewItemBlock();
     }
 
     function processItemPhotos(event, itemId) {
         const files = event.target.files;
         if (!files || files.length === 0) return;
+        if (itemPhotosMap[itemId].length + files.length > 5) return alert("⚠️ Max 5 photos per item!");
         
-        if (itemPhotosMap[itemId].length + files.length > 5) {
-            alert("⚠️ Max 5 photos per item!");
-            event.target.value = ''; return;
-        }
         Array.from(files).forEach(file => {
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = e => {
                 const img = new Image();
-                img.onload = function() {
+                img.onload = () => {
                     const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 800; const MAX_HEIGHT = 800;
-                    let width = img.width; let height = img.height;
-                    if (width > height) { if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; } } 
-                    else { if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; } }
+                    let width = img.width, height = img.height;
+                    if (width > height) { if(width > 800) { height *= 800/width; width = 800; } } 
+                    else { if(height > 800) { width *= 800/height; height = 800; } }
                     canvas.width = width; canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
+                    canvas.getContext('2d').drawImage(img, 0, 0, width, height);
                     itemPhotosMap[itemId].push(canvas.toDataURL('image/jpeg', 0.8));
                     renderGalleryUI(itemId); 
                 };
@@ -668,45 +545,31 @@
 
     function renderGalleryUI(itemId) {
         const gallery = document.getElementById('gallery_' + itemId);
-        const countSpan = document.getElementById('count_' + itemId);
-        if (countSpan) countSpan.innerText = itemPhotosMap[itemId].length;
-        
+        document.getElementById('count_' + itemId).innerText = itemPhotosMap[itemId].length;
         gallery.innerHTML = ''; 
-        itemPhotosMap[itemId].forEach((b64Data, index) => {
-            gallery.innerHTML += `
-                <div class="photo-wrapper">
-                    <img src="${b64Data}" class="photo-thumbnail" onclick="showPhoto('${b64Data}')">
-                    <button type="button" class="remove-single-btn" onclick="removeSinglePhoto('${itemId}', ${index})">✖</button>
-                </div>
-            `;
+        itemPhotosMap[itemId].forEach((b64, index) => {
+            gallery.innerHTML += `<div class="photo-wrapper"><img src="${b64}" class="photo-thumbnail" onclick="showPhoto('${b64}')"><button type="button" class="remove-single-btn" onclick="removeSinglePhoto('${itemId}', ${index})">✖</button></div>`;
         });
     }
 
-    function removeSinglePhoto(itemId, index) { itemPhotosMap[itemId].splice(index, 1); renderGalleryUI(itemId); }
+    function removeSinglePhoto(id, idx) { itemPhotosMap[id].splice(idx, 1); renderGalleryUI(id); }
     function showPhoto(src) { document.getElementById('modalImg').src = src; document.getElementById('photoModal').style.display = 'block'; }
     function closePhoto() { document.getElementById('photoModal').style.display = 'none'; }
 
+    // Preorder Logic
     function editOrder(id) {
         const order = orders.find(o => o.id === id);
-        document.getElementById('custName').value = order.name || '';
-        document.getElementById('custPhone').value = order.phone || '';
-        document.getElementById('carModel').value = order.car || '';
-        document.getElementById('chassisNumber').value = order.chassis || '';
-        document.getElementById('totalPrice').value = order.total || '';
-        document.getElementById('deposit').value = order.deposit || '';
-        document.getElementById('balance').value = order.balance || '';
-        document.getElementById('orderByStaff').value = order.staff || '';
-        document.getElementById('remarks').value = order.remarks || '';
-
+        ['custName','custPhone','carModel','chassisNumber','totalPrice','deposit','balance','orderByStaff','remarks'].forEach(field => {
+            document.getElementById(field).value = order[field.replace('orderByStaff', 'staff').replace('custName', 'name').replace('custPhone', 'phone').replace('carModel', 'car').replace('chassisNumber', 'chassis').replace('totalPrice', 'total')] || '';
+        });
         document.getElementById('dynamicItemsContainer').innerHTML = '';
         itemPhotosMap = {};
-
-        let itemsToLoad = order.items || [];
+        const itemsToLoad = order.items || [];
         if(itemsToLoad.length === 0) addNewItemBlock();
-        itemsToLoad.forEach(itemData => addNewItemBlock(itemData));
+        itemsToLoad.forEach(data => addNewItemBlock(data));
 
         editingId = id;
-        document.getElementById('mainBtn').innerText = "Confirm Update Data (Cloud)";
+        document.getElementById('mainBtn').innerText = "Confirm Update Data";
         document.getElementById('mainBtn').style.backgroundColor = "#10b981"; 
         document.getElementById('cancelBtn').style.display = "block";
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -717,64 +580,37 @@
         document.getElementById('mainBtn').innerText = "💾 Save Document & Sync";
         document.getElementById('mainBtn').style.backgroundColor = "#2563eb";
         document.getElementById('cancelBtn').style.display = "none";
-        document.querySelectorAll('#ordersTab input:not(.login-input)').forEach(input => { if(input.id !== 'searchInput') input.value = ''; });
+        document.querySelectorAll('#ordersTab input:not(.login-input)').forEach(i => { if(i.id !== 'searchInput') i.value = ''; });
         document.getElementById('orderByStaff').value = '';
-        
         document.getElementById('dynamicItemsContainer').innerHTML = '';
-        itemPhotosMap = {};
-        addNewItemBlock();
+        itemPhotosMap = {}; addNewItemBlock();
     }
 
     async function saveOrUpdateOrder() {
-        const name = document.getElementById('custName').value;
-        const phone = document.getElementById('custPhone').value.replace(/[^0-9]/g, '');
-        const car = document.getElementById('carModel').value;
-        const chassis = document.getElementById('chassisNumber').value;
-        const total = document.getElementById('totalPrice').value || "0";
-        const deposit = document.getElementById('deposit').value || "0";
-        const balance = document.getElementById('balance').value || "0";
-        const staff = document.getElementById('orderByStaff').value;
-        const remarks = document.getElementById('remarks').value;
-
-        let finalItemsArray = [];
+        const payload = {
+            name: document.getElementById('custName').value, phone: document.getElementById('custPhone').value.replace(/[^0-9]/g, ''),
+            car: document.getElementById('carModel').value, chassis: document.getElementById('chassisNumber').value,
+            total: document.getElementById('totalPrice').value || "0", deposit: document.getElementById('deposit').value || "0",
+            balance: document.getElementById('balance').value || "0", staff: document.getElementById('orderByStaff').value,
+            remarks: document.getElementById('remarks').value, items: []
+        };
         document.querySelectorAll('.pos-table-row').forEach(card => {
             const id = card.id;
-            const part = card.querySelector('.i-part').value;
-            const partNo = card.querySelector('.i-partNo').value;
-            const brand = card.querySelector('.i-brand').value;
-            const supplier = card.querySelector('.i-supplier').value;
-            const qty = card.querySelector('.i-qty').value || "1";
-            const unitPrice = card.querySelector('.i-unitPrice').value || "0";
-            const subTotal = card.querySelector('.i-subTotal').value || "0";
-            const eta = card.querySelector('.i-eta').value;
-            const photos = itemPhotosMap[id] || [];
-
-            if (part || partNo) { 
-                finalItemsArray.push({ part, partNo, brand, supplier, qty, unitPrice, subTotal, eta, photos });
-            }
+            const p = { part: card.querySelector('.i-part').value, partNo: card.querySelector('.i-partNo').value, brand: card.querySelector('.i-brand').value, supplier: card.querySelector('.i-supplier').value, qty: card.querySelector('.i-qty').value || "1", unitPrice: card.querySelector('.i-unitPrice').value || "0", subTotal: card.querySelector('.i-subTotal').value || "0", eta: card.querySelector('.i-eta').value, photos: itemPhotosMap[id] || [] };
+            if (p.part || p.partNo) payload.items.push(p);
         });
-
-        if(!name) return alert("Please fill in Customer Name.");
-        if(finalItemsArray.length === 0) return alert("Please enter at least 1 Part Description or Item Code.");
+        if(!payload.name) return alert("Please fill Customer Name.");
+        if(payload.items.length === 0) return alert("Enter at least 1 Part.");
 
         if (editingId) {
-            await db.ref('orders/' + editingId).update({
-                name, phone, car, chassis, total, deposit, balance, staff, remarks, 
-                items: finalItemsArray,
-                part: null, partNo: null, supplier: null, eta: null, photos: null, photo: null
-            });
+            await db.ref('orders/' + editingId).update(payload);
             cancelEdit();
         } else {
-            const counterRef = db.ref('orderCounter');
-            const snapshot = await counterRef.transaction((currentValue) => { return (currentValue || 1000) + 1; });
-            const nextNum = snapshot.snapshot.val();
-            const refNo = 'MMC-' + nextNum;
-            const dateStr = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-            
-            await db.ref('orders').push({
-                refNo, date: dateStr, name, phone, car, chassis, total, deposit, balance, staff, remarks, status: 'waiting', 
-                items: finalItemsArray, timestamp: Date.now()
-            });
+            const snapshot = await db.ref('orderCounter').transaction(cv => (cv || 1000) + 1);
+            payload.refNo = 'MMC-' + snapshot.snapshot.val();
+            payload.date = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+            payload.status = 'waiting'; payload.timestamp = Date.now();
+            await db.ref('orders').push(payload);
             cancelEdit(); 
         }
     }
@@ -782,318 +618,171 @@
     async function toggleStatus(id) {
         const order = orders.find(o => o.id === id);
         if(order.status === 'completed') return; 
-        const newStatus = order.status === 'waiting' ? 'arrived' : 'waiting';
-        await db.ref('orders/' + id).update({ status: newStatus });
+        await db.ref('orders/' + id).update({ status: order.status === 'waiting' ? 'arrived' : 'waiting' });
     }
-    async function markCompleted(id) {
-        if(confirm("Confirm item collected and balance cleared? This will hide the order into History.")){
-            await db.ref('orders/' + id).update({ status: 'completed' });
-        }
-    }
+    async function markCompleted(id) { if(confirm("Confirm item collected?")) await db.ref('orders/' + id).update({ status: 'completed' }); }
     async function restoreOrder(id) { await db.ref('orders/' + id).update({ status: 'arrived' }); }
-    async function deleteOrder(id) {
-        if(!isAdmin) return alert("You do not have permission to delete orders.");
-        if(confirm("Are you absolutely sure you want to delete this order from the cloud?")) {
-            await db.ref('orders/' + id).remove();
-        }
-    }
-
-    // ==========================================
-    // HTML GENERATOR FOR PDF/PRINT
-    // ==========================================
-    function getInvoiceHTML(order) {
-        let itemsHtml = '';
-        let itemsToDisplay = order.items || [];
-        
-        itemsToDisplay.forEach((item, index) => {
-            itemsHtml += `
-                <tr>
-                    <td style="text-align:center;">${index + 1}</td>
-                    <td style="text-align:center;"><div class="check-box"></div></td>
-                    <td><strong>${item.part || 'N/A'}</strong></td>
-                    <td>${item.partNo || '-'}</td>
-                    <td>${item.brand || '-'}</td>
-                    <td>${item.supplier || '-'}</td>
-                    <td style="text-align:center;">${item.qty || '1'}</td>
-                    <td style="text-align:right;">RM ${parseFloat(item.unitPrice || 0).toFixed(2)}</td>
-                    <td style="text-align:right;"><strong>RM ${parseFloat(item.subTotal || 0).toFixed(2)}</strong></td>
-                </tr>
-            `;
-        });
-
-        return `
-            <style>
-                body { font-family: 'Segoe UI', Arial, sans-serif; padding: 30px; color: #1e293b; margin: auto; }
-                .header { text-align: center; border-bottom: 2px solid #1e293b; padding-bottom: 20px; margin-bottom: 30px; }
-                .logo { font-size: 28px; font-weight: 800; letter-spacing: 1px;}
-                .info-grid { display: flex; justify-content: space-between; margin-bottom: 30px; }
-                .info-box { background: #f8fafc; padding: 15px; border-radius: 6px; width: 45%; border: 1px solid #e2e8f0; }
-                .info-box p { margin: 5px 0; font-size: 14px; }
-                table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
-                th, td { border: 1px solid #cbd5e1; padding: 12px; text-align: left; font-size: 13px;}
-                th { background: #f1f5f9; text-transform: uppercase; font-size: 11px;}
-                .check-box { width: 16px; height: 16px; border: 1px solid #64748b; display: inline-block; border-radius: 2px; }
-                .totals { text-align: right; font-size: 15px; }
-                .totals p { margin: 5px 0; }
-                .footer { margin-top: 50px; font-size: 12px; text-align: center; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 20px;}
-            </style>
-            <div id="invoiceBody">
-                <div class="header">
-                    <div class="logo">MALAYSIA MOTOR COMPANY</div>
-                </div>
-                <h2 style="text-align:center; margin-bottom:30px; letter-spacing: 1px;">ORDER LIST / PACKING LIST</h2>
-                <div class="info-grid">
-                    <div class="info-box">
-                        <p><strong>Customer Name:</strong> ${order.name}</p>
-                        <p><strong>Contact:</strong> ${order.phone || '-'}</p>
-                        <p><strong>Car Details:</strong> ${order.car || '-'} ${order.chassis ? '('+order.chassis+')' : ''}</p>
-                    </div>
-                    <div class="info-box">
-                        <p><strong>Order No:</strong> ${order.refNo}</p>
-                        <p><strong>Date:</strong> ${order.date}</p>
-                        <p><strong>Served By:</strong> ${order.staff || '-'}</p>
-                        <p><strong>Status:</strong> ${order.status === 'completed' ? 'Collected' : 'Pending Fulfillment'}</p>
-                    </div>
-                </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th style="width:5%; text-align:center;">No.</th>
-                            <th style="width:5%; text-align:center;">Pack</th>
-                            <th style="width:25%;">Part Description</th>
-                            <th style="width:15%;">Item Code</th>
-                            <th style="width:12%;">Brand</th>
-                            <th style="width:13%;">Supplier</th>
-                            <th style="width:5%; text-align:center;">QTY</th>
-                            <th style="width:10%; text-align:right;">U.Price</th>
-                            <th style="width:10%; text-align:right;">Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>${itemsHtml}</tbody>
-                </table>
-                <div class="totals">
-                    <p>Total Amount: <strong>RM ${parseFloat(order.total || 0).toFixed(2)}</strong></p>
-                    <p>Deposit Paid: RM ${parseFloat(order.deposit || 0).toFixed(2)}</p>
-                    <p style="font-size: 18px; margin-top: 10px;">Balance Due: <strong style="color: #ef4444;">RM ${parseFloat(order.balance || 0).toFixed(2)}</strong></p>
-                </div>
-                <div class="footer">
-                    Thank you for choosing Malaysia Motor Company. Please retain this list for your records.<br>
-                    ${order.remarks ? 'Internal Remarks: ' + order.remarks : ''}
-                </div>
-            </div>
-        `;
-    }
-
-    // FUNCTION 1: NORMAL PRINT
-    function printOrder(id) {
-        const order = orders.find(o => o.id === id);
-        if(!order) return;
-        const printWindow = window.open('', '_blank');
-        printWindow.document.write('<html><head><title>Order List - '+order.refNo+'</title></head><body>');
-        printWindow.document.write(getInvoiceHTML(order));
-        printWindow.document.write('</body><script>window.onload = function() { window.print(); window.close(); }<\/script></html>');
-        printWindow.document.close();
-    }
-
-    // FUNCTION 2: SAVE DIRECT AS PDF
-    function savePdfOrder(id) {
-        const order = orders.find(o => o.id === id);
-        if(!order) return;
-        
-        const container = document.getElementById('pdfContainer');
-        container.innerHTML = getInvoiceHTML(order);
-        
-        const opt = {
-            margin:       10,
-            filename:     `${order.refNo}_MMC_PackingList.pdf`,
-            image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2, useCORS: true },
-            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        };
-        
-        html2pdf().set(opt).from(container.querySelector('#invoiceBody')).save().then(() => {
-            container.innerHTML = ''; // Clear after saving
-        });
-    }
+    async function deleteOrder(id) { if(isAdmin && confirm("Delete order?")) await db.ref('orders/' + id).remove(); }
 
     function renderTable() {
-        const tbody = document.getElementById('orderTableBody');
-        tbody.innerHTML = '';
-        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-        const viewFilter = document.getElementById('viewFilter').value;
+        const tbody = document.getElementById('orderTableBody'); tbody.innerHTML = '';
+        const search = document.getElementById('searchInput').value.toLowerCase();
+        const view = document.getElementById('viewFilter').value;
 
-        let filteredOrders = orders;
-        if (viewFilter === 'active') { filteredOrders = orders.filter(o => o.status !== 'completed'); } 
-        else if (viewFilter === 'history') { filteredOrders = orders.filter(o => o.status === 'completed'); }
-
-        filteredOrders = filteredOrders.filter(o => {
-            let partMatch = false;
-            if (o.items) {
-                partMatch = o.items.some(i => (i.part && i.part.toLowerCase().includes(searchTerm)) || (i.partNo && i.partNo.toLowerCase().includes(searchTerm)));
-            }
-            return o.name.toLowerCase().includes(searchTerm) || (o.car && o.car.toLowerCase().includes(searchTerm)) || 
-                   (o.chassis && o.chassis.toLowerCase().includes(searchTerm)) || (o.refNo && o.refNo.toLowerCase().includes(searchTerm)) ||
-                   (o.staff && o.staff.toLowerCase().includes(searchTerm)) || partMatch;
+        let filtered = orders.filter(o => {
+            if (view === 'active' && o.status === 'completed') return false;
+            if (view === 'history' && o.status !== 'completed') return false;
+            const itemMatch = (o.items||[]).some(i => (i.part||'').toLowerCase().includes(search) || (i.partNo||'').toLowerCase().includes(search));
+            return (o.name||'').toLowerCase().includes(search) || (o.car||'').toLowerCase().includes(search) || (o.refNo||'').toLowerCase().includes(search) || itemMatch;
         });
 
-        filteredOrders.forEach(order => {
-            let itemsToDisplay = order.items || [];
+        filtered.forEach(order => {
             let partsHtml = `<ul class="table-item-list">`;
-            let simplePartsListForWa = [];
-            
-            itemsToDisplay.forEach(item => {
-                const qtyText = item.qty ? `<span style="background:#e2e8f0; padding:2px 6px; border-radius:10px; font-size:11px; font-weight:bold; margin-right:4px;">${item.qty}x</span>` : '';
-                const partDesc = item.part || 'No Desc';
-                const partNoText = item.partNo ? ` <small class="mono-text" style="color:#64748b;">[${item.partNo}]</small>` : '';
-                const brandText = item.brand ? ` • Brd: ${item.brand}` : '';
-                const supText = item.supplier ? ` • Sup: ${item.supplier}` : '';
-                
-                let priceDetails = "";
-                if (parseFloat(item.subTotal) > 0) {
-                    priceDetails = `<span style="float:right; font-size:12px; color:#64748b;">@ RM${item.unitPrice || 0} = <b style="color:#0f172a;">RM${item.subTotal}</b></span>`;
-                }
-
-                let photoHtml = '';
-                if (item.photos && item.photos.length > 0) {
-                    photoHtml = `<div style="display:flex; gap:4px; flex-wrap:wrap; margin-top:4px;">`;
-                    item.photos.forEach(p => { photoHtml += `<img src="${p}" class="photo-thumbnail" onclick="showPhoto('${p}')" style="width:40px; height:40px; border:1px solid #cbd5e1;">`; });
-                    photoHtml += `</div>`;
-                }
-                
-                partsHtml += `<li><div>${qtyText}<strong>${partDesc}</strong>${partNoText}${priceDetails}</div><small style="color:#64748b;">${brandText}${supText}</small>${photoHtml}</li>`;
-                
-                const waPrice = item.subTotal > 0 ? ` (RM${item.subTotal})` : '';
-                simplePartsListForWa.push(`- ${item.qty || 1}x ${partDesc} ${item.partNo ? '['+item.partNo+']' : ''}${waPrice}`);
+            let waList = [];
+            (order.items||[]).forEach(item => {
+                const sub = parseFloat(item.subTotal) > 0 ? `<span style="float:right; font-size:12px; color:#64748b;">RM${item.subTotal}</span>` : '';
+                partsHtml += `<li><div><span style="background:#e2e8f0; padding:2px 6px; border-radius:10px; font-size:11px; margin-right:4px;">${item.qty||1}x</span><strong>${item.part||'-'}</strong> <small>[${item.partNo||''}]</small>${sub}</div><small style="color:#64748b;">Brd: ${item.brand||'-'} • Sup: ${item.supplier||'-'}</small></li>`;
+                waList.push(`- ${item.qty||1}x ${item.part||'-'} [${item.partNo||''}]`);
             });
             partsHtml += `</ul>`;
 
-            const carText = order.car ? order.car + ' ' : '';
-            const chassisText = order.chassis ? '(' + order.chassis + ') ' : '';
-            const allItemsMsg = simplePartsListForWa.join('\n');
+            const waMsgArr = `*MALAYSIA MOTOR COMPANY*\n\nPelanggan yang dihormati ${order.name},\nBerita baik! Pesanan anda (${order.refNo}) telah selamat tiba. Baki bayaran: RM${order.balance}. Anda dialu-alukan untuk mengambilnya. Terima kasih!\n\nDear ${order.name},\nGood news! Your order (${order.refNo}) has arrived. Balance due: RM${order.balance}. You are welcome to collect it. Thank you!`;
+            const waMsgNot = `*MALAYSIA MOTOR COMPANY*\n\nPelanggan yang dihormati ${order.name},\nKami memohon maaf, barang pesanan anda (${order.refNo}) kehabisan stok. Sila hubungi kami untuk pemulangan deposit (RM${order.deposit}). Harap maaf atas kesulitan.\n\nDear ${order.name},\nWe apologize, your ordered item (${order.refNo}) is out of stock. Please contact us for a deposit refund (RM${order.deposit}). Sorry for the inconvenience.`;
             
-            // ---------------------------------------------------------
-            // POLITE 2-LANGUAGE WHATSAPP MESSAGES (MALAY -> ENGLISH)
-            // ---------------------------------------------------------
-            
-            // MSG 1: RECEIPT
-            const msgReceipt = `🧾 *MALAYSIA MOTOR COMPANY - RESIT / RECEIPT*\n\nPelanggan yang dihormati ${order.name},\nTerima kasih. Pesanan istimewa anda telah disahkan!\n\nDear ${order.name},\nThank you. Your special order has been confirmed!\n\n*No. Pesanan / Order ID:* ${order.refNo}\n*Kenderaan / Car:* ${carText}${chassisText}\n*Barang / Items:*\n${allItemsMsg}\n\n*Jumlah / Total:* RM${order.total}\n*Deposit:* RM${order.deposit}\n*Baki / Balance Due:* RM${order.balance}\n\n(Handled by: ${order.staff || '-'})`;
-            
-            // MSG 2: ITEM ARRIVED (Malay First, English Second - Very Polite)
-            const msgArrived = `*MALAYSIA MOTOR COMPANY*\n\nPelanggan yang dihormati ${order.name},\nBerita baik! Pesanan anda (No. Pesanan: ${order.refNo}) telah selamat tiba di kedai kami. Baki bayaran adalah sebanyak RM${order.balance}. Anda dialu-alukan untuk datang mengambil pesanan anda pada bila-bila masa yang kelapangan. Terima kasih atas sokongan berterusan anda!\n\nDear ${order.name},\nGood news! Your order (${order.refNo}) has safely arrived at our shop. The balance due is RM${order.balance}. You are most welcome to drop by and collect it at your convenience. Thank you so much for your continued support!`;
-            
-            // MSG 3: ITEM NOT FOUND / CANCELLED (Malay First, English Second - Very Polite)
-            const msgNotFound = `*MALAYSIA MOTOR COMPANY*\n\nPelanggan yang dihormati ${order.name},\nKami memohon maaf atas segala kesulitan, dukacita dimaklumkan bahawa barang pesanan anda (No. Pesanan: ${order.refNo}) pada masa ini kehabisan stok dan tidak dapat dibekalkan oleh pembekal kami. Sila hubungi kami untuk urusan pemulangan penuh deposit anda (RM${order.deposit}). Kami amat kesal atas kesulitan yang timbul dan amat menghargai kesabaran anda.\n\nDear ${order.name},\nWe sincerely apologize, but we regret to inform you that your ordered item(s) (${order.refNo}) are currently out of stock and cannot be sourced by our suppliers. Please kindly contact us to arrange for a full refund of your deposit (RM${order.deposit}). We are truly sorry for the inconvenience caused and deeply appreciate your understanding.`;
-            
-            const linkReceipt = order.phone ? `https://wa.me/${order.phone}?text=${encodeURIComponent(msgReceipt)}` : '#';
-            const linkArrived = order.phone ? `https://wa.me/${order.phone}?text=${encodeURIComponent(msgArrived)}` : '#';
-            const linkNotFound = order.phone ? `https://wa.me/${order.phone}?text=${encodeURIComponent(msgNotFound)}` : '#';
-
-            let statusHtml = order.status === 'completed' 
-                ? `<button class="status-btn status-completed">📦 Collected</button>`
-                : `<button class="status-btn ${order.status === 'waiting' ? 'status-waiting' : 'status-arrived'}" onclick="toggleStatus('${order.id}')">${order.status === 'waiting' ? '⏳ Waiting Supplier' : '✅ Stock Arrived'}</button>`;
-
-            const deleteBtnHtml = isAdmin ? `<button class="delete-btn" onclick="deleteOrder('${order.id}')">✖ Del</button>` : '';
-
             const tr = document.createElement('tr');
             tr.style.opacity = order.status === 'completed' ? '0.6' : '1';
-
             tr.innerHTML = `
-                <td><span class="ref-badge">${order.refNo || 'N/A'}</span><br><small style="color:#64748b; margin-top:6px; display:inline-block; font-weight:700;">${order.date}</small><br>${order.staff ? `<span class="staff-badge">👤 ${order.staff}</span>` : ''}</td>
-                <td><strong style="color:#0f172a;">${order.name}</strong><br><small style="color:#3b82f6; font-weight:bold;">${order.phone}</small><br><div style="margin-top:8px; padding-top:8px; border-top:1px dashed #e2e8f0;"><strong style="color:#334155;">${order.car || '-'}</strong><br><span class="mono-text" style="color:#64748b; font-size:12px;">${order.chassis || ''}</span></div></td>
-                <td>${partsHtml}<div class="notes-text" style="margin-top:8px; color:#059669; font-weight:600;">${order.remarks ? '📝 Remarks: ' + order.remarks : ''}</div></td>
-                <td><small style="color:#64748b;">Total: RM${order.total}</small><br><small style="color:#64748b;">Paid: RM${order.deposit}</small><br><strong style="font-size:15px; margin-top:6px; display:inline-block; color:#0f172a;">Bal: RM${order.balance}</strong></td>
-                <td>${statusHtml}</td>
+                <td><span class="ref-badge">${order.refNo}</span><br><small style="color:#64748b; margin-top:6px; display:inline-block;">${order.date}</small></td>
+                <td><strong style="color:#0f172a;">${order.name}</strong><br><small style="color:#3b82f6; font-weight:bold;">${order.phone}</small><br><div style="margin-top:8px; padding-top:8px; border-top:1px dashed #e2e8f0;">${order.car||'-'}</div></td>
+                <td>${partsHtml}</td>
+                <td><small style="color:#64748b;">Total: RM${order.total}</small><br><strong style="font-size:15px; color:#0f172a;">Bal: RM${order.balance}</strong></td>
+                <td><button class="status-btn ${order.status==='completed'?'status-completed':(order.status==='waiting'?'status-waiting clickable':'status-arrived clickable')}" onclick="${order.status!=='completed'?`toggleStatus('${order.id}')`:''}">${order.status==='waiting'?'⏳ Wait':(order.status==='arrived'?'✅ Arrived':'📦 Done')}</button></td>
                 <td>
                     <div class="action-btns" style="flex-direction:column; align-items:stretch;">
-                        ${order.phone && order.status !== 'completed' ? `
-                            <a href="${linkReceipt}" target="_blank" class="wa-btn wa-btn-receipt">📄 WA Receipt</a>
-                            <a href="${linkArrived}" target="_blank" class="wa-btn wa-btn-arrived">💬 Inform Arrived</a>
-                            <a href="${linkNotFound}" target="_blank" class="wa-btn wa-btn-cancel">❌ Item Not Found</a>
-                        ` : (order.status === 'completed' ? '<small style="color:#94a3b8; text-align:center; font-weight:bold;">Closed</small>' : '<small style="color:#94a3b8; text-align:center; font-weight:bold;">No Phone</small>')}
+                        ${order.phone && order.status !== 'completed' ? `<a href="https://wa.me/${order.phone}?text=${encodeURIComponent(waMsgArr)}" target="_blank" class="wa-btn wa-btn-arrived">💬 Inform Arrived</a><a href="https://wa.me/${order.phone}?text=${encodeURIComponent(waMsgNot)}" target="_blank" class="wa-btn wa-btn-cancel">❌ Item Not Found</a>` : ''}
                     </div>
                 </td>
                 <td>
-                    <div class="action-btns" style="margin-bottom:6px;">
-                        <button class="print-btn" onclick="printOrder('${order.id}')">🖨️ Print</button>
-                        <button class="pdf-btn" onclick="savePdfOrder('${order.id}')">📄 PDF</button>
-                    </div>
-                    <div class="action-btns">
-                        ${order.status !== 'completed' ? `<button class="complete-btn" onclick="markCompleted('${order.id}')">✔️ Done</button>` : `<button class="edit-btn" onclick="restoreOrder('${order.id}')">⏪ Return</button>`}
-                        <button class="edit-btn" onclick="editOrder('${order.id}')">✏️ Edit</button>
-                        ${deleteBtnHtml}
-                    </div>
-                </td>
-            `;
+                    <div class="action-btns" style="margin-bottom:6px;"><button class="print-btn" onclick="printOrder('${order.id}')">🖨️</button><button class="pdf-btn" onclick="savePdfOrder('${order.id}')">📄</button></div>
+                    <div class="action-btns">${order.status !== 'completed' ? `<button class="complete-btn" onclick="markCompleted('${order.id}')">✔️</button>` : ''}<button class="edit-btn" onclick="editOrder('${order.id}')">✏️</button>${isAdmin?`<button class="delete-btn" onclick="deleteOrder('${order.id}')">✖</button>`:''}</div>
+                </td>`;
             tbody.appendChild(tr);
         });
     }
 
+    // PDF/PRINT Preorders
+    function getInvoiceHTML(order) {
+        let itemsHtml = '';
+        (order.items||[]).forEach((item, idx) => {
+            itemsHtml += `<tr><td style="text-align:center;">${idx+1}</td><td><div style="width:16px;height:16px;border:1px solid #64748b;"></div></td><td><strong>${item.part||'-'}</strong></td><td>${item.partNo||'-'}</td><td>${item.brand||'-'}</td><td>${item.supplier||'-'}</td><td style="text-align:center;">${item.qty||'1'}</td><td style="text-align:right;">RM ${parseFloat(item.unitPrice||0).toFixed(2)}</td><td style="text-align:right;"><strong>RM ${parseFloat(item.subTotal||0).toFixed(2)}</strong></td></tr>`;
+        });
+        return `<style>body{font-family:sans-serif;padding:30px;color:#1e293b;} table{width:100%;border-collapse:collapse;margin-top:20px;} th,td{border:1px solid #cbd5e1;padding:10px;font-size:13px;}</style><div id="invoiceBody"><h2 style="text-align:center;">MALAYSIA MOTOR COMPANY<br><span style="font-size:16px;">ORDER LIST / PACKING LIST</span></h2><p><strong>Order No:</strong> ${order.refNo} | <strong>Customer:</strong> ${order.name} | <strong>Car:</strong> ${order.car||'-'}</p><table><thead><tr><th style="width:5%;">No</th><th style="width:5%;">[ ]</th><th>Part</th><th>Code</th><th>Brand</th><th>Supplier</th><th>Qty</th><th>U.Price</th><th>Total</th></tr></thead><tbody>${itemsHtml}</tbody></table><p style="text-align:right;font-size:16px;">Total Balance Due: <strong style="color:red;">RM ${parseFloat(order.balance||0).toFixed(2)}</strong></p></div>`;
+    }
+    function printOrder(id) { const o = orders.find(x=>x.id===id); if(o){ const p = window.open('','_blank'); p.document.write(getInvoiceHTML(o)); p.document.close(); p.onload=()=>p.print(); } }
+    function savePdfOrder(id) { const o = orders.find(x=>x.id===id); if(o){ document.getElementById('pdfContainer').innerHTML = getInvoiceHTML(o); html2pdf().set({margin:10, filename:`${o.refNo}_List.pdf`, jsPDF:{format:'a4'}}).from(document.getElementById('invoiceBody')).save().then(()=>document.getElementById('pdfContainer').innerHTML=''); } }
+
     // ==========================================
-    // RESTOCK SYSTEM LOGIC
+    // RESTOCK SYSTEM V28
     // ==========================================
     async function addRestockItem() {
         const part = document.getElementById('r_part').value;
         const code = document.getElementById('r_code').value;
-        const brand = document.getElementById('r_brand').value;
-        const supp = document.getElementById('r_supp').value;
+        if(!part && !code) return; // Prevent empty scan loops
 
-        if(!part && !code) return alert("Please enter at least a part description or item code.");
-
-        const dateStr = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+        const payload = {
+            part: part, code: code, brand: document.getElementById('r_brand').value, supp: document.getElementById('r_supp').value,
+            onHandQty: document.getElementById('r_onHand').value || "0", needOrderQty: document.getElementById('r_needOrder').value || "1",
+            status: "Not Yet", date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+            timestamp: Date.now()
+        };
+        await db.ref('restock').push(payload);
         
-        await db.ref('restock').push({
-            part, code, brand, supp, date: dateStr, timestamp: Date.now()
-        });
-
-        document.getElementById('r_part').value = '';
-        document.getElementById('r_code').value = '';
-        document.getElementById('r_brand').value = '';
-        document.getElementById('r_supp').value = '';
+        // Reset fields
+        ['r_part','r_code','r_brand','r_supp','r_onHand','r_needOrder'].forEach(id => document.getElementById(id).value = '');
     }
 
-    function renderRestockTable() {
-        const tbody = document.getElementById('restockTableBody');
-        tbody.innerHTML = '';
+    async function markRestockOrdered(id) { await db.ref('restock/' + id).update({ status: 'Ordered' }); }
+    async function deleteRestock(id) { if(isAdmin && confirm("Delete record?")) await db.ref('restock/' + id).remove(); }
 
-        restockItems.forEach(item => {
+    function toggleCustomDate() {
+        document.getElementById('customDateGroup').style.display = document.getElementById('rDateFilter').value === 'custom' ? 'flex' : 'none';
+        filterRestock();
+    }
+
+    function filterRestock() {
+        const search = document.getElementById('rSearchInput').value.toLowerCase();
+        const view = document.getElementById('rViewFilter').value;
+        const datePreset = document.getElementById('rDateFilter').value;
+        
+        document.getElementById('rStatsDashboard').style.display = view === 'summary' ? 'grid' : 'none';
+        document.getElementById('rPrintGroup').style.display = view === 'summary' ? 'flex' : 'none';
+
+        // Date Logic
+        let startTs = 0, endTs = Number.MAX_SAFE_INTEGER;
+        const now = new Date();
+        now.setHours(0,0,0,0); // Midnight today
+        
+        if (datePreset === 'today') { startTs = now.getTime(); endTs = startTs + 86400000; }
+        else if (datePreset === 'yesterday') { startTs = now.getTime() - 86400000; endTs = now.getTime(); }
+        else if (datePreset === 'week') { const mon = new Date(now); mon.setDate(now.getDate() - (now.getDay()||7) + 1); startTs = mon.getTime(); }
+        else if (datePreset === 'month') { const first = new Date(now.getFullYear(), now.getMonth(), 1); startTs = first.getTime(); }
+        else if (datePreset === 'custom') {
+            const s = document.getElementById('rStartDate').value; const e = document.getElementById('rEndDate').value;
+            if(s) startTs = new Date(s).getTime();
+            if(e) { const endD = new Date(e); endD.setHours(23,59,59,999); endTs = endD.getTime(); }
+        }
+
+        let filtered = restockItems.filter(i => {
+            if (i.timestamp < startTs || i.timestamp > endTs) return false;
+            if (view === 'active' && i.status === 'Ordered') return false;
+            if (view === 'history' && i.status !== 'Ordered') return false;
+            return (i.part||'').toLowerCase().includes(search) || (i.code||'').toLowerCase().includes(search) || (i.brand||'').toLowerCase().includes(search) || (i.supp||'').toLowerCase().includes(search);
+        });
+
+        // Update Stats
+        let tAdd=0, tNot=0, tOrd=0;
+        filtered.forEach(i => { tAdd++; if(i.status==='Ordered') tOrd++; else tNot++; });
+        document.getElementById('s_total').innerText = tAdd;
+        document.getElementById('s_notYet').innerText = tNot;
+        document.getElementById('s_ordered').innerText = tOrd;
+        window.currentRestockPrintData = filtered; // Save for PDF
+
+        // Render
+        const tbody = document.getElementById('restockTableBody'); tbody.innerHTML = '';
+        filtered.forEach(item => {
+            let actionHtml = '';
+            if (item.status === 'Not Yet') actionHtml = `<button class="complete-btn" onclick="markRestockOrdered('${item.id}')" style="width:100%;">✔️ Done</button>`;
+            if (isAdmin) actionHtml += `<button class="delete-btn" onclick="deleteRestock('${item.id}')" style="width:100%; margin-top:4px;">✖ Del</button>`;
+            
             const tr = document.createElement('tr');
+            tr.style.opacity = item.status === 'Ordered' ? '0.6' : '1';
             tr.innerHTML = `
                 <td><small style="color:#64748b; font-weight:bold;">${item.date}</small></td>
                 <td><strong>${item.part || '-'}</strong></td>
                 <td class="mono-text">${item.code || '-'}</td>
                 <td>${item.brand || '-'}</td>
                 <td>${item.supp || '-'}</td>
-                <td>
-                    <div class="action-btns">
-                        <button class="complete-btn" onclick="deleteRestock('${item.id}')">✔️ Ordered</button>
-                    </div>
-                </td>
+                <td style="text-align:center; font-weight:bold;">${item.onHandQty || '0'}</td>
+                <td style="text-align:center; color:#ef4444; font-weight:bold;">${item.needOrderQty || '0'}</td>
+                <td style="text-align:center;"><span style="padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; background:${item.status==='Ordered'?'#d1fae5':'#fef3c7'}; color:${item.status==='Ordered'?'#047857':'#b45309'};">${item.status}</span></td>
+                <td>${actionHtml}</td>
             `;
             tbody.appendChild(tr);
         });
     }
 
-    async function deleteRestock(id) {
-        if(confirm("Confirm you have ordered this item from the supplier? It will be removed from the list.")) {
-            await db.ref('restock/' + id).remove();
-        }
+    // Print & PDF for Restock Summary
+    function getRestockHTML() {
+        const data = window.currentRestockPrintData || [];
+        let rows = '';
+        data.forEach((i, idx) => { rows += `<tr><td style="text-align:center;">${idx+1}</td><td>${i.date}</td><td><strong>${i.part||'-'}</strong></td><td>${i.code||'-'}</td><td>${i.brand||'-'}</td><td>${i.supp||'-'}</td><td style="text-align:center;">${i.onHandQty||0}</td><td style="text-align:center; color:red; font-weight:bold;">${i.needOrderQty||0}</td><td>${i.status}</td></tr>`; });
+        const dateRangeText = document.getElementById('rDateFilter').options[document.getElementById('rDateFilter').selectedIndex].text;
+        
+        return `<style>body{font-family:sans-serif;padding:30px;} table{width:100%;border-collapse:collapse;margin-top:20px;font-size:12px;} th,td{border:1px solid #ccc;padding:8px;}</style><div id="rInvoiceBody"><h2 style="text-align:center;">RESTOCK SUMMARY REPORT</h2><p style="text-align:center; color:#555;">Date Range: ${dateRangeText}</p><div style="display:flex; justify-content:space-around; margin:20px 0; background:#f4f4f4; padding:10px;"><span>Total Items: <strong>${document.getElementById('s_total').innerText}</strong></span><span>Not Yet Ordered: <strong>${document.getElementById('s_notYet').innerText}</strong></span><span>Ordered: <strong>${document.getElementById('s_ordered').innerText}</strong></span></div><table><thead><tr><th style="width:5%;">No</th><th style="width:10%;">Date</th><th>Part</th><th>Code</th><th>Brand</th><th>Supplier</th><th style="width:8%;">On Hand</th><th style="width:8%;">Need</th><th style="width:10%;">Status</th></tr></thead><tbody>${rows}</tbody></table></div>`;
     }
+    function printRestock() { const p = window.open('','_blank'); p.document.write(getRestockHTML()); p.document.close(); p.onload=()=>p.print(); }
+    function savePdfRestock() { document.getElementById('pdfContainer').innerHTML = getRestockHTML(); html2pdf().set({margin:10, filename:`Restock_Summary.pdf`, jsPDF:{format:'a4', orientation:'landscape'}}).from(document.getElementById('rInvoiceBody')).save().then(()=>document.getElementById('pdfContainer').innerHTML=''); }
 
-    function exportCSV() {
-        if(!isAdmin) return;
-        if(orders.length === 0) return alert("No data available to export.");
-        let csvContent = "data:text/csv;charset=utf-8,\uFEFFRef No,Order Date,Handled By,Customer Name,Phone,Car Model,Chassis No,All Parts,Total,Deposit,Balance,Status,Remarks\n";
-        orders.forEach(o => {
-            let allPartsText = o.items ? o.items.map(i => `${i.qty || 1}x ${i.part || i.partNo} (RM${i.subTotal})`).join(" + ") : "";
-            const row = `"${o.refNo}","${o.date}","${o.staff || ''}","${o.name}","${o.phone}","${o.car || ''}","${o.chassis || ''}","${allPartsText}","${o.total}","${o.deposit}","${o.balance}","${o.status}","${o.remarks}"`;
-            csvContent += row + "\n";
-        });
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", `MMC_Cloud_Database_${new Date().toISOString().split('T')[0]}.csv`);
-        document.body.appendChild(link); link.click(); document.body.removeChild(link);
-    }
 </script>
 </body>
 </html>
