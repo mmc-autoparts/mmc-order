@@ -14,13 +14,11 @@
         .login-box { background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); text-align: center; max-width: 400px; width: 100%; box-sizing: border-box;}
         .login-box h3 { margin-top: 0; color: #1a1a1a; font-family: sans-serif; margin-bottom: 5px; }
         
-        /* Login Form Fields Side-by-Side */
         .login-field { display: flex; align-items: center; background: #fff; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 15px; overflow: hidden; }
         .login-field label { background: #f8f9fa; color: #333; font-weight: bold; font-size: 14px; padding: 12px; width: 85px; text-align: left; border-right: 1px solid #ccc; margin: 0;}
         .login-input { border: none; padding: 12px; font-size: 16px; flex: 1; outline: none; background: transparent; width: 100%; box-sizing: border-box;}
         
         .login-btn { background-color: #0866ff; color: white; border: none; padding: 12px; font-weight: bold; border-radius: 4px; cursor: pointer; width: 100%; font-size: 16px; margin-top: 5px; margin-bottom: 10px;}
-        .login-btn:hover { background-color: #0050d1; }
         .error-msg { color: #dc3545; font-size: 13px; margin-top: -5px; margin-bottom: 15px; display: none; font-weight: bold; }
 
         /* Main App & Header */
@@ -30,26 +28,42 @@
         h2 { color: #1a1a1a; margin: 0; font-size: 20px;}
         .logout-btn { background-color: #dc3545; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; white-space: nowrap;}
         
-        /* 💻 DESKTOP GRID LAYOUT (4 Columns) */
-        .form-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 15px; }
+        /* Layout Grids */
+        .form-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
         input:not(.login-input), select { padding: 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; width: 100%; box-sizing: border-box; }
         .col-span-2 { grid-column: span 2; }
         .col-span-4 { grid-column: span 4; }
-        
         .finance-group { display: flex; gap: 10px; }
         .finance-group > div { flex: 1; }
 
+        /* MULTI-ITEM CART STYLES */
+        .items-wrapper { background: #f8f9fa; border: 1px solid #e4e6eb; border-radius: 8px; padding: 15px; margin-bottom: 20px; grid-column: span 4;}
+        .items-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px dashed #ccc;}
+        .items-header h3 { margin: 0; color: #0056b3; font-size: 18px; }
+        .item-card { background: white; border: 1px solid #ccc; border-left: 4px solid #0866ff; border-radius: 6px; padding: 15px; margin-bottom: 15px; position: relative;}
+        .item-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 10px;}
+        
+        .add-item-btn { background-color: #28a745; color: white; border: none; padding: 10px 15px; font-weight: bold; border-radius: 4px; cursor: pointer; font-size: 14px;}
+        .remove-item-btn { color: #dc3545; background: #ffe6e6; border: none; padding: 6px 10px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px; position: absolute; top: 10px; right: 10px;}
+        
+        .photo-preview-container { display: flex; flex-direction: column; gap: 8px; background: #f0f2f5; padding: 10px; border-radius: 4px; border: 1px dashed #ccc;}
+        .photo-gallery { display: flex; gap: 10px; flex-wrap: wrap; }
+        .photo-wrapper { position: relative; display: inline-block; }
+        .photo-thumbnail { width: 60px; height: 60px; object-fit: cover; border-radius: 4px; cursor: pointer; border: 1px solid #ccc; transition: transform 0.2s;}
+        .remove-single-btn { position: absolute; top: -5px; right: -5px; background: #dc3545; color: white; border: none; border-radius: 50%; width: 22px; height: 22px; font-size: 12px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center;}
+
+        /* Main Buttons */
         .button-group { display: flex; gap: 10px; grid-column: span 4; }
-        button.add-btn { background-color: #0866ff; color: white; border: none; padding: 14px; font-weight: bold; border-radius: 4px; cursor: pointer; width: 100%; font-size: 16px;}
+        button.main-save-btn { background-color: #0866ff; color: white; border: none; padding: 14px; font-weight: bold; border-radius: 4px; cursor: pointer; width: 100%; font-size: 16px;}
         button.cancel-btn { background-color: #6c757d; color: white; border: none; padding: 14px; font-weight: bold; border-radius: 4px; cursor: pointer; width: 30%; font-size: 16px; display: none;}
 
+        /* Controls & Table */
         .top-controls { display: flex; gap: 10px; align-items: center; margin-top: 30px; margin-bottom: 15px; }
         .search-bar { padding: 12px; width: 320px; border-radius: 20px; border: 1px solid #ccc; box-sizing: border-box;}
         #exportBtn { background-color: #107c41; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-left: auto; display: none; white-space: nowrap;}
         
-        /* Table Styles */
         .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 4px; }
-        table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 900px; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 1000px; }
         th, td { padding: 12px; border-bottom: 1px solid #eee; text-align: left; vertical-align: top;}
         th { background-color: #f8f9fa; color: #333; }
         
@@ -69,15 +83,11 @@
 
         .ref-badge { background-color: #e9ecef; padding: 3px 6px; border-radius: 4px; font-family: monospace; font-weight: bold; color: #495057; font-size: 13px;}
         .staff-badge { background-color: #e6f7ff; color: #0050b3; border: 1px solid #91d5ff; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; display: inline-block; margin-top: 4px; }
-        .notes-text { font-size: 12px; color: #6c757d; font-style: italic; margin-top: 4px;}
-        .mono-text { font-family: monospace; font-size: 13px; color: #495057; }
-
-        .photo-preview-container { display: flex; flex-direction: column; gap: 10px; background: #f8f9fa; padding: 15px; border-radius: 4px; border: 1px dashed #ccc;}
-        .photo-gallery { display: flex; gap: 10px; flex-wrap: wrap; }
-        .photo-wrapper { position: relative; display: inline-block; }
-        .photo-thumbnail { width: 70px; height: 70px; object-fit: cover; border-radius: 4px; cursor: pointer; border: 1px solid #ccc; transition: transform 0.2s;}
-        .remove-single-btn { position: absolute; top: -5px; right: -5px; background: #dc3545; color: white; border: none; border-radius: 50%; width: 22px; height: 22px; font-size: 12px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3);}
         
+        .table-item-list { margin: 0; padding-left: 15px; }
+        .table-item-list li { margin-bottom: 8px; border-bottom: 1px dashed #eee; padding-bottom: 8px;}
+        .table-item-list li:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0;}
+
         #photoModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; text-align: center; cursor: pointer; }
         #modalImg { max-width: 90%; max-height: 90%; margin-top: 5vh; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
         #adminBadge { display: none; background: #28a745; color: white; padding: 4px 8px; border-radius: 15px; font-size: 11px; font-weight: bold; vertical-align: middle; margin-left: 10px;}
@@ -90,11 +100,12 @@
             .logout-btn { width: 100%; padding: 12px; font-size: 16px;}
             #adminBadge { display: block; width: fit-content; margin: 8px 0 0 0; }
             .form-grid { display: flex; flex-direction: column; gap: 12px; }
+            .item-grid { display: flex; flex-direction: column; gap: 8px; }
             .finance-group { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
             .top-controls { flex-direction: column; align-items: stretch; margin-top: 20px; }
             .search-bar, #viewFilter, #exportBtn { width: 100%; padding: 12px; font-size: 16px;}
             .button-group { flex-direction: column; }
-            button.add-btn, button.cancel-btn { width: 100%; }
+            button.main-save-btn, button.cancel-btn { width: 100%; }
         }
     </style>
 </head>
@@ -104,17 +115,14 @@
     <div class="login-box">
         <h3>🔐 MMC Staff Login</h3>
         <p style="color: #666; font-size: 13px; margin-bottom: 25px;">Please sign in to access cloud records.</p>
-        
         <div class="login-field">
             <label>Username</label>
             <input type="text" id="authEmail" class="login-input" placeholder="e.g. staff" onkeydown="if(event.key==='Enter') document.getElementById('authPassword').focus()">
         </div>
-        
         <div class="login-field">
             <label>Password</label>
             <input type="password" id="authPassword" class="login-input" placeholder="••••••••" onkeydown="if(event.key==='Enter') loginSystem()">
         </div>
-
         <div id="loginError" class="error-msg">Login failed. Check username or password.</div>
         <button class="login-btn" onclick="loginSystem()">Secure Login</button>
     </div>
@@ -135,13 +143,12 @@
         <input type="text" id="carModel" placeholder="Car Model (e.g., Honda Civic)">
         <input type="text" id="chassisNumber" placeholder="Chassis No (e.g., FC1)">
         
-        <input type="text" id="partDesc" placeholder="Part Needed (e.g., Lower Arm)">
-        <input type="text" id="partNumber" placeholder="Part ID / OEM No (e.g., 51350-TBA-A00)">
-        <input type="text" id="supplier" placeholder="Supplier">
-        
-        <div>
-            <small style="color: #666; font-size: 12px; display:block; margin-bottom:4px; font-weight:bold;">Target ETA Date</small>
-            <input type="date" id="etaDate">
+        <div class="items-wrapper">
+            <div class="items-header">
+                <h3>🛒 Parts Ordered List</h3>
+                <button type="button" class="add-item-btn" onclick="addNewItemBlock()">+ Add Part</button>
+            </div>
+            <div id="dynamicItemsContainer"></div>
         </div>
 
         <div class="col-span-2 finance-group">
@@ -172,17 +179,9 @@
             </select>
         </div>
         <input type="text" id="remarks" placeholder="Internal Remarks (Optional)">
-
-        <div class="col-span-4 photo-preview-container">
-            <div>
-                <small style="color: #666; font-size: 13px; display:block; font-weight:bold; margin-bottom:6px;">📷 Upload Photos (Max 5 allowed)</small>
-                <input type="file" id="photoInput" accept="image/*" multiple onchange="compressAndPreview(event)" style="border:none; padding:0; width:100%; font-size: 16px;">
-            </div>
-            <div id="photoGallery" class="photo-gallery"></div>
-        </div>
         
         <div class="button-group">
-            <button class="add-btn" id="mainBtn" onclick="saveOrUpdateOrder()">Save & Sync Order to Cloud</button>
+            <button class="main-save-btn" id="mainBtn" onclick="saveOrUpdateOrder()">Save Entire Order to Cloud</button>
             <button class="cancel-btn" id="cancelBtn" onclick="cancelEdit()">Cancel Edit</button>
         </div>
     </div>
@@ -202,10 +201,8 @@
             <thead>
                 <tr>
                     <th>Order ID</th>
-                    <th>Customer Details</th>
-                    <th>Car & Chassis</th>
-                    <th>Part Details</th>
-                    <th>Supplier / ETA</th>
+                    <th>Customer / Car</th>
+                    <th>Ordered Parts Details</th>
                     <th>Financials</th>
                     <th style="width: 100px;">Status</th>
                     <th style="width: 100px;">WhatsApp</th>
@@ -242,9 +239,12 @@
 
     let orders = [];
     let editingId = null; 
-    let currentPhotosArray = [];
     let isDataLoaded = false;
     let isAdmin = false; 
+    
+    // NEW MULTI-ITEM STATE MANAGEMENT
+    let itemMapCounter = 0;
+    let itemPhotosMap = {}; // Tracks photos for each specific item box
 
     auth.onAuthStateChanged((user) => {
         if (user) {
@@ -260,28 +260,20 @@
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('mainApp').style.display = 'block';
             document.getElementById('loginError').style.display = 'none';
-            document.getElementById('authEmail').value = '';
-            document.getElementById('authPassword').value = '';
-            if (!isDataLoaded) { loadDatabaseData(); } else { renderTable(); }
+            if (!isDataLoaded) { loadDatabaseData(); addNewItemBlock(); } else { renderTable(); }
         } else {
             document.getElementById('loginScreen').style.display = 'flex';
             document.getElementById('mainApp').style.display = 'none';
-            isAdmin = false;
-            orders = []; 
+            isAdmin = false; orders = []; 
         }
     });
 
     function loginSystem() {
         let email = document.getElementById('authEmail').value.trim();
-        if (email !== '' && !email.includes('@')) {
-            email = email + '@mmc.com';
-        }
-        
+        if (email !== '' && !email.includes('@')) email = email + '@mmc.com';
         const password = document.getElementById('authPassword').value;
-        auth.signInWithEmailAndPassword(email, password)
-            .catch((error) => { document.getElementById('loginError').style.display = 'block'; });
+        auth.signInWithEmailAndPassword(email, password).catch(() => { document.getElementById('loginError').style.display = 'block'; });
     }
-
     function logoutSystem() { auth.signOut(); }
 
     function loadDatabaseData() {
@@ -301,21 +293,55 @@
         const deposit = parseFloat(document.getElementById('deposit').value) || 0;
         document.getElementById('balance').value = Math.max(0, total - deposit);
     }
-
     document.getElementById('searchInput').addEventListener('input', renderTable);
 
-    // UPGRADED TO 5 PHOTOS
-    function compressAndPreview(event) {
+    // ==========================================
+    // MULTI-ITEM LOGIC (ADD, REMOVE, PHOTOS)
+    // ==========================================
+    function addNewItemBlock(data = null) {
+        itemMapCounter++;
+        const currentId = 'item_box_' + itemMapCounter;
+        itemPhotosMap[currentId] = data && data.photos ? [...data.photos] : [];
+
+        // Check if there is more than 1 item to show the delete button
+        const container = document.getElementById('dynamicItemsContainer');
+        const showRemove = container.children.length > 0;
+
+        const html = `
+        <div class="item-card" id="${currentId}">
+            ${showRemove ? `<button type="button" class="remove-item-btn" onclick="removeItemBlock('${currentId}')">✖ Remove</button>` : ''}
+            <div class="item-grid">
+                <input type="text" class="i-part" placeholder="Part Needed (e.g. Lower Arm)" value="${data ? data.part : ''}">
+                <input type="text" class="i-partNo" placeholder="Part ID / OEM No" value="${data && data.partNo ? data.partNo : ''}">
+                <input type="text" class="i-supplier" placeholder="Supplier" value="${data && data.supplier ? data.supplier : ''}">
+                <div>
+                    <small style="color:#666; font-size:11px; margin-bottom:2px; display:block;">ETA Date</small>
+                    <input type="date" class="i-eta" value="${data && data.eta ? data.eta : ''}">
+                </div>
+            </div>
+            <div class="photo-preview-container">
+                <small style="color: #666; font-weight:bold;">📷 Photos for this part (Max 5)</small>
+                <input type="file" accept="image/*" multiple onchange="processItemPhotos(event, '${currentId}')" style="font-size: 14px; padding:0; border:none;">
+                <div id="gallery_${currentId}" class="photo-gallery"></div>
+            </div>
+        </div>`;
+        container.insertAdjacentHTML('beforeend', html);
+        renderGalleryUI(currentId);
+    }
+
+    function removeItemBlock(id) {
+        document.getElementById(id).remove();
+        delete itemPhotosMap[id];
+    }
+
+    function processItemPhotos(event, itemId) {
         const files = event.target.files;
         if (!files || files.length === 0) return;
         
-        // Validation now checks for 5 max
-        if (currentPhotosArray.length + files.length > 5) {
-            alert("⚠️ You can only upload a maximum of 5 photos per order!");
-            event.target.value = ''; 
-            return;
+        if (itemPhotosMap[itemId].length + files.length > 5) {
+            alert("⚠️ Max 5 photos per item!");
+            event.target.value = ''; return;
         }
-        
         Array.from(files).forEach(file => {
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -329,8 +355,8 @@
                     canvas.width = width; canvas.height = height;
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, width, height);
-                    currentPhotosArray.push(canvas.toDataURL('image/jpeg', 0.5));
-                    renderPhotoGalleryUI(); 
+                    itemPhotosMap[itemId].push(canvas.toDataURL('image/jpeg', 0.5));
+                    renderGalleryUI(itemId); 
                 };
                 img.src = e.target.result;
             };
@@ -339,56 +365,60 @@
         event.target.value = ''; 
     }
 
-    function renderPhotoGalleryUI() {
-        const gallery = document.getElementById('photoGallery');
+    function renderGalleryUI(itemId) {
+        const gallery = document.getElementById('gallery_' + itemId);
         gallery.innerHTML = ''; 
-        currentPhotosArray.forEach((b64Data, index) => {
+        itemPhotosMap[itemId].forEach((b64Data, index) => {
             gallery.innerHTML += `
                 <div class="photo-wrapper">
                     <img src="${b64Data}" class="photo-thumbnail" onclick="showPhoto('${b64Data}')">
-                    <button type="button" class="remove-single-btn" onclick="removeSinglePhoto(${index})" title="Remove photo">✖</button>
+                    <button type="button" class="remove-single-btn" onclick="removeSinglePhoto('${itemId}', ${index})">✖</button>
                 </div>
             `;
         });
     }
 
-    function removeSinglePhoto(index) {
-        currentPhotosArray.splice(index, 1); 
-        renderPhotoGalleryUI(); 
-    }
-
-    function removeAllPhotos() {
-        currentPhotosArray = [];
-        document.getElementById('photoInput').value = '';
-        renderPhotoGalleryUI();
+    function removeSinglePhoto(itemId, index) {
+        itemPhotosMap[itemId].splice(index, 1); 
+        renderGalleryUI(itemId); 
     }
 
     function showPhoto(src) { document.getElementById('modalImg').src = src; document.getElementById('photoModal').style.display = 'block'; }
     function closePhoto() { document.getElementById('photoModal').style.display = 'none'; }
 
+    // ==========================================
+    // SAVE & EDIT
+    // ==========================================
     function editOrder(id) {
         const order = orders.find(o => o.id === id);
         document.getElementById('custName').value = order.name || '';
         document.getElementById('custPhone').value = order.phone || '';
         document.getElementById('carModel').value = order.car || '';
         document.getElementById('chassisNumber').value = order.chassis || '';
-        document.getElementById('partDesc').value = order.part || '';
-        document.getElementById('partNumber').value = order.partNo || '';
-        document.getElementById('supplier').value = order.supplier || '';
-        document.getElementById('etaDate').value = order.eta || '';
         document.getElementById('totalPrice').value = order.total || '';
         document.getElementById('deposit').value = order.deposit || '';
         document.getElementById('balance').value = order.balance || '';
         document.getElementById('orderByStaff').value = order.staff || '';
         document.getElementById('remarks').value = order.remarks || '';
 
-        currentPhotosArray = [];
-        if (order.photos && Array.isArray(order.photos)) {
-            currentPhotosArray = [...order.photos];
-        } else if (order.photo) {
-            currentPhotosArray.push(order.photo);
+        // Clear current container
+        document.getElementById('dynamicItemsContainer').innerHTML = '';
+        itemPhotosMap = {};
+
+        // Backward compatibility: If it's an old order, convert to array format
+        let itemsToLoad = [];
+        if (order.items && order.items.length > 0) {
+            itemsToLoad = order.items;
+        } else if (order.part) {
+            let oldPhotos = [];
+            if (order.photos) oldPhotos = [...order.photos];
+            else if (order.photo) oldPhotos.push(order.photo);
+            itemsToLoad.push({ part: order.part, partNo: order.partNo, supplier: order.supplier, eta: order.eta, photos: oldPhotos });
         }
-        renderPhotoGalleryUI();
+
+        // Render each item block
+        if(itemsToLoad.length === 0) addNewItemBlock();
+        itemsToLoad.forEach(itemData => addNewItemBlock(itemData));
 
         editingId = id;
         document.getElementById('mainBtn').innerText = "Confirm Update Data (Cloud)";
@@ -399,12 +429,15 @@
 
     function cancelEdit() {
         editingId = null;
-        document.getElementById('mainBtn').innerText = "Save & Sync Order to Cloud";
+        document.getElementById('mainBtn').innerText = "Save Entire Order to Cloud";
         document.getElementById('mainBtn').style.backgroundColor = "#0866ff";
         document.getElementById('cancelBtn').style.display = "none";
-        document.querySelectorAll('input').forEach(input => { if(input.id !== 'searchInput') input.value = ''; });
+        document.querySelectorAll('input:not(.login-input)').forEach(input => { if(input.id !== 'searchInput') input.value = ''; });
         document.getElementById('orderByStaff').value = '';
-        removeAllPhotos();
+        
+        document.getElementById('dynamicItemsContainer').innerHTML = '';
+        itemPhotosMap = {};
+        addNewItemBlock();
     }
 
     async function saveOrUpdateOrder() {
@@ -412,39 +445,50 @@
         const phone = document.getElementById('custPhone').value.replace(/[^0-9]/g, '');
         const car = document.getElementById('carModel').value;
         const chassis = document.getElementById('chassisNumber').value;
-        const part = document.getElementById('partDesc').value;
-        const partNo = document.getElementById('partNumber').value;
-        const supplier = document.getElementById('supplier').value;
-        const eta = document.getElementById('etaDate').value;
         const total = document.getElementById('totalPrice').value || "0";
         const deposit = document.getElementById('deposit').value || "0";
         const balance = document.getElementById('balance').value || "0";
         const staff = document.getElementById('orderByStaff').value;
         const remarks = document.getElementById('remarks').value;
 
-        if(!name || !part) return alert("Please fill in at least Customer Name and Part Needed.");
+        // Scrape all items from the dynamic blocks
+        let finalItemsArray = [];
+        document.querySelectorAll('.item-card').forEach(card => {
+            const id = card.id;
+            const part = card.querySelector('.i-part').value;
+            const partNo = card.querySelector('.i-partNo').value;
+            const supplier = card.querySelector('.i-supplier').value;
+            const eta = card.querySelector('.i-eta').value;
+            const photos = itemPhotosMap[id] || [];
+
+            if (part) { // Only save if a part name was entered
+                finalItemsArray.push({ part, partNo, supplier, eta, photos });
+            }
+        });
+
+        if(!name) return alert("Please fill in Customer Name.");
+        if(finalItemsArray.length === 0) return alert("Please enter at least 1 Part Needed in the Cart.");
 
         if (editingId) {
             await db.ref('orders/' + editingId).update({
-                name, phone, car, chassis, part, partNo, supplier, eta, total, deposit, balance, staff, remarks, photos: currentPhotosArray, photo: null
+                name, phone, car, chassis, total, deposit, balance, staff, remarks, 
+                items: finalItemsArray,
+                // Nullify legacy fields so database cleans itself up
+                part: null, partNo: null, supplier: null, eta: null, photos: null, photo: null
             });
             cancelEdit();
         } else {
             const counterRef = db.ref('orderCounter');
-            const snapshot = await counterRef.transaction((currentValue) => {
-                return (currentValue || 1000) + 1;
-            });
+            const snapshot = await counterRef.transaction((currentValue) => { return (currentValue || 1000) + 1; });
             const nextNum = snapshot.snapshot.val();
             const refNo = 'MMC-' + nextNum;
             const dateStr = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
             
             await db.ref('orders').push({
-                refNo, date: dateStr, name, phone, car, chassis, part, partNo, supplier, eta, total, deposit, balance, staff, remarks, status: 'waiting', photos: currentPhotosArray, timestamp: Date.now()
+                refNo, date: dateStr, name, phone, car, chassis, total, deposit, balance, staff, remarks, status: 'waiting', 
+                items: finalItemsArray, timestamp: Date.now()
             });
-            
-            document.querySelectorAll('input').forEach(input => { if(input.id !== 'searchInput') input.value = ''; });
-            document.getElementById('orderByStaff').value = '';
-            removeAllPhotos();
+            cancelEdit(); // Reset form
         }
     }
 
@@ -461,10 +505,7 @@
         }
     }
 
-    async function restoreOrder(id) {
-        await db.ref('orders/' + id).update({ status: 'arrived' });
-    }
-
+    async function restoreOrder(id) { await db.ref('orders/' + id).update({ status: 'arrived' }); }
     async function deleteOrder(id) {
         if(!isAdmin) return alert("You do not have permission to delete orders.");
         if(confirm("Are you absolutely sure you want to delete this order from the cloud?")) {
@@ -475,18 +516,21 @@
     function exportCSV() {
         if(!isAdmin) return;
         if(orders.length === 0) return alert("No data available to export.");
-        let csvContent = "data:text/csv;charset=utf-8,\uFEFFRef No,Order Date,Handled By,Customer Name,Phone,Car Model,Chassis No,Part,Part No ID,Supplier,ETA,Total,Deposit,Balance,Status,Remarks\n";
+        let csvContent = "data:text/csv;charset=utf-8,\uFEFFRef No,Order Date,Handled By,Customer Name,Phone,Car Model,Chassis No,All Parts,Total,Deposit,Balance,Status,Remarks\n";
         orders.forEach(o => {
-            const row = `"${o.refNo}","${o.date}","${o.staff || ''}","${o.name}","${o.phone}","${o.car || ''}","${o.chassis || ''}","${o.part}","${o.partNo || ''}","${o.supplier}","${o.eta}","${o.total}","${o.deposit}","${o.balance}","${o.status}","${o.remarks}"`;
+            // Combine all item names into one string for excel
+            let allPartsText = "";
+            if(o.items) allPartsText = o.items.map(i => i.part).join(" + ");
+            else if(o.part) allPartsText = o.part; // Legacy
+
+            const row = `"${o.refNo}","${o.date}","${o.staff || ''}","${o.name}","${o.phone}","${o.car || ''}","${o.chassis || ''}","${allPartsText}","${o.total}","${o.deposit}","${o.balance}","${o.status}","${o.remarks}"`;
             csvContent += row + "\n";
         });
         const encodedUri = encodeURI(csvContent);
         const link = document.createElement("a");
         link.setAttribute("href", encodedUri);
         link.setAttribute("download", `MMC_Cloud_Database_${new Date().toISOString().split('T')[0]}.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        document.body.appendChild(link); link.click(); document.body.removeChild(link);
     }
 
     function renderTable() {
@@ -499,25 +543,58 @@
         if (viewFilter === 'active') { filteredOrders = orders.filter(o => o.status !== 'completed'); } 
         else if (viewFilter === 'history') { filteredOrders = orders.filter(o => o.status === 'completed'); }
 
-        filteredOrders = filteredOrders.filter(o => 
-            o.name.toLowerCase().includes(searchTerm) || 
-            (o.car && o.car.toLowerCase().includes(searchTerm)) || 
-            (o.chassis && o.chassis.toLowerCase().includes(searchTerm)) || 
-            o.part.toLowerCase().includes(searchTerm) ||
-            (o.partNo && o.partNo.toLowerCase().includes(searchTerm)) ||
-            (o.refNo && o.refNo.toLowerCase().includes(searchTerm)) ||
-            (o.staff && o.staff.toLowerCase().includes(searchTerm))
-        );
+        filteredOrders = filteredOrders.filter(o => {
+            // Search inside the multi-item array
+            let partMatch = false;
+            if (o.items) {
+                partMatch = o.items.some(i => i.part.toLowerCase().includes(searchTerm) || (i.partNo && i.partNo.toLowerCase().includes(searchTerm)));
+            } else if (o.part) {
+                partMatch = o.part.toLowerCase().includes(searchTerm) || (o.partNo && o.partNo.toLowerCase().includes(searchTerm));
+            }
+            return o.name.toLowerCase().includes(searchTerm) || (o.car && o.car.toLowerCase().includes(searchTerm)) || 
+                   (o.chassis && o.chassis.toLowerCase().includes(searchTerm)) || (o.refNo && o.refNo.toLowerCase().includes(searchTerm)) ||
+                   (o.staff && o.staff.toLowerCase().includes(searchTerm)) || partMatch;
+        });
 
         filteredOrders.forEach(order => {
+            // Standardize old legacy orders vs new array orders
+            let itemsToDisplay = order.items || [];
+            if (itemsToDisplay.length === 0 && order.part) {
+                let oldPhotos = [];
+                if (order.photos) oldPhotos = [...order.photos];
+                else if (order.photo) oldPhotos.push(order.photo);
+                itemsToDisplay.push({ part: order.part, partNo: order.partNo, supplier: order.supplier, eta: order.eta, photos: oldPhotos });
+            }
+
+            // Generate HTML for the parts column (a bulleted list essentially)
+            let partsHtml = `<ul class="table-item-list">`;
+            let simplePartsListForWa = [];
+            
+            itemsToDisplay.forEach(item => {
+                const partNoText = item.partNo ? ` <small class="mono-text">[${item.partNo}]</small>` : '';
+                const supText = item.supplier ? ` • Supp: ${item.supplier}` : '';
+                const etaText = item.eta ? ` • ETA: ${item.eta}` : '';
+                
+                let photoHtml = '';
+                if (item.photos && item.photos.length > 0) {
+                    photoHtml = `<div style="display:flex; gap:3px; flex-wrap:wrap; margin-top:4px;">`;
+                    item.photos.forEach(p => { photoHtml += `<img src="${p}" class="photo-thumbnail" onclick="showPhoto('${p}')" style="width:35px; height:35px;">`; });
+                    photoHtml += `</div>`;
+                }
+                
+                partsHtml += `<li><strong>${item.part}</strong>${partNoText}<br><small style="color:#666;">${supText} ${etaText}</small>${photoHtml}</li>`;
+                simplePartsListForWa.push(`- ${item.part} ${item.partNo ? '('+item.partNo+')' : ''}`);
+            });
+            partsHtml += `</ul>`;
+
             const carText = order.car ? order.car + ' ' : '';
             const chassisText = order.chassis ? '(' + order.chassis + ') ' : '';
-            const partNoText = order.partNo ? ' [ID: ' + order.partNo + ']' : '';
+            const allItemsMsg = simplePartsListForWa.join('\n');
             
-            const msgReceipt = `🧾 *MALAYSIA MOTOR COMPANY - RECEIPT*\n\nHi ${order.name}, your special order has been confirmed!\n\n*Order ID:* ${order.refNo}\n*Item:* ${carText}${chassisText}${order.part}${partNoText}\n*Total:* RM${order.total}\n*Deposit Paid:* RM${order.deposit}\n*Balance Due:* RM${order.balance}\n\nWe will update you once your part has arrived. Thank you!\n(Handled by: ${order.staff || '-'})`;
+            const msgReceipt = `🧾 *MALAYSIA MOTOR COMPANY - RECEIPT*\n\nHi ${order.name}, your special order has been confirmed!\n\n*Order ID:* ${order.refNo}\n*Car:* ${carText}${chassisText}\n*Items Ordered:*\n${allItemsMsg}\n\n*Total:* RM${order.total}\n*Deposit Paid:* RM${order.deposit}\n*Balance Due:* RM${order.balance}\n\nWe will update you once your parts have arrived. Thank you!\n(Handled by: ${order.staff || '-'})`;
             const msgUpdate = order.status === 'arrived' 
-                ? `📦 *ITEM ARRIVED!*\n\nHi ${order.name}, good news! Your preorder item (*${order.refNo}*) has safely arrived at our shop.\n\n*Balance due to collect:* RM${order.balance}\n\nYou can come down for installation or collection anytime. Thank you!` 
-                : `⏳ *SPECIAL ORDER UPDATE*\n\nHi ${order.name}, this is an update regarding your order (*${order.refNo}*). The part is currently being processed by our supplier. We will notify you immediately once it reaches our counter. Thanks for your patience!`;
+                ? `📦 *ITEM ARRIVED!*\n\nHi ${order.name}, good news! Your preorder (*${order.refNo}*) has safely arrived at our shop.\n\n*Balance due to collect:* RM${order.balance}\n\nYou can come down for installation or collection anytime. Thank you!` 
+                : `⏳ *SPECIAL ORDER UPDATE*\n\nHi ${order.name}, this is an update regarding your order (*${order.refNo}*). The parts are currently being processed by our supplier. We will notify you immediately once it reaches our counter. Thanks for your patience!`;
             
             const linkReceipt = order.phone ? `https://wa.me/${order.phone}?text=${encodeURIComponent(msgReceipt)}` : '#';
             const linkUpdate = order.phone ? `https://wa.me/${order.phone}?text=${encodeURIComponent(msgUpdate)}` : '#';
@@ -526,19 +603,6 @@
                 ? `<button class="status-btn status-completed">📦 Collected</button>`
                 : `<button class="status-btn ${order.status === 'waiting' ? 'status-waiting' : 'status-arrived'}" onclick="toggleStatus('${order.id}')">${order.status === 'waiting' ? '⏳ Waiting Supplier' : '✅ Stock Arrived'}</button>`;
 
-            let combinedPhotos = [];
-            if (order.photos) combinedPhotos = [...order.photos];
-            else if (order.photo) combinedPhotos.push(order.photo);
-            
-            let photoHtml = '';
-            if (combinedPhotos.length > 0) {
-                photoHtml = `<div style="display:flex; gap:5px; flex-wrap:wrap; margin-top:5px;">`;
-                combinedPhotos.forEach(p => {
-                    photoHtml += `<img src="${p}" class="photo-thumbnail" onclick="showPhoto('${p}')" style="width:40px; height:40px;">`;
-                });
-                photoHtml += `</div>`;
-            }
-            
             const deleteBtnHtml = isAdmin ? `<button class="delete-btn" onclick="deleteOrder('${order.id}')">✖</button>` : '';
 
             const tr = document.createElement('tr');
@@ -546,10 +610,8 @@
 
             tr.innerHTML = `
                 <td><span class="ref-badge">${order.refNo || 'N/A'}</span><br><small>${order.date}</small><br>${order.staff ? `<span class="staff-badge">👤 ${order.staff}</span>` : ''}</td>
-                <td><strong>${order.name}</strong><br><small>${order.phone}</small></td>
-                <td><strong>${order.car || '-'}</strong><br><small class="mono-text">${order.chassis || ''}</small></td>
-                <td><strong>${order.part}</strong><br><small class="mono-text">${order.partNo || ''}</small>${photoHtml}</td>
-                <td><strong>${order.supplier}</strong><br><small>ETA: ${order.eta || '-'}</small><div class="notes-text">${order.remarks ? '📝 ' + order.remarks : ''}</div></td>
+                <td><strong>${order.name}</strong><br><small>${order.phone}</small><br><div style="margin-top:6px;"><strong>${order.car || '-'}</strong> <span class="mono-text">${order.chassis || ''}</span></div></td>
+                <td>${partsHtml}<div class="notes-text">${order.remarks ? '📝 Remarks: ' + order.remarks : ''}</div></td>
                 <td><small>Total: RM${order.total}</small><br><small>Paid: RM${order.deposit}</small><br><strong>Bal: RM${order.balance}</strong></td>
                 <td>${statusHtml}</td>
                 <td>
@@ -561,7 +623,7 @@
                 <td>
                     <div class="action-btns">
                         ${order.status !== 'completed' ? `<button class="complete-btn" onclick="markCompleted('${order.id}')">✔️ Done</button>` : `<button class="edit-btn" onclick="restoreOrder('${order.id}')">⏪ Return</button>`}
-                        <button class="edit-btn" onclick="editOrder('${order.id}')">✏️</button>
+                        <button class="edit-btn" onclick="editOrder('${order.id}')">✏️ Edit</button>
                         ${deleteBtnHtml}
                     </div>
                 </td>
