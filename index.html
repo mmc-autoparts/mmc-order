@@ -17,89 +17,81 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <style>
-        /* 🎨 NEW PRO UI/UX BASE STYLES */
+        /* 🎨 PRO UI/UX BASE STYLES */
         body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; background-color: #f1f5f9; margin: 0; padding: 20px; color: #334155; }
         
         #loginScreen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(241, 245, 249, 0.95); z-index: 9999; display: flex; justify-content: center; align-items: center; padding: 20px; backdrop-filter: blur(5px);}
-        .login-box { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; max-width: 400px; width: 100%; box-sizing: border-box; border: 1px solid #e2e8f0;}
+        .login-box { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; max-width: 400px; width: 100%; border: 1px solid #e2e8f0;}
         .login-box h3 { margin-top: 0; color: #0f172a; margin-bottom: 5px; font-size: 22px; font-weight: 800;}
-        .login-field { display: flex; align-items: center; background: #fff; border: 1px solid #cbd5e1; border-radius: 8px; margin-bottom: 15px; overflow: hidden; transition: border-color 0.2s;}
+        .login-field { display: flex; align-items: center; border: 1px solid #cbd5e1; border-radius: 8px; margin-bottom: 15px; overflow: hidden; transition: border-color 0.2s;}
         .login-field:focus-within { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
         .login-field label { background: #f8fafc; color: #475569; font-weight: bold; font-size: 14px; padding: 14px; width: 85px; text-align: left; border-right: 1px solid #cbd5e1; margin: 0;}
-        .login-input { border: none; padding: 14px; font-size: 16px; flex: 1; outline: none; background: transparent; width: 100%; box-sizing: border-box;}
-        .login-btn { background-color: #2563eb; color: white; border: none; padding: 14px; font-weight: bold; border-radius: 8px; cursor: pointer; width: 100%; font-size: 16px; margin-top: 10px; margin-bottom: 10px; transition: background 0.2s;}
-        .login-btn:hover { background-color: #1d4ed8; }
+        .login-input { border: none; padding: 14px; font-size: 16px; flex: 1; outline: none; width: 100%;}
+        .login-btn { background-color: #2563eb; color: white; border: none; padding: 14px; font-weight: bold; border-radius: 8px; cursor: pointer; width: 100%; font-size: 16px; margin-top: 10px; margin-bottom: 10px;}
         .error-msg { color: #ef4444; font-size: 13px; margin-top: -5px; margin-bottom: 15px; display: none; font-weight: bold; }
 
-        /* Main App & Header */
         #mainApp { display: none; }
-        .container { max-width: 1450px; margin: auto; background: white; padding: 25px 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); box-sizing: border-box; border: 1px solid #e2e8f0;}
+        .container { max-width: 1450px; margin: auto; background: white; padding: 25px 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;}
         .header-flex { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 15px;}
         h2 { color: #0f172a; margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.5px;}
-        .logout-btn { background-color: #ef4444; color: white; border: none; padding: 10px 18px; border-radius: 6px; cursor: pointer; font-weight: bold; white-space: nowrap; transition: background 0.2s;}
+        .logout-btn { background-color: #ef4444; color: white; border: none; padding: 10px 18px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: background 0.2s;}
         .logout-btn:hover { background-color: #dc2626; }
         
-        /* 📑 TABS NAVIGATION */
+        /* TABS */
         .tabs-nav { display: flex; gap: 10px; margin-bottom: 25px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
         .tab-btn { background: transparent; border: none; padding: 10px 20px; font-size: 16px; font-weight: bold; color: #64748b; cursor: pointer; border-radius: 6px; transition: all 0.2s;}
-        .tab-btn:hover { background: #f1f5f9; color: #0f172a;}
         .tab-btn.active { background: #e0e7ff; color: #4338ca; box-shadow: inset 0 -3px 0 #4338ca; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
 
-        /* Master Layout Grids */
+        /* GRID FORMS */
         .form-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-bottom: 25px; }
-        input:not(.login-input), select { padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; width: 100%; box-sizing: border-box; transition: all 0.2s; color:#0f172a; }
+        input:not(.login-input), select { padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; width: 100%; box-sizing: border-box; color:#0f172a; }
         input:not(.login-input):focus, select:focus { border-color: #3b82f6; outline: none; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
         .col-span-2 { grid-column: span 2; }
-        .col-span-4 { grid-column: span 4; }
         .finance-group { display: flex; gap: 12px; }
         .finance-group > div { flex: 1; }
-        .label-text { color: #64748b; font-size: 12px; font-weight: 700; display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;}
+        .label-text { color: #64748b; font-size: 12px; font-weight: 700; display: block; margin-bottom: 6px; text-transform: uppercase;}
 
-        /* =========================================
-           POS-STYLE TABLE GRID WITH QTY & SCANNER
-           ========================================= */
-        .items-wrapper { border: 1px solid #cbd5e1; border-radius: 8px; margin-bottom: 20px; grid-column: span 4; overflow: hidden; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.02);}
+        /* ITEMS WRAPPER (V27 Style) */
+        .items-wrapper { border: 1px solid #cbd5e1; border-radius: 8px; margin-bottom: 20px; grid-column: span 4; overflow: hidden; background: #fff;}
         .items-header-bar { display: flex; justify-content: space-between; align-items: center; padding: 12px 18px; background-color: #f8fafc; border-bottom: 1px solid #cbd5e1;}
-        .items-header-bar h3 { margin: 0; font-size: 16px; color: #0f172a; display: flex; align-items: center; gap: 8px; font-weight: 700;}
-        .add-item-btn { background-color: #10b981; color: white; border: none; padding: 8px 16px; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 13px; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2); transition: background 0.2s;}
-        .add-item-btn:hover { background-color: #059669; }
+        .items-header-bar h3 { margin: 0; font-size: 16px; color: #0f172a; font-weight: 700;}
+        .add-item-btn { background-color: #10b981; color: white; border: none; padding: 8px 16px; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 13px;}
         
         .pos-table-header { display: grid; grid-template-columns: 35px 2fr 1.5fr 1fr 1fr 50px 80px 90px 110px 70px 40px; gap: 6px; background: #e2e8f0; padding: 10px 12px; border-bottom: 1px solid #cbd5e1; font-weight: 700; font-size: 11px; color: #475569; text-transform: uppercase;}
         .pos-table-row { display: grid; grid-template-columns: 35px 2fr 1.5fr 1fr 1fr 50px 80px 90px 110px 70px 40px; gap: 6px; padding: 8px 12px; border-bottom: 1px solid #f1f5f9; align-items: start;}
-        .pos-table-row:hover { background-color: #f8fafc; }
         
         .row-num { font-size: 14px; color: #64748b; display: flex; align-items: center; justify-content: center; height: 38px; font-weight: 700;}
-        .pos-input { border: 1px solid #cbd5e1 !important; padding: 8px 6px !important; height: 38px; border-radius: 4px !important; font-family: inherit;}
-        .readonly-input { background-color: #f1f5f9; color: #0f172a; font-weight: 700; border-color: #e2e8f0 !important;}
+        .pos-input { border: 1px solid #cbd5e1 !important; padding: 8px 6px !important; height: 38px; border-radius: 4px !important;}
+        .readonly-input { background-color: #f1f5f9; color: #0f172a; font-weight: 700;}
         
         .input-group { display: flex; gap: 4px; }
-        .scan-btn { background: #334155; color: white; border: none; border-radius: 4px; width: 42px; height: 38px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.2); transition: background 0.2s;}
-        .scan-btn:hover { background: #0f172a; }
-
-        .remove-row-btn { color: #ef4444; background: #fee2e2; border: 1px solid #fecaca; height: 38px; width: 100%; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; transition: all 0.2s;}
+        .scan-btn { background: #334155; color: white; border: none; border-radius: 4px; width: 42px; height: 38px; cursor: pointer; display: flex; align-items: center; justify-content: center;}
+        .remove-row-btn { color: #ef4444; background: #fee2e2; border: 1px solid #fecaca; height: 38px; width: 100%; border-radius: 4px; font-weight: bold; cursor: pointer;}
         
-        .photo-upload-btn { display: flex; align-items: center; justify-content: center; gap: 5px; background: #f8fafc; border: 1px solid #cbd5e1; height: 38px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 700; color: #475569; transition: background 0.2s;}
+        .photo-upload-btn { display: flex; align-items: center; justify-content: center; gap: 5px; background: #f8fafc; border: 1px solid #cbd5e1; height: 38px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 700;}
         .row-gallery { grid-column: 2 / -1; display: flex; gap: 8px; flex-wrap: wrap; padding-top: 6px; }
         .photo-wrapper { position: relative; display: inline-block; }
-        .photo-thumbnail { width: 48px; height: 48px; object-fit: cover; border-radius: 4px; cursor: pointer; border: 1px solid #cbd5e1; box-shadow: 0 1px 2px rgba(0,0,0,0.05);}
-        .remove-single-btn { position: absolute; top: -6px; right: -6px; background: #ef4444; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 10px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);}
+        .photo-thumbnail { width: 48px; height: 48px; object-fit: cover; border-radius: 4px; cursor: pointer; border: 1px solid #cbd5e1;}
+        .remove-single-btn { position: absolute; top: -6px; right: -6px; background: #ef4444; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 10px; font-weight: bold; cursor: pointer;}
 
-        /* Buttons & Controls */
+        .mobile-grid-3 { display: contents; } 
+        .mobile-label { display: none; font-size: 11px; color: #64748b; font-weight: 700; margin-bottom: 4px; text-transform: uppercase;}
+
         .button-group { display: flex; gap: 12px; grid-column: span 4; margin-top: 10px;}
-        button.main-save-btn { background-color: #2563eb; color: white; border: none; padding: 14px; font-weight: bold; border-radius: 6px; cursor: pointer; width: 100%; font-size: 16px; box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2); transition: background 0.2s;}
+        button.main-save-btn { background-color: #2563eb; color: white; border: none; padding: 14px; font-weight: bold; border-radius: 6px; cursor: pointer; width: 100%; font-size: 16px;}
         button.cancel-btn { background-color: #64748b; color: white; border: none; padding: 14px; font-weight: bold; border-radius: 6px; cursor: pointer; width: 30%; font-size: 16px; display: none;}
         
+        /* TABLE STYLES */
         .top-controls { display: flex; gap: 12px; align-items: center; margin-top: 25px; margin-bottom: 18px; flex-wrap: wrap;}
-        .search-bar { padding: 12px 15px; width: 320px; border-radius: 20px; border: 1px solid #cbd5e1; box-sizing: border-box; box-shadow: inset 0 1px 2px rgba(0,0,0,0.02);}
-        #exportBtn { background-color: #059669; color: white; border: none; padding: 12px 18px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-left: auto; display: none; white-space: nowrap; box-shadow: 0 2px 4px rgba(5, 150, 105, 0.2);}
+        .search-bar { padding: 12px 15px; width: 320px; border-radius: 20px; border: 1px solid #cbd5e1;}
+        #exportBtn { background-color: #059669; color: white; border: none; padding: 12px 18px; border-radius: 6px; font-weight: bold; margin-left: auto; display: none;}
         
-        /* Table Bottom */
-        .table-responsive { width: 100%; overflow-x: auto; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.02);}
+        .table-responsive { width: 100%; overflow-x: auto; border-radius: 8px; border: 1px solid #e2e8f0;}
         table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 1050px; }
-        th, td { padding: 14px 16px; border-bottom: 1px solid #e2e8f0; text-align: left; vertical-align: middle;}
-        th { background-color: #f8fafc; color: #334155; font-weight: 700; border-bottom: 2px solid #cbd5e1; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px;}
+        th, td { padding: 14px 16px; border-bottom: 1px solid #e2e8f0; text-align: left; vertical-align: top;}
+        th { background-color: #f8fafc; color: #334155; font-weight: 700; border-bottom: 2px solid #cbd5e1; text-transform: uppercase; font-size: 12px;}
         
         .status-btn { padding: 8px 12px; border: none; border-radius: 20px; font-weight: 700; font-size: 12px; width: 100%; margin-bottom: 6px; text-align: center;}
         .status-btn.clickable { cursor: pointer; transition: transform 0.1s;}
@@ -109,38 +101,38 @@
         .status-completed { background-color: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0;}
         
         .action-btns { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap;}
-        .action-btns button { border: none; cursor: pointer; font-size: 12px; padding: 8px 10px; border-radius: 4px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 4px; flex: 1; min-width: 60px; transition: opacity 0.2s;}
-        .action-btns button:hover { opacity: 0.8; }
+        .action-btns button { border: none; cursor: pointer; font-size: 12px; padding: 8px 10px; border-radius: 4px; font-weight: 700; flex: 1; min-width: 60px;}
         .delete-btn { color: #ef4444; background: #fee2e2; }
         .edit-btn { color: #2563eb; background: #dbeafe; }
         .complete-btn { color: #059669; background: #d1fae5; }
         .print-btn { color: #334155; background: #e2e8f0; border: 1px solid #cbd5e1;}
         .pdf-btn { color: #b91c1c; background: #fee2e2; border: 1px solid #fecaca;}
         
-        .wa-btn { color: #fff; text-decoration: none; padding: 8px; border-radius: 4px; font-weight: 700; display: block; text-align: center; font-size: 12px; margin-bottom: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); transition: opacity 0.2s; cursor: pointer; border: none;}
-        .wa-btn:hover { opacity: 0.85; }
+        .wa-btn { color: #fff; text-decoration: none; padding: 8px; border-radius: 4px; font-weight: 700; display: block; text-align: center; font-size: 12px; margin-bottom: 6px; cursor: pointer; border: none;}
         .wa-btn-receipt { background-color: #0ea5e9; }
         .wa-btn-arrived { background-color: #22c55e; }
         .wa-btn-cancel { background-color: #ef4444; }
+        .wa-btn-boss { background-color: #3b82f6; }
         
-        .ref-badge { background-color: #e2e8f0; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-weight: 700; color: #334155; font-size: 13px;}
-        .staff-badge { background-color: #dbeafe; color: #1d4ed8; border: 1px solid #bfdbfe; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; display: inline-block; margin-top: 6px; }
+        .ref-badge { background-color: #e2e8f0; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-weight: 700; font-size: 13px;}
+        .table-item-list { margin: 0; padding-left: 15px; }
+        .table-item-list li { margin-bottom: 8px; border-bottom: 1px dashed #e2e8f0; padding-bottom: 8px;}
 
-        /* BOSS DASHBOARDS & RESTOCK UI */
+        /* ADMIN & RESTOCK DASHBOARDS */
         .stats-dashboard { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px;}
         .stat-card { background: white; padding: 20px; border-radius: 10px; border: 1px solid #cbd5e1; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.02);}
-        .stat-card h4 { margin: 0 0 8px 0; color: #64748b; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;}
+        .stat-card h4 { margin: 0 0 8px 0; color: #64748b; font-size: 13px; text-transform: uppercase;}
         .stat-card p { margin: 0; font-size: 26px; font-weight: 900; color: #0f172a;}
         
         .restock-row { display: grid; grid-template-columns: 2fr 1.5fr 1fr 1fr 80px 80px 100px; gap: 10px; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 15px; align-items: end;}
         .custom-date-group { display: none; gap: 10px; align-items: center;}
 
         /* Modals */
-        #photoModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.9); z-index: 1000; text-align: center; cursor: pointer; }
-        #modalImg { max-width: 90%; max-height: 90%; margin-top: 5vh; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        #photoModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.9); z-index: 1000; text-align: center;}
+        #modalImg { max-width: 90%; max-height: 90%; margin-top: 5vh; border-radius: 8px;}
         #barcodeModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.95); z-index: 2000; flex-direction: column; align-items: center; justify-content: center; }
         .barcode-container { background: white; padding: 20px; border-radius: 12px; width: 95%; max-width: 450px; text-align: center; }
-        #adminBadge { display: none; background: #10b981; color: white; padding: 5px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; vertical-align: middle; margin-left: 10px;}
+        #adminBadge { display: none; background: #10b981; color: white; padding: 5px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; margin-left: 10px;}
         #pdfContainer { position: absolute; left: -9999px; top: 0; width: 1000px; background: white; }
 
         @media (max-width: 800px) {
@@ -150,11 +142,10 @@
             .form-grid { display: flex; flex-direction: column; gap: 15px; }
             .finance-group { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
             .pos-table-header { display: none; }
-            .pos-table-row { display: flex; flex-direction: column; gap: 10px; border: 2px solid #bfdbfe; border-radius: 8px; padding: 15px; margin: 10px 0; background: #fff; }
+            .pos-table-row { display: flex; flex-direction: column; gap: 10px; border: 2px solid #bfdbfe; border-radius: 8px; padding: 15px; margin: 10px 0;}
             .mobile-label { display: block; } .row-num { display: none; }
             .mobile-grid-3 { display: grid; grid-template-columns: 1fr 1.5fr 1.5fr; gap: 10px; }
             .mobile-grid-3 > div { display: flex; flex-direction: column; }
-            .top-controls { flex-direction: column; align-items: stretch;}
             .restock-row { display: flex; flex-direction: column; }
             .stats-dashboard { grid-template-columns: 1fr; }
         }
@@ -289,7 +280,7 @@
             </select>
 
             <select id="rDateFilter" onchange="toggleCustomDate()" style="font-weight: bold; padding: 12px; border-radius: 8px; border:1px solid #cbd5e1;">
-                <option value="today">Today's Data</option>
+                <option value="today" selected>Today's Data</option>
                 <option value="yesterday">Yesterday</option>
                 <option value="week">This Week</option>
                 <option value="month">This Month</option>
@@ -305,8 +296,8 @@
             <div style="margin-left:auto; display:flex; gap:10px; flex-wrap:wrap;">
                 <button class="print-btn" onclick="printRestock()" style="padding:10px 15px; border-radius:6px; font-weight:bold;">🖨️ Print Summary</button>
                 <button class="pdf-btn" onclick="savePdfRestock()" style="padding:10px 15px; border-radius:6px; font-weight:bold;">📄 PDF Export</button>
-                <button class="wa-btn wa-btn-arrived" onclick="sendBossReport('60194482580', 'Hock')" style="margin:0; padding:10px 15px; border-radius:6px; font-size:13px;">📲 Boss Hock</button>
-                <button class="wa-btn wa-btn-arrived" onclick="sendBossReport('60164401970', 'Kelvin')" style="margin:0; padding:10px 15px; border-radius:6px; font-size:13px;">📲 Boss Kelvin</button>
+                <button class="wa-btn wa-btn-boss" onclick="sendBossReport('60194482580', 'Hock')" style="margin:0; padding:10px 15px; border-radius:6px; font-size:13px;">📲 Boss Hock</button>
+                <button class="wa-btn wa-btn-boss" onclick="sendBossReport('60164401970', 'Kelvin')" style="margin:0; padding:10px 15px; border-radius:6px; font-size:13px;">📲 Boss Kelvin</button>
             </div>
         </div>
 
@@ -569,7 +560,6 @@
     function showPhoto(src) { document.getElementById('modalImg').src = src; document.getElementById('photoModal').style.display = 'block'; }
     function closePhoto() { document.getElementById('photoModal').style.display = 'none'; }
 
-    // Preorder Logic
     function editOrder(id) {
         const order = orders.find(o => o.id === id);
         ['custName','custPhone','carModel','chassisNumber','totalPrice','deposit','balance','orderByStaff','remarks'].forEach(field => {
@@ -578,6 +568,15 @@
         document.getElementById('dynamicItemsContainer').innerHTML = '';
         itemPhotosMap = {};
         const itemsToLoad = order.items || [];
+        
+        // Legacy data fallback (V27 standard)
+        if(itemsToLoad.length === 0 && order.part) {
+            let oldPhotos = [];
+            if(order.photos) oldPhotos = [...order.photos];
+            else if(order.photo) oldPhotos.push(order.photo);
+            itemsToLoad.push({ part: order.part, partNo: order.partNo, brand: order.brand, supplier: order.supplier, eta: order.eta, photos: oldPhotos, qty: '1', unitPrice: order.total, subTotal: order.total });
+        }
+
         if(itemsToLoad.length === 0) addNewItemBlock();
         itemsToLoad.forEach(data => addNewItemBlock(data));
 
@@ -642,76 +641,114 @@
         const search = document.getElementById('searchInput').value.toLowerCase();
         const view = document.getElementById('viewFilter').value;
 
-        // Admin Boss Dashboard Logic
+        // Admin Boss Dashboard Calculations
         let sumSales = 0, sumBal = 0, sumComp = 0;
-
-        let filtered = orders.filter(o => {
-            // Dashboard calculations
+        orders.forEach(o => {
             sumSales += parseFloat(o.total) || 0;
             if(o.status !== 'completed') sumBal += parseFloat(o.balance) || 0;
             if(o.status === 'completed') sumComp++;
-
-            // Table Filter
-            if (view === 'active' && o.status === 'completed') return false;
-            if (view === 'history' && o.status !== 'completed') return false;
-            const itemMatch = (o.items||[]).some(i => (i.part||'').toLowerCase().includes(search) || (i.partNo||'').toLowerCase().includes(search));
-            return (o.name||'').toLowerCase().includes(search) || (o.car||'').toLowerCase().includes(search) || (o.refNo||'').toLowerCase().includes(search) || itemMatch;
         });
 
-        // Update Boss Dashboard UI
         if(isAdmin) {
             document.getElementById('b_totalSales').innerText = "RM " + sumSales.toFixed(2);
             document.getElementById('b_pendingBal').innerText = "RM " + sumBal.toFixed(2);
             document.getElementById('b_completed').innerText = sumComp;
         }
 
+        let filtered = orders.filter(o => {
+            if (view === 'active' && o.status === 'completed') return false;
+            if (view === 'history' && o.status !== 'completed') return false;
+            const itemMatch = (o.items||[]).some(i => (i.part||'').toLowerCase().includes(search) || (i.partNo||'').toLowerCase().includes(search));
+            return (o.name||'').toLowerCase().includes(search) || (o.car||'').toLowerCase().includes(search) || (o.refNo||'').toLowerCase().includes(search) || itemMatch;
+        });
+
         filtered.forEach(order => {
+            let itemsToDisplay = order.items || [];
+            
+            // Legacy Data V27 Fallback
+            if(itemsToDisplay.length === 0 && order.part) {
+                let oldPhotos = [];
+                if(order.photos) oldPhotos = [...order.photos];
+                else if(order.photo) oldPhotos.push(order.photo);
+                itemsToDisplay.push({ part: order.part, partNo: order.partNo, brand: order.brand, supplier: order.supplier, eta: order.eta, photos: oldPhotos, qty: '1', unitPrice: order.total, subTotal: order.total });
+            }
+
             let partsHtml = `<ul class="table-item-list">`;
             let waList = [];
-            (order.items||[]).forEach(item => {
-                const sub = parseFloat(item.subTotal) > 0 ? `<span style="float:right; font-size:12px; color:#64748b;">RM${item.subTotal}</span>` : '';
-                partsHtml += `<li><div><span style="background:#e2e8f0; padding:2px 6px; border-radius:10px; font-size:11px; margin-right:4px;">${item.qty||1}x</span><strong>${item.part||'-'}</strong> <small>[${item.partNo||''}]</small>${sub}</div><small style="color:#64748b;">Brd: ${item.brand||'-'} • Sup: ${item.supplier||'-'}</small></li>`;
-                waList.push(`- ${item.qty||1}x ${item.part||'-'} [${item.partNo||''}]`);
+            
+            itemsToDisplay.forEach(item => {
+                const qtyText = item.qty ? `<span style="background:#e2e8f0; padding:2px 6px; border-radius:10px; font-size:11px; margin-right:4px;">${item.qty}x</span>` : '';
+                const partDesc = item.part || '-';
+                const partNoText = item.partNo ? ` <small class="mono-text" style="color:#64748b;">[${item.partNo}]</small>` : '';
+                const brandText = item.brand ? ` • Brd: ${item.brand}` : '';
+                const supText = item.supplier ? ` • Sup: ${item.supplier}` : '';
+                const etaText = item.eta ? ` • ETA: ${item.eta}` : '';
+                
+                let priceDetails = "";
+                if (parseFloat(item.subTotal) > 0) {
+                    priceDetails = `<span style="float:right; font-size:12px; color:#64748b;">@ RM${item.unitPrice || 0} = <b style="color:#0f172a;">RM${item.subTotal}</b></span>`;
+                }
+
+                // Restore V27 Photos!
+                let photoHtml = '';
+                if (item.photos && item.photos.length > 0) {
+                    photoHtml = `<div style="display:flex; gap:4px; flex-wrap:wrap; margin-top:4px;">`;
+                    item.photos.forEach(p => { photoHtml += `<img src="${p}" class="photo-thumbnail" onclick="showPhoto('${p}')" style="width:40px; height:40px; border:1px solid #cbd5e1;">`; });
+                    photoHtml += `</div>`;
+                }
+                
+                partsHtml += `<li><div>${qtyText}<strong>${partDesc}</strong>${partNoText}${priceDetails}</div><small style="color:#64748b;">${brandText}${supText}${etaText}</small>${photoHtml}</li>`;
+                waList.push(`- ${item.qty||1}x ${partDesc} ${item.partNo ? '['+item.partNo+']' : ''}`);
             });
             partsHtml += `</ul>`;
 
-            const waMsgArr = `*MALAYSIA MOTOR COMPANY*\n\nPelanggan yang dihormati ${order.name},\nBerita baik! Pesanan anda (${order.refNo}) telah selamat tiba. Baki bayaran: RM${order.balance}. Anda dialu-alukan untuk mengambilnya pada bila-bila masa. Terima kasih!\n\nDear ${order.name},\nGood news! Your order (${order.refNo}) has arrived. Balance due: RM${order.balance}. You are welcome to collect it. Thank you!`;
-            const waMsgNot = `*MALAYSIA MOTOR COMPANY*\n\nPelanggan yang dihormati ${order.name},\nKami memohon maaf, barang pesanan anda (${order.refNo}) kehabisan stok. Sila hubungi kami untuk pemulangan deposit (RM${order.deposit}). Harap maaf atas segala kesulitan.\n\nDear ${order.name},\nWe apologize, your ordered item (${order.refNo}) is out of stock. Please contact us for a deposit refund (RM${order.deposit}). Sorry for the inconvenience.`;
+            const carText = order.car ? order.car + ' ' : '';
+            const chassisText = order.chassis ? '(' + order.chassis + ') ' : '';
+            const allItemsMsg = waList.join('\n');
+            
+            // Restore V27 Polite WhatsApp Messages
+            const msgReceipt = `🧾 *MALAYSIA MOTOR COMPANY - RESIT / RECEIPT*\n\nPelanggan yang dihormati ${order.name},\nTerima kasih. Pesanan istimewa anda telah disahkan!\n\nDear ${order.name},\nThank you. Your special order has been confirmed!\n\n*No. Pesanan / Order ID:* ${order.refNo}\n*Kenderaan / Car:* ${carText}${chassisText}\n*Barang / Items:*\n${allItemsMsg}\n\n*Jumlah / Total:* RM${order.total}\n*Deposit:* RM${order.deposit}\n*Baki / Balance Due:* RM${order.balance}\n\n(Handled by: ${order.staff || '-'})`;
+            const msgArrived = `*MALAYSIA MOTOR COMPANY*\n\nPelanggan yang dihormati ${order.name},\nBerita baik! Pesanan anda (No. Pesanan: ${order.refNo}) telah selamat tiba di kedai kami. Baki bayaran adalah sebanyak RM${order.balance}. Anda dialu-alukan untuk datang mengambil pesanan anda pada bila-bila masa yang kelapangan. Terima kasih atas sokongan berterusan anda!\n\nDear ${order.name},\nGood news! Your order (${order.refNo}) has safely arrived at our shop. The balance due is RM${order.balance}. You are most welcome to drop by and collect it at your convenience. Thank you so much for your continued support!`;
+            const msgNotFound = `*MALAYSIA MOTOR COMPANY*\n\nPelanggan yang dihormati ${order.name},\nKami memohon maaf atas segala kesulitan, dukacita dimaklumkan bahawa barang pesanan anda (No. Pesanan: ${order.refNo}) pada masa ini kehabisan stok dan tidak dapat dibekalkan oleh pembekal kami. Sila hubungi kami untuk urusan pemulangan penuh deposit anda (RM${order.deposit}). Kami amat kesal atas kesulitan yang timbul dan amat menghargai kesabaran anda.\n\nDear ${order.name},\nWe sincerely apologize, but we regret to inform you that your ordered item(s) (${order.refNo}) are currently out of stock and cannot be sourced by our suppliers. Please kindly contact us to arrange for a full refund of your deposit (RM${order.deposit}). We are truly sorry for the inconvenience caused and deeply appreciate your understanding.`;
             
             const tr = document.createElement('tr');
             tr.style.opacity = order.status === 'completed' ? '0.6' : '1';
             tr.innerHTML = `
-                <td><span class="ref-badge">${order.refNo}</span><br><small style="color:#64748b; margin-top:6px; display:inline-block;">${order.date}</small></td>
-                <td><strong style="color:#0f172a;">${order.name}</strong><br><small style="color:#3b82f6; font-weight:bold;">${order.phone}</small><br><div style="margin-top:8px; padding-top:8px; border-top:1px dashed #e2e8f0;">${order.car||'-'}</div></td>
-                <td>${partsHtml}</td>
-                <td><small style="color:#64748b;">Total: RM${order.total}</small><br><strong style="font-size:15px; color:#0f172a;">Bal: RM${order.balance}</strong></td>
+                <td><span class="ref-badge">${order.refNo}</span><br><small style="color:#64748b; margin-top:6px; display:inline-block; font-weight:700;">${order.date}</small><br>${order.staff ? `<span class="staff-badge">👤 ${order.staff}</span>` : ''}</td>
+                <td><strong style="color:#0f172a;">${order.name}</strong><br><small style="color:#3b82f6; font-weight:bold;">${order.phone}</small><br><div style="margin-top:8px; padding-top:8px; border-top:1px dashed #e2e8f0;"><strong style="color:#334155;">${order.car||'-'}</strong><br><span class="mono-text" style="color:#64748b; font-size:12px;">${order.chassis||''}</span></div></td>
+                <td>${partsHtml}<div class="notes-text" style="margin-top:8px; color:#059669; font-weight:600;">${order.remarks ? '📝 Remarks: ' + order.remarks : ''}</div></td>
+                <td><small style="color:#64748b;">Total: RM${order.total}</small><br><small style="color:#64748b;">Paid: RM${order.deposit}</small><br><strong style="font-size:15px; margin-top:6px; display:inline-block; color:#0f172a;">Bal: RM${order.balance}</strong></td>
                 <td><button class="status-btn ${order.status==='completed'?'status-completed':(order.status==='waiting'?'status-waiting clickable':'status-arrived clickable')}" onclick="${order.status!=='completed'?`toggleStatus('${order.id}')`:''}">${order.status==='waiting'?'⏳ Wait':(order.status==='arrived'?'✅ Arrived':'📦 Done')}</button></td>
                 <td>
                     <div class="action-btns" style="flex-direction:column; align-items:stretch;">
-                        ${order.phone && order.status !== 'completed' ? `<a href="https://wa.me/${order.phone}?text=${encodeURIComponent(waMsgArr)}" target="_blank" class="wa-btn wa-btn-arrived">💬 Inform Arrived</a><a href="https://wa.me/${order.phone}?text=${encodeURIComponent(waMsgNot)}" target="_blank" class="wa-btn wa-btn-cancel">❌ Item Not Found</a>` : ''}
+                        ${order.phone && order.status !== 'completed' ? `<a href="https://wa.me/${order.phone}?text=${encodeURIComponent(msgReceipt)}" target="_blank" class="wa-btn wa-btn-receipt">📄 WA Receipt</a><a href="https://wa.me/${order.phone}?text=${encodeURIComponent(msgArrived)}" target="_blank" class="wa-btn wa-btn-arrived">💬 Inform Arrived</a><a href="https://wa.me/${order.phone}?text=${encodeURIComponent(msgNotFound)}" target="_blank" class="wa-btn wa-btn-cancel">❌ Item Not Found</a>` : ''}
                     </div>
                 </td>
                 <td>
-                    <div class="action-btns" style="margin-bottom:6px;"><button class="print-btn" onclick="printOrder('${order.id}')">🖨️</button><button class="pdf-btn" onclick="savePdfOrder('${order.id}')">📄</button></div>
-                    <div class="action-btns">${order.status !== 'completed' ? `<button class="complete-btn" onclick="markCompleted('${order.id}')">✔️</button>` : ''}<button class="edit-btn" onclick="editOrder('${order.id}')">✏️</button>${isAdmin?`<button class="delete-btn" onclick="deleteOrder('${order.id}')">✖</button>`:''}</div>
+                    <div class="action-btns" style="margin-bottom:6px;"><button class="print-btn" onclick="printOrder('${order.id}')">🖨️ Print</button><button class="pdf-btn" onclick="savePdfOrder('${order.id}')">📄 PDF</button></div>
+                    <div class="action-btns">${order.status !== 'completed' ? `<button class="complete-btn" onclick="markCompleted('${order.id}')">✔️ Done</button>` : `<button class="edit-btn" onclick="restoreOrder('${order.id}')">⏪ Return</button>`}<button class="edit-btn" onclick="editOrder('${order.id}')">✏️ Edit</button>${isAdmin?`<button class="delete-btn" onclick="deleteOrder('${order.id}')">✖ Del</button>`:''}</div>
                 </td>`;
             tbody.appendChild(tr);
         });
     }
 
-    // PDF/PRINT Preorders
+    // PDF/PRINT Preorders (Restored V27)
     function getInvoiceHTML(order) {
         let itemsHtml = '';
-        (order.items||[]).forEach((item, idx) => {
-            itemsHtml += `<tr><td style="text-align:center;">${idx+1}</td><td><div style="width:16px;height:16px;border:1px solid #64748b;"></div></td><td><strong>${item.part||'-'}</strong></td><td>${item.partNo||'-'}</td><td>${item.brand||'-'}</td><td>${item.supplier||'-'}</td><td style="text-align:center;">${item.qty||'1'}</td><td style="text-align:right;">RM ${parseFloat(item.unitPrice||0).toFixed(2)}</td><td style="text-align:right;"><strong>RM ${parseFloat(item.subTotal||0).toFixed(2)}</strong></td></tr>`;
+        let itemsToDisplay = order.items || [];
+        if(itemsToDisplay.length === 0 && order.part) {
+            itemsToDisplay.push({ part: order.part, partNo: order.partNo, brand: order.brand, supplier: order.supplier, qty: '1', unitPrice: order.total, subTotal: order.total });
+        }
+        itemsToDisplay.forEach((item, idx) => {
+            itemsHtml += `<tr><td style="text-align:center;">${idx+1}</td><td style="text-align:center;"><div class="check-box"></div></td><td><strong>${item.part||'-'}</strong></td><td>${item.partNo||'-'}</td><td>${item.brand||'-'}</td><td>${item.supplier||'-'}</td><td style="text-align:center;">${item.qty||'1'}</td><td style="text-align:right;">RM ${parseFloat(item.unitPrice||0).toFixed(2)}</td><td style="text-align:right;"><strong>RM ${parseFloat(item.subTotal||0).toFixed(2)}</strong></td></tr>`;
         });
-        return `<style>body{font-family:sans-serif;padding:30px;color:#1e293b;} table{width:100%;border-collapse:collapse;margin-top:20px;} th,td{border:1px solid #cbd5e1;padding:10px;font-size:13px;}</style><div id="invoiceBody"><h2 style="text-align:center;">MALAYSIA MOTOR COMPANY<br><span style="font-size:16px;">ORDER LIST / PACKING LIST</span></h2><p><strong>Order No:</strong> ${order.refNo} | <strong>Customer:</strong> ${order.name} | <strong>Car:</strong> ${order.car||'-'}</p><table><thead><tr><th style="width:5%;">No</th><th style="width:5%;">[ ]</th><th>Part</th><th>Code</th><th>Brand</th><th>Supplier</th><th>Qty</th><th>U.Price</th><th>Total</th></tr></thead><tbody>${itemsHtml}</tbody></table><p style="text-align:right;font-size:16px;">Total Balance Due: <strong style="color:red;">RM ${parseFloat(order.balance||0).toFixed(2)}</strong></p></div>`;
+        return `<style>body{font-family:'Segoe UI',Arial,sans-serif;padding:30px;color:#1e293b;margin:auto;} .header{text-align:center;border-bottom:2px solid #1e293b;padding-bottom:20px;margin-bottom:30px;} .logo{font-size:28px;font-weight:800;letter-spacing:1px;} .info-grid{display:flex;justify-content:space-between;margin-bottom:30px;} .info-box{background:#f8fafc;padding:15px;border-radius:6px;width:45%;border:1px solid #e2e8f0;} .info-box p{margin:5px 0;font-size:14px;} table{width:100%;border-collapse:collapse;margin-bottom:30px;} th,td{border:1px solid #cbd5e1;padding:12px;text-align:left;font-size:13px;} th{background:#f1f5f9;text-transform:uppercase;font-size:11px;} .check-box{width:16px;height:16px;border:1px solid #64748b;display:inline-block;border-radius:2px;} .totals{text-align:right;font-size:15px;} .totals p{margin:5px 0;} .footer{margin-top:50px;font-size:12px;text-align:center;color:#64748b;border-top:1px solid #e2e8f0;padding-top:20px;}</style><div id="invoiceBody"><div class="header"><div class="logo">MALAYSIA MOTOR COMPANY</div></div><h2 style="text-align:center;margin-bottom:30px;letter-spacing:1px;">ORDER LIST / PACKING LIST</h2><div class="info-grid"><div class="info-box"><p><strong>Customer Name:</strong> ${order.name}</p><p><strong>Contact:</strong> ${order.phone||'-'}</p><p><strong>Car Details:</strong> ${order.car||'-'} ${order.chassis?'('+order.chassis+')':''}</p></div><div class="info-box"><p><strong>Order No:</strong> ${order.refNo}</p><p><strong>Date:</strong> ${order.date}</p><p><strong>Served By:</strong> ${order.staff||'-'}</p><p><strong>Status:</strong> ${order.status==='completed'?'Collected':'Pending Fulfillment'}</p></div></div><table><thead><tr><th style="width:5%;text-align:center;">No.</th><th style="width:5%;text-align:center;">Pack</th><th style="width:30%;">Part Description</th><th style="width:20%;">Item Code</th><th style="width:15%;">Brand</th><th style="width:5%;text-align:center;">QTY</th><th style="width:10%;text-align:right;">U.Price</th><th style="width:10%;text-align:right;">Total</th></tr></thead><tbody>${itemsHtml}</tbody></table><div class="totals"><p>Total Amount: <strong>RM ${parseFloat(order.total||0).toFixed(2)}</strong></p><p>Deposit Paid: RM ${parseFloat(order.deposit||0).toFixed(2)}</p><p style="font-size:18px;margin-top:10px;">Balance Due: <strong style="color:#ef4444;">RM ${parseFloat(order.balance||0).toFixed(2)}</strong></p></div><div class="footer">Thank you for choosing Malaysia Motor Company. Please retain this list for your records.<br>${order.remarks?'Internal Remarks: '+order.remarks:''}</div></div>`;
     }
     function printOrder(id) { const o = orders.find(x=>x.id===id); if(o){ const p = window.open('','_blank'); p.document.write(getInvoiceHTML(o)); p.document.close(); p.onload=()=>p.print(); } }
     function savePdfOrder(id) { const o = orders.find(x=>x.id===id); if(o){ document.getElementById('pdfContainer').innerHTML = getInvoiceHTML(o); html2pdf().set({margin:10, filename:`${o.refNo}_List.pdf`, jsPDF:{format:'a4'}}).from(document.getElementById('invoiceBody')).save().then(()=>document.getElementById('pdfContainer').innerHTML=''); } }
 
     // ==========================================
-    // RESTOCK SYSTEM V29
+    // RESTOCK SYSTEM V30
     // ==========================================
     async function addRestockItem() {
         const part = document.getElementById('r_part').value;
@@ -742,10 +779,9 @@
         const view = document.getElementById('rViewFilter').value;
         const datePreset = document.getElementById('rDateFilter').value;
         
-        // Date Logic
         let startTs = 0, endTs = Number.MAX_SAFE_INTEGER;
         const now = new Date();
-        now.setHours(0,0,0,0); // Midnight today
+        now.setHours(0,0,0,0);
         
         if (datePreset === 'today') { startTs = now.getTime(); endTs = startTs + 86400000; }
         else if (datePreset === 'yesterday') { startTs = now.getTime() - 86400000; endTs = now.getTime(); }
@@ -764,25 +800,20 @@
             return (i.part||'').toLowerCase().includes(search) || (i.code||'').toLowerCase().includes(search) || (i.brand||'').toLowerCase().includes(search) || (i.supp||'').toLowerCase().includes(search);
         });
 
-        // Update Stats Dashboard (Always visible)
+        // Update Stats Dashboard
         let tAdd=0, tNot=0, tOrd=0;
         filtered.forEach(i => { tAdd++; if(i.status==='Ordered') tOrd++; else tNot++; });
         document.getElementById('s_total').innerText = tAdd;
         document.getElementById('s_notYet').innerText = tNot;
         document.getElementById('s_ordered').innerText = tOrd;
-        window.currentRestockPrintData = filtered; // Save for PDF
+        window.currentRestockPrintData = filtered; 
 
         // Render Table
         const tbody = document.getElementById('restockTableBody'); tbody.innerHTML = '';
         filtered.forEach(item => {
             let actionHtml = '';
-            // The Done Button Fix: Shows as long as it's not strictly 'Ordered'
-            if (item.status !== 'Ordered') {
-                actionHtml += `<button class="complete-btn" onclick="markRestockOrdered('${item.id}')" style="width:100%;">✔️ Done</button>`;
-            }
-            if (isAdmin) {
-                actionHtml += `<button class="delete-btn" onclick="deleteRestock('${item.id}')" style="width:100%; margin-top:4px;">✖ Del</button>`;
-            }
+            if (item.status !== 'Ordered') { actionHtml += `<button class="complete-btn" onclick="markRestockOrdered('${item.id}')" style="width:100%;">✔️ Done</button>`; }
+            if (isAdmin) { actionHtml += `<button class="delete-btn" onclick="deleteRestock('${item.id}')" style="width:100%; margin-top:4px;">✖ Del</button>`; }
             
             const tr = document.createElement('tr');
             tr.style.opacity = item.status === 'Ordered' ? '0.6' : '1';
@@ -814,18 +845,15 @@
                else { ordText += details; ordCount++; }
             }
         });
-
         const text = `📊 *MMC DAILY RESTOCK REPORT*\nTo: Boss ${bossName}\n📅 Date: ${todayStr}\n\n*🔴 PENDING ORDER (Not Yet): ${notYetCount}*\n${notYetText || '- None -'}\n\n*🟢 ALREADY ORDERED: ${ordCount}*\n${ordText || '- None -'}`;
         window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank');
     }
 
-    // Print & PDF for Restock Summary
     function getRestockHTML() {
         const data = window.currentRestockPrintData || [];
         let rows = '';
         data.forEach((i, idx) => { rows += `<tr><td style="text-align:center;">${idx+1}</td><td>${i.date}</td><td><strong>${i.part||'-'}</strong></td><td>${i.code||'-'}</td><td>${i.brand||'-'}</td><td>${i.supp||'-'}</td><td style="text-align:center;">${i.onHandQty||0}</td><td style="text-align:center; color:red; font-weight:bold;">${i.needOrderQty||0}</td><td>${i.status}</td></tr>`; });
         const dateRangeText = document.getElementById('rDateFilter').options[document.getElementById('rDateFilter').selectedIndex].text;
-        
         return `<style>body{font-family:sans-serif;padding:30px;} table{width:100%;border-collapse:collapse;margin-top:20px;font-size:12px;} th,td{border:1px solid #ccc;padding:8px;}</style><div id="rInvoiceBody"><h2 style="text-align:center;">RESTOCK SUMMARY REPORT</h2><p style="text-align:center; color:#555;">Date Range: ${dateRangeText}</p><div style="display:flex; justify-content:space-around; margin:20px 0; background:#f4f4f4; padding:10px;"><span>Total Items: <strong>${document.getElementById('s_total').innerText}</strong></span><span>Not Yet Ordered: <strong>${document.getElementById('s_notYet').innerText}</strong></span><span>Ordered: <strong>${document.getElementById('s_ordered').innerText}</strong></span></div><table><thead><tr><th style="width:5%;">No</th><th style="width:10%;">Date</th><th>Part</th><th>Code</th><th>Brand</th><th>Supplier</th><th style="width:8%;">On Hand</th><th style="width:8%;">Need</th><th style="width:10%;">Status</th></tr></thead><tbody>${rows}</tbody></table></div>`;
     }
     function printRestock() { const p = window.open('','_blank'); p.document.write(getRestockHTML()); p.document.close(); p.onload=()=>p.print(); }
@@ -841,9 +869,7 @@
             csvContent += row + "\n";
         });
         const encodedUri = encodeURI(csvContent);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", `MMC_Cloud_Database_${new Date().toISOString().split('T')[0]}.csv`);
+        const link = document.createElement("a"); link.setAttribute("href", encodedUri); link.setAttribute("download", `MMC_Cloud_Database_${new Date().toISOString().split('T')[0]}.csv`);
         document.body.appendChild(link); link.click(); document.body.removeChild(link);
     }
 </script>
