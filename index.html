@@ -3,27 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Malaysia Motor Company - Secure Cloud Portal</title>
+    <title>Malaysia Motor Company - Secure Portal</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
-        /* Passcode Lockscreen Overlay Styles */
-        #lockScreen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(240, 242, 245, 0.98); z-index: 9999; display: flex; justify-content: center; align-items: center; }
-        .lock-box { background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); text-align: center; max-width: 360px; width: 100%; }
-        .lock-box h3 { margin-top: 0; color: #1a1a1a; font-family: sans-serif; }
-        .lock-box input { padding: 12px; font-size: 18px; text-align: center; width: 100%; box-sizing: border-box; border: 2px solid #ccc; border-radius: 4px; margin-bottom: 15px; letter-spacing: 5px; }
-        .lock-btn { background-color: #0866ff; color: white; border: none; padding: 12px; font-weight: bold; border-radius: 4px; cursor: pointer; width: 100%; font-size: 16px; }
-        .lock-btn:hover { background-color: #0050d1; }
-        .error-msg { color: red; font-size: 13px; margin-top: -10px; margin-bottom: 10px; display: none; font-weight: bold; }
+        /* Professional Login Screen Styles */
+        #loginScreen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(240, 242, 245, 0.98); z-index: 9999; display: flex; justify-content: center; align-items: center; }
+        .login-box { background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); text-align: center; max-width: 360px; width: 100%; }
+        .login-box h3 { margin-top: 0; color: #1a1a1a; font-family: sans-serif; }
+        .login-box input { padding: 12px; font-size: 14px; width: 100%; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 15px; }
+        .login-btn { background-color: #0866ff; color: white; border: none; padding: 12px; font-weight: bold; border-radius: 4px; cursor: pointer; width: 100%; font-size: 16px; margin-bottom: 10px;}
+        .login-btn:hover { background-color: #0050d1; }
+        .error-msg { color: #dc3545; font-size: 13px; margin-top: -5px; margin-bottom: 15px; display: none; font-weight: bold; }
 
-        /* Core Application UI (Hidden until authenticated) */
+        /* Main App Styles */
         #mainApp { display: none; }
         
         body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; }
         .container { max-width: 1250px; margin: auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        h2 { color: #1a1a1a; margin-top: 0; border-bottom: 2px solid #e4e6eb; padding-bottom: 10px; }
+        .header-flex { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e4e6eb; padding-bottom: 10px; margin-bottom: 20px;}
+        h2 { color: #1a1a1a; margin: 0; }
         h2 a { color: #1a1a1a; text-decoration: none; }
         h2 a:hover { color: #0866ff; text-decoration: underline; }
+        .logout-btn { background-color: #dc3545; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .logout-btn:hover { background-color: #c82333; }
+
         .form-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px; }
         input, select { padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; width: 100%; box-sizing: border-box;}
         .col-span-2 { grid-column: span 2; }
@@ -37,7 +42,9 @@
 
         .top-controls { display: flex; gap: 10px; align-items: center; margin-top: 30px; margin-bottom: 15px; }
         .search-bar { padding: 10px; width: 320px; border-radius: 20px; border: 1px solid #ccc; }
-        .export-btn { background-color: #107c41; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-left: auto; }
+        
+        /* Export Excel Button (Hidden by default) */
+        #exportBtn { background-color: #107c41; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-left: auto; display: none; }
         
         table { width: 100%; border-collapse: collapse; font-size: 14px; }
         th, td { padding: 12px; border-bottom: 1px solid #eee; text-align: left; vertical-align: top;}
@@ -69,26 +76,34 @@
         .photo-thumbnail:hover { transform: scale(1.1); box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         #photoModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; text-align: center; cursor: pointer; }
         #modalImg { max-width: 90%; max-height: 90%; margin-top: 5vh; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+        
+        /* Admin Badge indicator */
+        #adminBadge { display: none; background: #28a745; color: white; padding: 3px 8px; border-radius: 15px; font-size: 11px; font-weight: bold; vertical-align: middle; margin-left: 10px;}
     </style>
 </head>
 <body>
 
-<div id="lockScreen">
-    <div class="lock-box">
-        <h3>🔒 MMC Secure System</h3>
-        <p style="color: #666; font-size: 14px; margin-bottom: 20px;">Enter Shop Passcode to Access</p>
-        <input type="password" id="passcodeField" placeholder="••••" maxlength="6" onkeydown="if(event.key==='Enter') verifyPasscode()">
-        <div id="errorMessage" class="error-msg">Wrong Passcode! Try again.</div>
-        <button class="lock-btn" onclick="verifyPasscode()">Unlock Dashboard</button>
+<div id="loginScreen">
+    <div class="login-box">
+        <h3>🔐 MMC Staff Login</h3>
+        <p style="color: #666; font-size: 13px; margin-bottom: 20px;">Please sign in to access cloud records.</p>
+        <input type="email" id="authEmail" placeholder="Staff Email (e.g. staff@mmc.com)">
+        <input type="password" id="authPassword" placeholder="Password" onkeydown="if(event.key==='Enter') loginSystem()">
+        <div id="loginError" class="error-msg">Login failed. Check email or password.</div>
+        <button class="login-btn" onclick="loginSystem()">Secure Login</button>
     </div>
 </div>
 
 <div id="mainApp" class="container">
-    <h2>
-        <a href="https://console.firebase.google.com/project/malaysia-motor-preorder/database/malaysia-motor-preorder-default-rtdb/data/~2F" target="_blank" title="Open Firebase Cloud Database">
-            Malaysia Motor Company - Special Orders Portal 🌐
-        </a>
-    </h2>
+    <div class="header-flex">
+        <h2>
+            <a href="https://console.firebase.google.com/project/malaysia-motor-preorder/database/malaysia-motor-preorder-default-rtdb/data/~2F" target="_blank" title="Open Firebase Cloud Database">
+                Malaysia Motor Company - Special Orders Portal 🌐
+            </a>
+            <span id="adminBadge">👑 Boss Admin View</span>
+        </h2>
+        <button class="logout-btn" onclick="logoutSystem()">🔒 Logout</button>
+    </div>
     
     <div class="form-grid">
         <input type="text" id="custName" placeholder="Customer Name">
@@ -145,7 +160,7 @@
             <option value="history">Completed History</option>
             <option value="all">All Records</option>
         </select>
-        <button class="export-btn" onclick="exportCSV()">📥 Download Excel Backup</button>
+        <button id="exportBtn" class="export-btn" onclick="exportCSV()">📥 Download Excel Backup</button>
     </div>
 
     <table>
@@ -171,23 +186,7 @@
 </div>
 
 <script>
-    // 🔒 Passcode verification matching your exact request
-    function verifyPasscode() {
-        const input = document.getElementById('passcodeField').value;
-        
-        // ----------------------------------------------------
-        // ⬅️ 店面专属密码在这里 (Passcode set to 3113)
-        // ----------------------------------------------------
-        if (input === '3113') {
-            document.getElementById('lockScreen').style.display = 'none';
-            document.getElementById('mainApp').style.display = 'block';
-            initializeFirebase(); 
-        } else {
-            document.getElementById('errorMessage').style.display = 'block';
-            document.getElementById('passcodeField').value = '';
-        }
-    }
-
+    // ⚠️ Replace this block with your EXACT Firebase Keys
     const firebaseConfig = {
         apiKey: "YOUR_API_KEY",
         authDomain: "malaysia-motor-preorder.firebaseapp.com",
@@ -198,25 +197,82 @@
         appId: "YOUR_APP_ID"
     };
     
-    let db;
+    // Initialize Firebase Services
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.database();
+
+    // ------------------------------------------------------------------
+    // 👑 BOSS ADMIN SETTING: Type your exact admin email here
+    // ------------------------------------------------------------------
+    const BOSS_EMAIL = "admin@mmc.com"; 
+
     let orders = [];
     let editingId = null; 
     let currentPhotoBase64 = null; 
+    let isDataLoaded = false;
+    let isAdmin = false; // Global flag to check if user is Boss
 
-    function initializeFirebase() {
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-            db = firebase.database();
+    // 🔒 Monitor Login Status (Check if user is allowed in)
+    auth.onAuthStateChanged((user) => {
+        if (user) {
+            // Check if logged in user is the Boss
+            if (user.email.toLowerCase() === BOSS_EMAIL.toLowerCase()) {
+                isAdmin = true;
+                document.getElementById('exportBtn').style.display = 'block';
+                document.getElementById('adminBadge').style.display = 'inline-block';
+            } else {
+                isAdmin = false;
+                document.getElementById('exportBtn').style.display = 'none';
+                document.getElementById('adminBadge').style.display = 'none';
+            }
+
+            // User is signed in! Hide login screen, show app.
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
+            document.getElementById('loginError').style.display = 'none';
+            document.getElementById('authEmail').value = '';
+            document.getElementById('authPassword').value = '';
             
-            db.ref('orders').on('value', (snapshot) => {
-                orders = [];
-                snapshot.forEach((childSnapshot) => {
-                    orders.push({ id: childSnapshot.key, ...childSnapshot.val() });
-                });
-                orders.sort((a,b) => b.timestamp - a.timestamp);
-                renderTable();
-            });
+            // Only pull database records AFTER successful login
+            if (!isDataLoaded) { loadDatabaseData(); } else { renderTable(); }
+        } else {
+            // User is signed out. Hide app, show login screen.
+            document.getElementById('loginScreen').style.display = 'flex';
+            document.getElementById('mainApp').style.display = 'none';
+            isAdmin = false;
+            orders = []; 
         }
+    });
+
+    // 🔑 Function to log in using the email you created in Firebase Console
+    function loginSystem() {
+        const email = document.getElementById('authEmail').value;
+        const password = document.getElementById('authPassword').value;
+        
+        auth.signInWithEmailAndPassword(email, password)
+            .catch((error) => {
+                document.getElementById('loginError').style.display = 'block';
+                console.error("Login failed:", error.message);
+            });
+    }
+
+    // 🚪 Function to log out
+    function logoutSystem() {
+        auth.signOut();
+    }
+
+    // Connect to database and pull records
+    function loadDatabaseData() {
+        isDataLoaded = true;
+        db.ref('orders').on('value', (snapshot) => {
+            orders = [];
+            snapshot.forEach((childSnapshot) => {
+                orders.push({ id: childSnapshot.key, ...childSnapshot.val() });
+            });
+            orders.sort((a,b) => b.timestamp - a.timestamp);
+            renderTable();
+        });
     }
 
     function calcBalance() {
@@ -365,12 +421,14 @@
     }
 
     async function deleteOrder(id) {
+        if(!isAdmin) return alert("You do not have permission to delete orders.");
         if(confirm("Are you absolutely sure you want to delete this order from the cloud?")) {
             await db.ref('orders/' + id).remove();
         }
     }
 
     function exportCSV() {
+        if(!isAdmin) return;
         if(orders.length === 0) return alert("No data available to export.");
         let csvContent = "data:text/csv;charset=utf-8,\uFEFFRef No,Order Date,Handled By,Customer Name,Phone,Car Model,Chassis No,Part,Part No ID,Supplier,ETA,Total,Deposit,Balance,Status,Remarks\n";
         orders.forEach(o => {
@@ -424,6 +482,9 @@
                 : `<button class="status-btn ${order.status === 'waiting' ? 'status-waiting' : 'status-arrived'}" onclick="toggleStatus('${order.id}')">${order.status === 'waiting' ? '⏳ Waiting Supplier' : '✅ Stock Arrived'}</button>`;
 
             const photoHtml = order.photo ? `<img src="${order.photo}" class="photo-thumbnail" onclick="showPhoto('${order.photo}')">` : '';
+            
+            // 🔥 ONLY SHOW DELETE BUTTON IF LOGGED IN AS ADMIN
+            const deleteBtnHtml = isAdmin ? `<button class="delete-btn" onclick="deleteOrder('${order.id}')">✖</button>` : '';
 
             const tr = document.createElement('tr');
             tr.style.opacity = order.status === 'completed' ? '0.7' : '1';
@@ -446,7 +507,7 @@
                     <div class="action-btns">
                         ${order.status !== 'completed' ? `<button class="complete-btn" onclick="markCompleted('${order.id}')">✔️ Done</button>` : `<button class="edit-btn" onclick="restoreOrder('${order.id}')">⏪ Return</button>`}
                         <button class="edit-btn" onclick="editOrder('${order.id}')">✏️</button>
-                        <button class="delete-btn" onclick="deleteOrder('${order.id}')">✖</button>
+                        ${deleteBtnHtml}
                     </div>
                 </td>
             `;
