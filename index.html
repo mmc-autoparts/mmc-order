@@ -21,7 +21,7 @@
 
         /* Main App & Header */
         #mainApp { display: none; }
-        .container { max-width: 1300px; margin: auto; background: white; padding: 20px 25px; border-radius: 6px; box-shadow: 0 4px 8px rgba(0,0,0,0.08); box-sizing: border-box;}
+        .container { max-width: 1350px; margin: auto; background: white; padding: 20px 25px; border-radius: 6px; box-shadow: 0 4px 8px rgba(0,0,0,0.08); box-sizing: border-box;}
         .header-flex { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e4e6eb; padding-bottom: 10px; margin-bottom: 20px;}
         h2 { color: #1a1a1a; margin: 0; font-size: 20px;}
         .logout-btn { background-color: #dc3545; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; white-space: nowrap;}
@@ -35,7 +35,7 @@
         .finance-group > div { flex: 1; }
 
         /* =========================================
-           NEW POS-STYLE TABLE GRID (ERP Look)
+           POS-STYLE TABLE GRID WITH QTY & PRICE
            ========================================= */
         .items-wrapper { border: 1px solid #b3b3b3; border-radius: 4px; margin-bottom: 20px; grid-column: span 4; overflow: hidden; background: #fff;}
         .items-header-bar { display: flex; justify-content: space-between; align-items: center; padding: 8px 15px; background-color: #e9ecef; border-bottom: 1px solid #b3b3b3;}
@@ -43,14 +43,15 @@
         .add-item-btn { background-color: #28a745; color: white; border: none; padding: 6px 12px; font-weight: bold; border-radius: 3px; cursor: pointer; font-size: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.2);}
         .add-item-btn:hover { background-color: #218838; }
 
-        .pos-table-header { display: grid; grid-template-columns: 40px 2.5fr 1.5fr 1.5fr 1fr 90px 40px; gap: 5px; background: #f4f5f7; padding: 8px 10px; border-bottom: 1px solid #ccc; font-weight: bold; font-size: 12px; color: #555;}
-        
-        .pos-table-row { display: grid; grid-template-columns: 40px 2.5fr 1.5fr 1.5fr 1fr 90px 40px; gap: 5px; padding: 6px 10px; border-bottom: 1px solid #eee; align-items: start;}
+        /* Updated 10-Column Grid Layout */
+        .pos-table-header { display: grid; grid-template-columns: 35px 2fr 1.5fr 1.2fr 60px 80px 90px 110px 80px 40px; gap: 6px; background: #f4f5f7; padding: 8px 10px; border-bottom: 1px solid #ccc; font-weight: bold; font-size: 12px; color: #555;}
+        .pos-table-row { display: grid; grid-template-columns: 35px 2fr 1.5fr 1.2fr 60px 80px 90px 110px 80px 40px; gap: 6px; padding: 6px 10px; border-bottom: 1px solid #eee; align-items: start;}
         .pos-table-row:hover { background-color: #f8faff; }
         
         .row-num { font-size: 13px; color: #666; display: flex; align-items: center; justify-content: center; height: 35px; font-weight: bold;}
-        .pos-input { border: 1px solid #d1d5db !important; padding: 8px !important; height: 35px; border-radius: 3px !important; font-family: inherit;}
+        .pos-input { border: 1px solid #d1d5db !important; padding: 6px !important; height: 35px; border-radius: 3px !important; font-family: inherit;}
         .pos-input:focus { border-color: #0866ff !important; outline: none; box-shadow: 0 0 0 2px rgba(8,102,255,0.2);}
+        .readonly-input { background-color: #e9ecef; color: #495057; font-weight: bold;}
         
         .remove-row-btn { color: white; background: #dc3545; border: none; height: 35px; width: 100%; border-radius: 3px; font-weight: bold; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center;}
         .remove-row-btn:hover { background: #c82333; }
@@ -63,28 +64,27 @@
         .photo-thumbnail { width: 45px; height: 45px; object-fit: cover; border-radius: 3px; cursor: pointer; border: 1px solid #aaa; }
         .remove-single-btn { position: absolute; top: -6px; right: -6px; background: #dc3545; color: white; border: none; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center;}
 
-        /* Mobile Labels (Hidden on Desktop) */
+        /* Desktop: This trick keeps QTY/PRICE in the main grid */
+        .mobile-grid-3 { display: contents; } 
         .mobile-label { display: none; font-size: 11px; color: #666; font-weight: bold; margin-bottom: 2px;}
 
-        /* Buttons & Table */
+        /* Buttons & Controls */
         .button-group { display: flex; gap: 10px; grid-column: span 4; margin-top: 10px;}
         button.main-save-btn { background-color: #0866ff; color: white; border: none; padding: 12px; font-weight: bold; border-radius: 4px; cursor: pointer; width: 100%; font-size: 15px;}
         button.cancel-btn { background-color: #6c757d; color: white; border: none; padding: 12px; font-weight: bold; border-radius: 4px; cursor: pointer; width: 30%; font-size: 15px; display: none;}
-
         .top-controls { display: flex; gap: 10px; align-items: center; margin-top: 30px; margin-bottom: 15px; }
         .search-bar { padding: 10px; width: 320px; border-radius: 20px; border: 1px solid #ccc; box-sizing: border-box;}
         #exportBtn { background-color: #107c41; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-left: auto; display: none; white-space: nowrap;}
         
+        /* Table Bottom */
         .table-responsive { width: 100%; overflow-x: auto; border-radius: 4px; border: 1px solid #dee2e6;}
         table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 1000px; }
         th, td { padding: 10px 12px; border-bottom: 1px solid #dee2e6; text-align: left; vertical-align: top;}
         th { background-color: #f8f9fa; color: #495057; font-weight: bold;}
-        
         .status-btn { padding: 6px 10px; border: none; border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 11px; width: 100%; margin-bottom: 5px;}
         .status-waiting { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba;}
         .status-arrived { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb;}
         .status-completed { background-color: #e2e3e5; color: #383d41; cursor: default;}
-        
         .wa-btn { background-color: #25D366; color: white; text-decoration: none; padding: 6px; border-radius: 3px; font-weight: bold; display: block; text-align: center; font-size: 11px; margin-bottom: 4px;}
         .wa-btn-receipt { background-color: #128C7E; }
         .action-btns { display: flex; gap: 4px; justify-content: center; flex-wrap: wrap;}
@@ -92,7 +92,6 @@
         .delete-btn { color: #dc3545; background: #ffe6e6; }
         .edit-btn { color: #0056b3; background: #e6f0ff; }
         .complete-btn { color: #155724; background: #d4edda; }
-
         .ref-badge { background-color: #e9ecef; padding: 3px 6px; border-radius: 4px; font-family: monospace; font-weight: bold; color: #495057; font-size: 12px;}
         .staff-badge { background-color: #e6f7ff; color: #0050b3; border: 1px solid #91d5ff; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; display: inline-block; margin-top: 4px; }
         .table-item-list { margin: 0; padding-left: 15px; }
@@ -102,7 +101,7 @@
         #modalImg { max-width: 90%; max-height: 90%; margin-top: 5vh; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
         #adminBadge { display: none; background: #28a745; color: white; padding: 4px 8px; border-radius: 15px; font-size: 11px; font-weight: bold; vertical-align: middle; margin-left: 10px;}
 
-        /* 📱 SMART MOBILE FALLBACK (Transforms Table into Cards) */
+        /* 📱 SMART MOBILE FALLBACK */
         @media (max-width: 800px) {
             body { padding: 5px; background-color: #fff; }
             .container { padding: 10px; box-shadow: none; border: none; }
@@ -113,14 +112,19 @@
             .finance-group { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
             
             /* Destroy the table layout for mobile */
-            .pos-table-header { display: none; } /* Hide headers */
+            .pos-table-header { display: none; }
             .pos-table-row { 
                 display: flex; flex-direction: column; gap: 8px; 
                 border: 1px solid #0866ff; border-radius: 6px; padding: 12px; margin: 10px;
                 background: #fdfdfd; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
             }
-            .mobile-label { display: block; } /* Show labels above inputs */
-            .row-num { display: none; } /* Hide numbers */
+            .mobile-label { display: block; } 
+            .row-num { display: none; }
+            
+            /* The clever trick to make QTY and PRICE sit together on mobile */
+            .mobile-grid-3 { display: grid; grid-template-columns: 1fr 1.5fr 1.5fr; gap: 8px; }
+            .mobile-grid-3 > div { display: flex; flex-direction: column; }
+
             .row-gallery { padding-top: 10px; border-top: 1px dashed #ccc; margin-top: 5px; }
             .remove-row-btn { margin-top: 5px; padding: 10px;}
             
@@ -185,9 +189,12 @@
             
             <div class="pos-table-header">
                 <div style="text-align:center;">No.</div>
-                <div>Description / Part Needed</div>
+                <div>Description / Part</div>
                 <div>Item Code / OEM No</div>
                 <div>Supplier Brand</div>
+                <div>QTY</div>
+                <div>U.Price</div>
+                <div>Total</div>
                 <div>ETA Date</div>
                 <div style="text-align:center;">Photos</div>
                 <div style="text-align:center;">Del</div>
@@ -198,8 +205,8 @@
 
         <div class="col-span-2 finance-group">
             <div>
-                <small style="color: #666; font-size: 12px; font-weight:bold;">Total (RM)</small>
-                <input type="number" id="totalPrice" placeholder="0.00" oninput="calcBalance()">
+                <small style="color: #666; font-size: 12px; font-weight:bold;">Grand Total (RM)</small>
+                <input type="number" id="totalPrice" placeholder="0.00" oninput="calcBalance()" class="readonly-input">
             </div>
             <div>
                 <small style="color: #666; font-size: 12px; font-weight:bold;">Deposit (RM)</small>
@@ -207,7 +214,7 @@
             </div>
             <div>
                 <small style="color: #666; font-size: 12px; font-weight:bold;">Balance (RM)</small>
-                <input type="number" id="balance" placeholder="0.00" readonly style="background-color: #e9ecef;">
+                <input type="number" id="balance" placeholder="0.00" readonly class="readonly-input">
             </div>
         </div>
 
@@ -271,13 +278,13 @@
     // ⚠️ REPLACE THE RED TEXT BELOW WITH YOUR EXACT FIREBASE KEYS
     // ------------------------------------------------------------------
     const firebaseConfig = {
-        apiKey: "AIzaSyDdTc6A67sqq1D5vMRWI1q-bhGsSd5DQBs",
+        apiKey: "🔴_PASTE_YOUR_API_KEY_HERE_🔴",
         authDomain: "malaysia-motor-preorder.firebaseapp.com",
         databaseURL: "https://malaysia-motor-preorder-default-rtdb.asia-southeast1.firebasedatabase.app",
         projectId: "malaysia-motor-preorder",
         storageBucket: "malaysia-motor-preorder.appspot.com",
-        messagingSenderId: "409637154704",
-        appId: "1:409637154704:web:ac1ed4603fb62bd0258d15"
+        messagingSenderId: "🔴_PASTE_YOUR_MESSAGING_SENDER_ID_HERE_🔴",
+        appId: "🔴_PASTE_YOUR_APP_ID_HERE_🔴"
     };
     
     firebase.initializeApp(firebaseConfig);
@@ -335,15 +342,36 @@
         });
     }
 
+    // AUTO-CALCULATION LOGIC
+    function calcRowTotal(rowId) {
+        const row = document.getElementById(rowId);
+        if(!row) return;
+        const qty = parseFloat(row.querySelector('.i-qty').value) || 0;
+        const price = parseFloat(row.querySelector('.i-unitPrice').value) || 0;
+        const sub = qty * price;
+        row.querySelector('.i-subTotal').value = sub > 0 ? sub.toFixed(2) : '';
+        calcGrandTotal();
+    }
+
+    function calcGrandTotal() {
+        let grand = 0;
+        document.querySelectorAll('.pos-table-row').forEach(row => {
+            const sub = parseFloat(row.querySelector('.i-subTotal').value) || 0;
+            grand += sub;
+        });
+        document.getElementById('totalPrice').value = grand > 0 ? grand.toFixed(2) : '';
+        calcBalance();
+    }
+
     function calcBalance() {
         const total = parseFloat(document.getElementById('totalPrice').value) || 0;
         const deposit = parseFloat(document.getElementById('deposit').value) || 0;
-        document.getElementById('balance').value = Math.max(0, total - deposit);
+        document.getElementById('balance').value = Math.max(0, total - deposit).toFixed(2);
     }
     document.getElementById('searchInput').addEventListener('input', renderTable);
 
     // ==========================================
-    // ERP-STYLE TABLE LOGIC
+    // ERP-STYLE TABLE LOGIC (WITH QTY & PRICE)
     // ==========================================
     function updateRowNumbers() {
         const rows = document.querySelectorAll('.pos-table-row');
@@ -377,6 +405,22 @@
                 <span class="mobile-label">Supplier</span>
                 <input type="text" class="i-supplier pos-input" placeholder="Supplier" value="${data && data.supplier ? data.supplier : ''}">
             </div>
+
+            <div class="mobile-grid-3">
+                <div>
+                    <span class="mobile-label">Qty</span>
+                    <input type="number" class="i-qty pos-input" placeholder="1" value="${data && data.qty ? data.qty : '1'}" oninput="calcRowTotal('${currentId}')" style="text-align:center;">
+                </div>
+                <div>
+                    <span class="mobile-label">U.Price (RM)</span>
+                    <input type="number" class="i-unitPrice pos-input" placeholder="0.00" value="${data && data.unitPrice ? data.unitPrice : ''}" oninput="calcRowTotal('${currentId}')">
+                </div>
+                <div>
+                    <span class="mobile-label">Total (RM)</span>
+                    <input type="number" class="i-subTotal pos-input readonly-input" placeholder="0.00" value="${data && data.subTotal ? data.subTotal : ''}" readonly>
+                </div>
+            </div>
+
             <div>
                 <span class="mobile-label">ETA Date</span>
                 <input type="date" class="i-eta pos-input" value="${data && data.eta ? data.eta : ''}">
@@ -399,14 +443,15 @@
         container.insertAdjacentHTML('beforeend', html);
         renderGalleryUI(currentId);
         updateRowNumbers();
+        if(data) calcRowTotal(currentId); // Calc total when loading edit
     }
 
     function removeItemBlock(id) {
         document.getElementById(id).remove();
         delete itemPhotosMap[id];
         updateRowNumbers();
+        calcGrandTotal(); // Re-calculate grand total if row is deleted
         
-        // Ensure there is always at least one row
         const container = document.getElementById('dynamicItemsContainer');
         if (container.children.length === 0) {
             addNewItemBlock();
@@ -493,7 +538,7 @@
             let oldPhotos = [];
             if (order.photos) oldPhotos = [...order.photos];
             else if (order.photo) oldPhotos.push(order.photo);
-            itemsToLoad.push({ part: order.part, partNo: order.partNo, supplier: order.supplier, eta: order.eta, photos: oldPhotos });
+            itemsToLoad.push({ part: order.part, partNo: order.partNo, supplier: order.supplier, eta: order.eta, photos: oldPhotos, qty: '1' });
         }
 
         if(itemsToLoad.length === 0) addNewItemBlock();
@@ -536,11 +581,14 @@
             const part = card.querySelector('.i-part').value;
             const partNo = card.querySelector('.i-partNo').value;
             const supplier = card.querySelector('.i-supplier').value;
+            const qty = card.querySelector('.i-qty').value || "1";
+            const unitPrice = card.querySelector('.i-unitPrice').value || "0";
+            const subTotal = card.querySelector('.i-subTotal').value || "0";
             const eta = card.querySelector('.i-eta').value;
             const photos = itemPhotosMap[id] || [];
 
             if (part || partNo) { 
-                finalItemsArray.push({ part, partNo, supplier, eta, photos });
+                finalItemsArray.push({ part, partNo, supplier, qty, unitPrice, subTotal, eta, photos });
             }
         });
 
@@ -596,8 +644,11 @@
         let csvContent = "data:text/csv;charset=utf-8,\uFEFFRef No,Order Date,Handled By,Customer Name,Phone,Car Model,Chassis No,All Parts,Total,Deposit,Balance,Status,Remarks\n";
         orders.forEach(o => {
             let allPartsText = "";
-            if(o.items) allPartsText = o.items.map(i => i.part || i.partNo).join(" + ");
-            else if(o.part) allPartsText = o.part; 
+            if(o.items) {
+                allPartsText = o.items.map(i => `${i.qty || 1}x ${i.part || i.partNo} (RM${i.subTotal})`).join(" + ");
+            } else if(o.part) {
+                allPartsText = o.part; 
+            }
 
             const row = `"${o.refNo}","${o.date}","${o.staff || ''}","${o.name}","${o.phone}","${o.car || ''}","${o.chassis || ''}","${allPartsText}","${o.total}","${o.deposit}","${o.balance}","${o.status}","${o.remarks}"`;
             csvContent += row + "\n";
@@ -637,18 +688,25 @@
                 let oldPhotos = [];
                 if (order.photos) oldPhotos = [...order.photos];
                 else if (order.photo) oldPhotos.push(order.photo);
-                itemsToDisplay.push({ part: order.part, partNo: order.partNo, supplier: order.supplier, eta: order.eta, photos: oldPhotos });
+                itemsToDisplay.push({ part: order.part, partNo: order.partNo, supplier: order.supplier, eta: order.eta, photos: oldPhotos, qty: '1', unitPrice: order.total, subTotal: order.total });
             }
 
             let partsHtml = `<ul class="table-item-list">`;
             let simplePartsListForWa = [];
             
             itemsToDisplay.forEach(item => {
+                const qtyText = item.qty ? `<span style="background:#e9ecef; padding:2px 6px; border-radius:10px; font-size:11px; font-weight:bold; margin-right:4px;">${item.qty}x</span>` : '';
                 const partDesc = item.part || 'No Desc';
                 const partNoText = item.partNo ? ` <small class="mono-text">[${item.partNo}]</small>` : '';
                 const supText = item.supplier ? ` • Supp: ${item.supplier}` : '';
                 const etaText = item.eta ? ` • ETA: ${item.eta}` : '';
                 
+                // Add subtotal text to the right side
+                let priceDetails = "";
+                if (parseFloat(item.subTotal) > 0) {
+                    priceDetails = `<span style="float:right; font-size:12px; color:#495057;">@ RM${item.unitPrice || 0} = <b style="color:#1a1a1a;">RM${item.subTotal}</b></span>`;
+                }
+
                 let photoHtml = '';
                 if (item.photos && item.photos.length > 0) {
                     photoHtml = `<div style="display:flex; gap:4px; flex-wrap:wrap; margin-top:4px;">`;
@@ -656,8 +714,11 @@
                     photoHtml += `</div>`;
                 }
                 
-                partsHtml += `<li><strong>${partDesc}</strong>${partNoText}<br><small style="color:#666;">${supText} ${etaText}</small>${photoHtml}</li>`;
-                simplePartsListForWa.push(`- ${partDesc} ${item.partNo ? '('+item.partNo+')' : ''}`);
+                partsHtml += `<li><div>${qtyText}<strong>${partDesc}</strong>${partNoText}${priceDetails}</div><small style="color:#666;">${supText} ${etaText}</small>${photoHtml}</li>`;
+                
+                // Format for WhatsApp Receipt
+                const waPrice = item.subTotal > 0 ? ` (RM${item.subTotal})` : '';
+                simplePartsListForWa.push(`- ${item.qty || 1}x ${partDesc} ${item.partNo ? '['+item.partNo+']' : ''}${waPrice}`);
             });
             partsHtml += `</ul>`;
 
