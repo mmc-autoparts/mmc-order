@@ -33,7 +33,7 @@
         .container { max-width: 1450px; margin: auto; background: white; padding: 25px 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;}
         .header-flex { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 15px;}
         h2 { color: #0f172a; margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.5px;}
-        .logout-btn { background-color: #ef4444; color: white; border: none; padding: 10px 18px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: background 0.2s;}
+        .logout-btn { background-color: #ef4444; color: white; border: none; padding: 10px 18px; border-radius: 6px; cursor: pointer; font-weight: bold;}
         
         /* TABS */
         .tabs-nav { display: flex; gap: 10px; margin-bottom: 25px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; flex-wrap: wrap;}
@@ -92,6 +92,8 @@
         th { background-color: #f8fafc; color: #334155; font-weight: 700; border-bottom: 2px solid #cbd5e1; text-transform: uppercase; font-size: 12px;}
         
         .status-btn { padding: 8px 12px; border: none; border-radius: 20px; font-weight: 700; font-size: 12px; width: 100%; margin-bottom: 6px; text-align: center;}
+        .status-btn.clickable { cursor: pointer; transition: transform 0.1s;}
+        .status-btn.clickable:active { transform: scale(0.95); }
         .status-waiting { background-color: #fef3c7; color: #b45309; border: 1px solid #fde68a;}
         .status-arrived { background-color: #d1fae5; color: #047857; border: 1px solid #a7f3d0;}
         .status-completed { background-color: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0;}
@@ -129,6 +131,7 @@
         #barcodeModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.95); z-index: 2000; flex-direction: column; align-items: center; justify-content: center; }
         .barcode-container { background: white; padding: 20px; border-radius: 12px; width: 95%; max-width: 450px; text-align: center; }
         #adminBadge { display: none; background: #10b981; color: white; padding: 5px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; margin-left: 10px;}
+        #pdfContainer { position: absolute; left: -9999px; top: 0; width: 1000px; background: white; }
 
         @media (max-width: 800px) {
             body { padding: 5px; }
@@ -224,7 +227,7 @@
                 <option value="history">Completed History</option>
                 <option value="all">All Records</option>
             </select>
-            <button id="exportBtn" class="export-btn" onclick="exportCSV()">📥 Export Excel Data</button>
+            <button id="exportBtn" class="export-btn" onclick="exportCSV()" style="background:#059669; padding:12px 18px; border-radius:20px; color:white; font-weight:bold; border:none; cursor:pointer;">📥 Export Excel Data</button>
         </div>
 
         <div class="table-responsive">
@@ -291,6 +294,7 @@
             <div style="margin-left:auto; display:flex; gap:10px; flex-wrap:wrap;">
                 <button class="print-btn" onclick="printRestock()" style="padding:10px 15px; border-radius:6px; font-weight:bold; cursor:pointer;">🖨️ Print Summary</button>
                 <button class="pdf-btn" onclick="savePdfRestock()" style="padding:10px 15px; border-radius:6px; font-weight:bold; cursor:pointer;">📄 PDF Export</button>
+                <button id="rExportBtn" class="export-btn" onclick="exportRestockCSV()" style="display:none; background:#059669; padding:10px 15px; border-radius:6px; color:white; font-weight:bold; border:none; cursor:pointer;">📥 Excel</button>
                 <button class="wa-btn wa-btn-boss" onclick="sendBossReport('60194482580', 'Hock')" style="margin:0; padding:10px 15px; border-radius:6px; font-size:13px;">📲 Boss Hock</button>
                 <button class="wa-btn wa-btn-boss" onclick="sendBossReport('60164401970', 'Kelvin')" style="margin:0; padding:10px 15px; border-radius:6px; font-size:13px;">📲 Boss Kelvin</button>
             </div>
@@ -326,6 +330,7 @@
         <button onclick="closeScanner()" style="margin-top:20px; padding:14px; background:#ef4444; color:white; border:none; border-radius:6px; width:100%; font-weight:bold;">Cancel Scan</button>
     </div>
 </div>
+<div id="pdfContainer"></div>
 
 <script>
     // ------------------------------------------------------------------
@@ -358,6 +363,28 @@
     let isRowScanner = false; 
     let isAutoSubmit = false;
 
+    // --- NEW SAFE DATA ENGINE ---
+    // Protects system from crashing if Firebase arrays are malformed or missing
+    function getSafeItems(order) {
+        try {
+            let items = [];
+            if (order.items && Array.isArray(order.items)) {
+                items = order.items.filter(i => i != null);
+            } else if (order.items && typeof order.items === 'object') {
+                items = Object.values(order.items).filter(i => i != null);
+            }
+            if (items.length === 0 && order.part) {
+                let oldPhotos = [];
+                if(order.photos && Array.isArray(order.photos)) oldPhotos = [...order.photos].filter(Boolean);
+                else if(order.photos && typeof order.photos === 'object') oldPhotos = Object.values(order.photos).filter(Boolean);
+                else if(order.photo) oldPhotos.push(order.photo);
+                
+                items.push({ part: order.part||'', partNo: order.partNo||'', brand: order.brand||'', supplier: order.supplier||'', eta: order.eta||'', photos: oldPhotos, qty: order.qty||'1', unitPrice: order.total||'0', subTotal: order.total||'0' });
+            }
+            return items;
+        } catch (e) { console.error("Data Load Error:", e); return []; }
+    }
+
     function switchTab(tabId, btnElement) {
         document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -369,6 +396,7 @@
         if (user) {
             isAdmin = (user.email.toLowerCase() === BOSS_EMAIL.toLowerCase());
             document.getElementById('exportBtn').style.display = isAdmin ? 'block' : 'none';
+            document.getElementById('rExportBtn').style.display = isAdmin ? 'block' : 'none';
             document.getElementById('adminBadge').style.display = isAdmin ? 'inline-block' : 'none';
             document.getElementById('bossPreorderDashboard').style.display = isAdmin ? 'grid' : 'none';
             
@@ -386,8 +414,7 @@
     function loginSystem() {
         let email = document.getElementById('authEmail').value.trim();
         if (email !== '' && !email.includes('@')) email = email + '@mmc.com';
-        auth.signInWithEmailAndPassword(email, document.getElementById('authPassword').value)
-            .catch(() => document.getElementById('loginError').style.display = 'block');
+        auth.signInWithEmailAndPassword(email, document.getElementById('authPassword').value).catch(() => document.getElementById('loginError').style.display = 'block');
     }
     function logoutSystem() { auth.signOut(); }
 
@@ -434,9 +461,7 @@
     document.getElementById('searchInput').addEventListener('input', renderTable);
 
     function openScanner(targetId, isRow = false, autoSubmit = false) {
-        targetBarcodeFieldId = targetId;
-        isRowScanner = isRow;
-        isAutoSubmit = autoSubmit;
+        targetBarcodeFieldId = targetId; isRowScanner = isRow; isAutoSubmit = autoSubmit;
         document.getElementById('barcodeModal').style.display = 'flex';
         html5QrcodeScanner = new Html5Qrcode("qr-reader");
         html5QrcodeScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 100 } }, onScanSuccess).catch(() => { alert("Camera access denied."); closeScanner(); });
@@ -557,12 +582,7 @@
         document.getElementById('dynamicItemsContainer').innerHTML = '';
         itemPhotosMap = {};
         
-        let itemsToLoad = [];
-        if (order.items && order.items.length > 0) { itemsToLoad = order.items; } 
-        else if (order.part) {
-            itemsToLoad = [{ part: order.part, partNo: order.partNo, brand: order.brand, supplier: order.supplier, eta: order.eta, photos: order.photos ? [...order.photos] : (order.photo ? [order.photo] : []), qty: '1', unitPrice: order.total, subTotal: order.total }];
-        }
-        
+        let itemsToLoad = getSafeItems(order);
         if(itemsToLoad.length === 0) addNewItemBlock();
         itemsToLoad.forEach(data => addNewItemBlock(data));
 
@@ -585,29 +605,34 @@
     }
 
     async function saveOrUpdateOrder() {
-        const payload = {
-            name: document.getElementById('custName').value, phone: document.getElementById('custPhone').value.replace(/[^0-9]/g, ''),
-            car: document.getElementById('carModel').value, chassis: document.getElementById('chassisNumber').value,
-            total: document.getElementById('totalPrice').value || "0", deposit: document.getElementById('deposit').value || "0",
-            balance: document.getElementById('balance').value || "0", staff: document.getElementById('orderByStaff').value,
-            remarks: document.getElementById('remarks').value, items: []
-        };
-        document.querySelectorAll('.pos-table-row').forEach(card => {
-            const id = card.id;
-            const p = { part: card.querySelector('.i-part').value, partNo: card.querySelector('.i-partNo').value, brand: card.querySelector('.i-brand').value, supplier: card.querySelector('.i-supplier').value, qty: card.querySelector('.i-qty').value || "1", unitPrice: card.querySelector('.i-unitPrice').value || "0", subTotal: card.querySelector('.i-subTotal').value || "0", eta: card.querySelector('.i-eta').value, photos: itemPhotosMap[id] || [] };
-            if (p.part || p.partNo) payload.items.push(p);
-        });
-        if(!payload.name) return alert("Please fill Customer Name.");
-        if(payload.items.length === 0) return alert("Enter at least 1 Part.");
+        try {
+            const payload = {
+                name: document.getElementById('custName').value || "", phone: document.getElementById('custPhone').value.replace(/[^0-9]/g, ''),
+                car: document.getElementById('carModel').value || "", chassis: document.getElementById('chassisNumber').value || "",
+                total: document.getElementById('totalPrice').value || "0", deposit: document.getElementById('deposit').value || "0",
+                balance: document.getElementById('balance').value || "0", staff: document.getElementById('orderByStaff').value || "",
+                remarks: document.getElementById('remarks').value || "", items: []
+            };
+            document.querySelectorAll('.pos-table-row').forEach(card => {
+                const id = card.id;
+                const p = { part: card.querySelector('.i-part').value||"", partNo: card.querySelector('.i-partNo').value||"", brand: card.querySelector('.i-brand').value||"", supplier: card.querySelector('.i-supplier').value||"", qty: card.querySelector('.i-qty').value||"1", unitPrice: card.querySelector('.i-unitPrice').value||"0", subTotal: card.querySelector('.i-subTotal').value||"0", eta: card.querySelector('.i-eta').value||"", photos: itemPhotosMap[id] || [] };
+                if (p.part || p.partNo) payload.items.push(p);
+            });
+            if(!payload.name) return alert("Please fill Customer Name.");
+            if(payload.items.length === 0) return alert("Enter at least 1 Part.");
 
-        if (editingId) { await db.ref('orders/' + editingId).update(payload); cancelEdit(); } 
-        else {
-            const snapshot = await db.ref('orderCounter').transaction(cv => (cv || 1000) + 1);
-            payload.refNo = 'MMC-' + snapshot.snapshot.val();
-            payload.date = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-            payload.status = 'waiting'; payload.timestamp = Date.now();
-            await db.ref('orders').push(payload);
-            cancelEdit(); 
+            if (editingId) { await db.ref('orders/' + editingId).update(payload); cancelEdit(); } 
+            else {
+                const snapshot = await db.ref('orderCounter').transaction(cv => (cv || 1000) + 1);
+                payload.refNo = 'MMC-' + snapshot.snapshot.val();
+                payload.date = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+                payload.status = 'waiting'; payload.timestamp = Date.now();
+                await db.ref('orders').push(payload);
+                cancelEdit(); 
+            }
+        } catch(e) {
+            console.error(e);
+            alert("Save failed. Please ensure no empty fields.");
         }
     }
 
@@ -625,7 +650,6 @@
         const search = document.getElementById('searchInput').value.toLowerCase();
         const view = document.getElementById('viewFilter').value;
 
-        // Boss Dashboard
         let sumSales = 0, sumBal = 0, sumComp = 0;
         orders.forEach(o => {
             sumSales += parseFloat(o.total) || 0;
@@ -642,96 +666,104 @@
         let filtered = orders.filter(o => {
             if (view === 'active' && o.status === 'completed') return false;
             if (view === 'history' && o.status !== 'completed') return false;
-            const itemMatch = (o.items||[]).some(i => (i.part||'').toLowerCase().includes(search) || (i.partNo||'').toLowerCase().includes(search));
+            const items = getSafeItems(o);
+            const itemMatch = items.some(i => (i.part||'').toLowerCase().includes(search) || (i.partNo||'').toLowerCase().includes(search));
             return (o.name||'').toLowerCase().includes(search) || (o.car||'').toLowerCase().includes(search) || (o.refNo||'').toLowerCase().includes(search) || itemMatch;
         });
 
         filtered.forEach(order => {
-            // SAFE LEGACY DATA LOAD (Guarantees V27 photos and data won't disappear)
-            let itemsToDisplay = [];
-            if (order.items && order.items.length > 0) { itemsToDisplay = order.items; } 
-            else if (order.part) {
-                itemsToDisplay = [{ part: order.part, partNo: order.partNo, brand: order.brand, supplier: order.supplier, eta: order.eta, photos: order.photos ? [...order.photos] : (order.photo ? [order.photo] : []), qty: '1', unitPrice: order.total, subTotal: order.total }];
-            }
-
-            let partsHtml = `<ul class="table-item-list">`;
-            let waList = [];
-            
-            itemsToDisplay.forEach(item => {
-                const qtyText = item.qty ? `<span style="background:#e2e8f0; padding:2px 6px; border-radius:10px; font-size:11px; margin-right:4px;">${item.qty}x</span>` : '';
-                const partDesc = item.part || '-';
-                const partNoText = item.partNo ? ` <small class="mono-text" style="color:#64748b; font-weight:bold;">[${item.partNo}]</small>` : '';
-                const brandText = item.brand ? ` • Brd: ${item.brand}` : '';
-                const supText = item.supplier ? ` • Sup: ${item.supplier}` : '';
-                const etaText = item.eta ? ` • ETA: ${item.eta}` : '';
+            try {
+                let itemsToDisplay = getSafeItems(order);
+                let partsHtml = `<ul class="table-item-list">`;
+                let waList = [];
                 
-                let priceDetails = "";
-                if (parseFloat(item.subTotal) > 0) { priceDetails = `<span style="float:right; font-size:12px; color:#64748b;">@ RM${item.unitPrice || 0} = <b style="color:#0f172a; font-size:13px;">RM${item.subTotal}</b></span>`; }
+                itemsToDisplay.forEach(item => {
+                    const qtyText = item.qty ? `<span style="background:#e2e8f0; padding:2px 6px; border-radius:10px; font-size:11px; margin-right:4px;">${item.qty}x</span>` : '';
+                    const partDesc = item.part || '-';
+                    const partNoText = item.partNo ? ` <small class="mono-text" style="color:#64748b; font-weight:bold;">[${item.partNo}]</small>` : '';
+                    const brandText = item.brand ? ` • Brd: ${item.brand}` : '';
+                    const supText = item.supplier ? ` • Sup: ${item.supplier}` : '';
+                    const etaText = item.eta ? ` • ETA: ${item.eta}` : '';
+                    
+                    let priceDetails = "";
+                    if (parseFloat(item.subTotal) > 0) { priceDetails = `<span style="float:right; font-size:12px; color:#64748b;">@ RM${item.unitPrice || 0} = <b style="color:#0f172a; font-size:13px;">RM${item.subTotal}</b></span>`; }
 
-                let photoHtml = '';
-                if (item.photos && item.photos.length > 0) {
-                    photoHtml = `<div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:6px;">`;
-                    item.photos.forEach(p => { photoHtml += `<img src="${p}" class="photo-thumbnail" onclick="showPhoto('${p}')" style="width:45px; height:45px; border:1px solid #cbd5e1; border-radius:4px;">`; });
-                    photoHtml += `</div>`;
-                }
+                    let photoHtml = '';
+                    if (item.photos && item.photos.length > 0) {
+                        photoHtml = `<div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:6px;">`;
+                        item.photos.forEach(p => { photoHtml += `<img src="${p}" class="photo-thumbnail" onclick="showPhoto('${p}')" style="width:45px; height:45px; border:1px solid #cbd5e1; border-radius:4px;">`; });
+                        photoHtml += `</div>`;
+                    }
+                    
+                    partsHtml += `<li><div style="margin-bottom:4px;">${qtyText}<strong style="color:#0f172a; font-size:14px;">${partDesc}</strong>${partNoText}${priceDetails}</div><small style="color:#64748b; font-weight:600;">${brandText}${supText}${etaText}</small>${photoHtml}</li>`;
+                    waList.push(`- ${item.qty||1}x ${partDesc} ${item.partNo ? '['+item.partNo+']' : ''}`);
+                });
+                partsHtml += `</ul>`;
+
+                const carText = order.car ? order.car + ' ' : '';
+                const chassisText = order.chassis ? '(' + order.chassis + ') ' : '';
+                const allItemsMsg = waList.join('\n');
                 
-                partsHtml += `<li><div style="margin-bottom:4px;">${qtyText}<strong style="color:#0f172a; font-size:14px;">${partDesc}</strong>${partNoText}${priceDetails}</div><small style="color:#64748b; font-weight:600;">${brandText}${supText}${etaText}</small>${photoHtml}</li>`;
-                waList.push(`- ${item.qty||1}x ${partDesc} ${item.partNo ? '['+item.partNo+']' : ''}`);
-            });
-            partsHtml += `</ul>`;
-
-            const carText = order.car ? order.car + ' ' : '';
-            const chassisText = order.chassis ? '(' + order.chassis + ') ' : '';
-            const allItemsMsg = waList.join('\n');
-            
-            const msgReceipt = `🧾 *MALAYSIA MOTOR COMPANY - RESIT / RECEIPT*\n\nPelanggan yang dihormati ${order.name},\nTerima kasih. Pesanan istimewa anda telah disahkan!\n\nDear ${order.name},\nThank you. Your special order has been confirmed!\n\n*No. Pesanan / Order ID:* ${order.refNo}\n*Kenderaan / Car:* ${carText}${chassisText}\n*Barang / Items:*\n${allItemsMsg}\n\n*Jumlah / Total:* RM${order.total}\n*Deposit:* RM${order.deposit}\n*Baki / Balance Due:* RM${order.balance}\n\n(Handled by: ${order.staff || '-'})`;
-            const msgArrived = `*MALAYSIA MOTOR COMPANY*\n\nPelanggan yang dihormati ${order.name},\nBerita baik! Pesanan anda (No. Pesanan: ${order.refNo}) telah selamat tiba di kedai kami. Baki bayaran adalah sebanyak RM${order.balance}. Anda dialu-alukan untuk datang mengambil pesanan anda pada bila-bila masa yang kelapangan. Terima kasih atas sokongan berterusan anda!\n\nDear ${order.name},\nGood news! Your order (${order.refNo}) has safely arrived at our shop. The balance due is RM${order.balance}. You are most welcome to drop by and collect it at your convenience. Thank you so much for your continued support!`;
-            const msgNotFound = `*MALAYSIA MOTOR COMPANY*\n\nPelanggan yang dihormati ${order.name},\nKami memohon maaf atas segala kesulitan, dukacita dimaklumkan bahawa barang pesanan anda (No. Pesanan: ${order.refNo}) pada masa ini kehabisan stok dan tidak dapat dibekalkan oleh pembekal kami. Sila hubungi kami untuk urusan pemulangan penuh deposit anda (RM${order.deposit}). Kami amat kesal atas kesulitan yang timbul dan amat menghargai kesabaran anda.\n\nDear ${order.name},\nWe sincerely apologize, but we regret to inform you that your ordered item(s) (${order.refNo}) are currently out of stock and cannot be sourced by our suppliers. Please kindly contact us to arrange for a full refund of your deposit (RM${order.deposit}). We are truly sorry for the inconvenience caused and deeply appreciate your understanding.`;
-            
-            const tr = document.createElement('tr');
-            tr.style.opacity = order.status === 'completed' ? '0.6' : '1';
-            tr.innerHTML = `
-                <td><span class="ref-badge">${order.refNo}</span><br><small style="color:#64748b; margin-top:6px; display:inline-block; font-weight:700;">${order.date}</small><br>${order.staff ? `<span class="staff-badge">👤 ${order.staff}</span>` : ''}</td>
-                <td><strong style="color:#0f172a;">${order.name}</strong><br><small style="color:#3b82f6; font-weight:bold;">${order.phone}</small><br><div style="margin-top:8px; padding-top:8px; border-top:1px dashed #e2e8f0;"><strong style="color:#334155;">${order.car||'-'}</strong><br><span class="mono-text" style="color:#64748b; font-size:12px;">${order.chassis||''}</span></div></td>
-                <td>${partsHtml}<div class="notes-text" style="margin-top:8px; color:#059669; font-weight:600;">${order.remarks ? '📝 Remarks: ' + order.remarks : ''}</div></td>
-                <td><small style="color:#64748b;">Total: RM${order.total}</small><br><small style="color:#64748b;">Paid: RM${order.deposit}</small><br><strong style="font-size:15px; margin-top:6px; display:inline-block; color:#0f172a;">Bal: RM${order.balance}</strong></td>
-                <td><button class="status-btn ${order.status==='completed'?'status-completed':(order.status==='waiting'?'status-waiting clickable':'status-arrived clickable')}" onclick="${order.status!=='completed'?`toggleStatus('${order.id}')`:''}">${order.status==='waiting'?'⏳ Wait':(order.status==='arrived'?'✅ Arrived':'📦 Done')}</button></td>
-                <td>
-                    <div class="action-btns" style="flex-direction:column; align-items:stretch;">
-                        ${order.phone && order.status !== 'completed' ? `<a href="https://wa.me/${order.phone}?text=${encodeURIComponent(msgReceipt)}" target="_blank" class="wa-btn wa-btn-receipt">📄 WA Receipt</a><a href="https://wa.me/${order.phone}?text=${encodeURIComponent(msgArrived)}" target="_blank" class="wa-btn wa-btn-arrived">💬 Inform Arrived</a><a href="https://wa.me/${order.phone}?text=${encodeURIComponent(msgNotFound)}" target="_blank" class="wa-btn wa-btn-cancel">❌ Item Not Found</a>` : ''}
-                    </div>
-                </td>
-                <td>
-                    <div class="action-btns" style="margin-bottom:6px;"><button class="print-btn" onclick="printOrder('${order.id}')">🖨️ Print</button><button class="pdf-btn" onclick="savePdfOrder('${order.id}')">📄 PDF</button></div>
-                    <div class="action-btns">${order.status !== 'completed' ? `<button class="complete-btn" onclick="markCompleted('${order.id}')">✔️ Done</button>` : `<button class="edit-btn" onclick="restoreOrder('${order.id}')">⏪ Return</button>`}<button class="edit-btn" onclick="editOrder('${order.id}')">✏️ Edit</button>${isAdmin?`<button class="delete-btn" onclick="deleteOrder('${order.id}')">✖ Del</button>`:''}</div>
-                </td>`;
-            tbody.appendChild(tr);
+                const msgReceipt = `🧾 *MALAYSIA MOTOR COMPANY - RESIT / RECEIPT*\n\nPelanggan yang dihormati ${order.name},\nTerima kasih. Pesanan istimewa anda telah disahkan!\n\nDear ${order.name},\nThank you. Your special order has been confirmed!\n\n*No. Pesanan / Order ID:* ${order.refNo}\n*Kenderaan / Car:* ${carText}${chassisText}\n*Barang / Items:*\n${allItemsMsg}\n\n*Jumlah / Total:* RM${order.total}\n*Deposit:* RM${order.deposit}\n*Baki / Balance Due:* RM${order.balance}\n\n(Handled by: ${order.staff || '-'})`;
+                const msgArrived = `*MALAYSIA MOTOR COMPANY*\n\nPelanggan yang dihormati ${order.name},\nBerita baik! Pesanan anda (No. Pesanan: ${order.refNo}) telah selamat tiba di kedai kami. Baki bayaran adalah sebanyak RM${order.balance}. Anda dialu-alukan untuk datang mengambil pesanan anda pada bila-bila masa yang kelapangan. Terima kasih atas sokongan berterusan anda!\n\nDear ${order.name},\nGood news! Your order (${order.refNo}) has safely arrived at our shop. The balance due is RM${order.balance}. You are most welcome to drop by and collect it at your convenience. Thank you so much for your continued support!`;
+                const msgNotFound = `*MALAYSIA MOTOR COMPANY*\n\nPelanggan yang dihormati ${order.name},\nKami memohon maaf atas segala kesulitan, dukacita dimaklumkan bahawa barang pesanan anda (No. Pesanan: ${order.refNo}) pada masa ini kehabisan stok dan tidak dapat dibekalkan oleh pembekal kami. Sila hubungi kami untuk urusan pemulangan penuh deposit anda (RM${order.deposit}). Kami amat kesal atas kesulitan yang timbul dan amat menghargai kesabaran anda.\n\nDear ${order.name},\nWe sincerely apologize, but we regret to inform you that your ordered item(s) (${order.refNo}) are currently out of stock and cannot be sourced by our suppliers. Please kindly contact us to arrange for a full refund of your deposit (RM${order.deposit}). We are truly sorry for the inconvenience caused and deeply appreciate your understanding.`;
+                
+                const tr = document.createElement('tr');
+                tr.style.opacity = order.status === 'completed' ? '0.6' : '1';
+                tr.innerHTML = `
+                    <td><span class="ref-badge">${order.refNo}</span><br><small style="color:#64748b; margin-top:6px; display:inline-block; font-weight:700;">${order.date}</small><br>${order.staff ? `<span class="staff-badge">👤 ${order.staff}</span>` : ''}</td>
+                    <td><strong style="color:#0f172a;">${order.name}</strong><br><small style="color:#3b82f6; font-weight:bold;">${order.phone}</small><br><div style="margin-top:8px; padding-top:8px; border-top:1px dashed #e2e8f0;"><strong style="color:#334155;">${order.car||'-'}</strong><br><span class="mono-text" style="color:#64748b; font-size:12px;">${order.chassis||''}</span></div></td>
+                    <td>${partsHtml}<div class="notes-text" style="margin-top:8px; color:#059669; font-weight:600;">${order.remarks ? '📝 Remarks: ' + order.remarks : ''}</div></td>
+                    <td><small style="color:#64748b;">Total: RM${order.total}</small><br><small style="color:#64748b;">Paid: RM${order.deposit}</small><br><strong style="font-size:15px; margin-top:6px; display:inline-block; color:#0f172a;">Bal: RM${order.balance}</strong></td>
+                    <td><button class="status-btn ${order.status==='completed'?'status-completed':(order.status==='waiting'?'status-waiting clickable':'status-arrived clickable')}" onclick="${order.status!=='completed'?`toggleStatus('${order.id}')`:''}">${order.status==='waiting'?'⏳ Wait':(order.status==='arrived'?'✅ Arrived':'📦 Done')}</button></td>
+                    <td>
+                        <div class="action-btns" style="flex-direction:column; align-items:stretch;">
+                            ${order.phone && order.status !== 'completed' ? `<a href="https://wa.me/${order.phone}?text=${encodeURIComponent(msgReceipt)}" target="_blank" class="wa-btn wa-btn-receipt">📄 WA Receipt</a><a href="https://wa.me/${order.phone}?text=${encodeURIComponent(msgArrived)}" target="_blank" class="wa-btn wa-btn-arrived">💬 Inform Arrived</a><a href="https://wa.me/${order.phone}?text=${encodeURIComponent(msgNotFound)}" target="_blank" class="wa-btn wa-btn-cancel">❌ Item Not Found</a>` : ''}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="action-btns" style="margin-bottom:6px;"><button class="print-btn" onclick="printOrder('${order.id}')">🖨️ Print</button><button class="pdf-btn" onclick="savePdfOrder('${order.id}')">📄 PDF</button></div>
+                        <div class="action-btns">${order.status !== 'completed' ? `<button class="complete-btn" onclick="markCompleted('${order.id}')">✔️ Done</button>` : `<button class="edit-btn" onclick="restoreOrder('${order.id}')">⏪ Return</button>`}<button class="edit-btn" onclick="editOrder('${order.id}')">✏️ Edit</button>${isAdmin?`<button class="delete-btn" onclick="deleteOrder('${order.id}')">✖ Del</button>`:''}</div>
+                    </td>`;
+                tbody.appendChild(tr);
+            } catch(e) { console.error("Render error on order", order.id, e); }
         });
     }
 
     // PREORDER PDF (100% RELIABLE HTML BUILDER)
     function getInvoiceHTML(order) {
-        let itemsToDisplay = [];
-        if (order.items && order.items.length > 0) { itemsToDisplay = order.items; } 
-        else if (order.part) { itemsToDisplay = [{ part: order.part, partNo: order.partNo, brand: order.brand, supplier: order.supplier, qty: '1', unitPrice: order.total, subTotal: order.total }]; }
-        
+        let itemsToDisplay = getSafeItems(order);
         let itemsHtml = '';
         itemsToDisplay.forEach((item, idx) => {
-            itemsHtml += `<tr><td style="text-align:center;">${idx+1}</td><td style="text-align:center;"><div class="check-box"></div></td><td><strong>${item.part||'-'}</strong></td><td>${item.partNo||'-'}</td><td>${item.brand||'-'}</td><td>${item.supplier||'-'}</td><td style="text-align:center;">${item.qty||'1'}</td><td style="text-align:right;">RM ${parseFloat(item.unitPrice||0).toFixed(2)}</td><td style="text-align:right;"><strong>RM ${parseFloat(item.subTotal||0).toFixed(2)}</strong></td></tr>`;
+            itemsHtml += `<tr><td style="text-align:center; padding:8px; border:1px solid #000;">${idx+1}</td><td style="text-align:center; padding:8px; border:1px solid #000;">[ &nbsp; ]</td><td style="padding:8px; border:1px solid #000;"><strong>${item.part||'-'}</strong></td><td style="padding:8px; border:1px solid #000;">${item.partNo||'-'}</td><td style="padding:8px; border:1px solid #000;">${item.brand||'-'}</td><td style="padding:8px; border:1px solid #000;">${item.supplier||'-'}</td><td style="text-align:center; padding:8px; border:1px solid #000;">${item.qty||'1'}</td><td style="text-align:right; padding:8px; border:1px solid #000;">RM ${parseFloat(item.unitPrice||0).toFixed(2)}</td><td style="text-align:right; padding:8px; border:1px solid #000;"><strong>RM ${parseFloat(item.subTotal||0).toFixed(2)}</strong></td></tr>`;
         });
         
-        return `<style>body{font-family:Arial,sans-serif;padding:30px;color:#1e293b;margin:auto;} .header{text-align:center;border-bottom:2px solid #1e293b;padding-bottom:20px;margin-bottom:30px;} .logo{font-size:28px;font-weight:800;letter-spacing:1px;} .info-grid{display:flex;justify-content:space-between;margin-bottom:30px;} .info-box{background:#f8fafc;padding:15px;border-radius:6px;width:45%;border:1px solid #e2e8f0;} .info-box p{margin:5px 0;font-size:14px;} table{width:100%;border-collapse:collapse;margin-bottom:30px;} th,td{border:1px solid #cbd5e1;padding:12px;text-align:left;font-size:13px;} th{background:#f1f5f9;text-transform:uppercase;font-size:11px;} .check-box{width:16px;height:16px;border:1px solid #64748b;display:inline-block;border-radius:2px;} .totals{text-align:right;font-size:15px;} .totals p{margin:5px 0;} .footer{margin-top:50px;font-size:12px;text-align:center;color:#64748b;border-top:1px solid #e2e8f0;padding-top:20px;}</style><div id="invoiceBody"><div class="header"><div class="logo">MALAYSIA MOTOR COMPANY</div></div><h2 style="text-align:center;margin-bottom:30px;letter-spacing:1px;">ORDER LIST / PACKING LIST</h2><div class="info-grid"><div class="info-box"><p><strong>Customer Name:</strong> ${order.name}</p><p><strong>Contact:</strong> ${order.phone||'-'}</p><p><strong>Car Details:</strong> ${order.car||'-'} ${order.chassis?'('+order.chassis+')':''}</p></div><div class="info-box"><p><strong>Order No:</strong> ${order.refNo}</p><p><strong>Date:</strong> ${order.date}</p><p><strong>Served By:</strong> ${order.staff||'-'}</p><p><strong>Status:</strong> ${order.status==='completed'?'Collected':'Pending Fulfillment'}</p></div></div><table><thead><tr><th style="width:5%;text-align:center;">No.</th><th style="width:5%;text-align:center;">Pack</th><th style="width:30%;">Part Description</th><th style="width:20%;">Item Code</th><th style="width:15%;">Brand</th><th style="width:5%;text-align:center;">QTY</th><th style="width:10%;text-align:right;">U.Price</th><th style="width:10%;text-align:right;">Total</th></tr></thead><tbody>${itemsHtml}</tbody></table><div class="totals"><p>Total Amount: <strong>RM ${parseFloat(order.total||0).toFixed(2)}</strong></p><p>Deposit Paid: RM ${parseFloat(order.deposit||0).toFixed(2)}</p><p style="font-size:18px;margin-top:10px;">Balance Due: <strong style="color:#ef4444;">RM ${parseFloat(order.balance||0).toFixed(2)}</strong></p></div><div class="footer">Thank you for choosing Malaysia Motor Company. Please retain this list for your records.<br>${order.remarks?'Internal Remarks: '+order.remarks:''}</div></div>`;
+        return `<div id="invoiceBody" style="font-family:Arial,sans-serif; padding:20px; color:#000; width:100%; max-width:800px; margin:auto;"><div style="text-align:center; border-bottom:2px solid #000; padding-bottom:15px; margin-bottom:20px;"><div style="font-size:24px; font-weight:bold; letter-spacing:1px;">MALAYSIA MOTOR COMPANY</div></div><h2 style="text-align:center; margin-bottom:20px; font-size:18px;">ORDER LIST / PACKING LIST</h2><table style="width:100%; margin-bottom:20px; border:none;"><tr><td style="vertical-align:top; width:50%;"><strong>Customer:</strong> ${order.name}<br><strong>Contact:</strong> ${order.phone||'-'}<br><strong>Car:</strong> ${order.car||'-'} ${order.chassis?'('+order.chassis+')':''}</td><td style="vertical-align:top; text-align:right;"><strong>Order No:</strong> ${order.refNo}<br><strong>Date:</strong> ${order.date}<br><strong>Status:</strong> ${order.status==='completed'?'Collected':'Pending'}</td></tr></table><table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:12px;"><thead><tr style="background:#eee;"><th style="padding:8px; border:1px solid #000;">No.</th><th style="padding:8px; border:1px solid #000;">Pack</th><th style="padding:8px; border:1px solid #000; text-align:left;">Part Description</th><th style="padding:8px; border:1px solid #000; text-align:left;">Item Code</th><th style="padding:8px; border:1px solid #000; text-align:left;">Brand</th><th style="padding:8px; border:1px solid #000; text-align:left;">Supplier</th><th style="padding:8px; border:1px solid #000;">QTY</th><th style="padding:8px; border:1px solid #000; text-align:right;">U.Price</th><th style="padding:8px; border:1px solid #000; text-align:right;">Total</th></tr></thead><tbody>${itemsHtml}</tbody></table><div style="text-align:right; font-size:14px;"><p style="margin:4px 0;">Total Amount: <strong>RM ${parseFloat(order.total||0).toFixed(2)}</strong></p><p style="margin:4px 0;">Deposit Paid: RM ${parseFloat(order.deposit||0).toFixed(2)}</p><p style="font-size:16px; margin-top:10px;">Balance Due: <strong>RM ${parseFloat(order.balance||0).toFixed(2)}</strong></p></div><div style="margin-top:30px; font-size:11px; text-align:center; color:#555; border-top:1px solid #ccc; padding-top:15px;">Thank you for choosing Malaysia Motor Company. Please retain this list for your records.<br>${order.remarks?'Internal Remarks: '+order.remarks:''}</div></div>`;
     }
     
-    function printOrder(id) { const o = orders.find(x=>x.id===id); if(o){ const p = window.open('','_blank'); p.document.write(getInvoiceHTML(o)); p.document.close(); p.onload=()=>p.print(); } }
+    function printOrder(id) { const o = orders.find(x=>x.id===id); if(o){ const p = window.open('','_blank'); p.document.write(`<html><head><title>${o.refNo}</title></head><body>${getInvoiceHTML(o)}<script>window.onload=function(){window.print();window.close();}<\/script></body></html>`); p.document.close(); } }
     
     function savePdfOrder(id) { 
         const o = orders.find(x=>x.id===id); 
         if(o){ 
-            const element = document.createElement('div');
-            element.innerHTML = getInvoiceHTML(o);
-            html2pdf().set({margin:10, filename:`${o.refNo}_List.pdf`, jsPDF:{format:'a4'}}).from(element).save(); 
+            document.getElementById('pdfContainer').innerHTML = getInvoiceHTML(o);
+            html2pdf().set({margin:10, filename:`${o.refNo}_List.pdf`, jsPDF:{format:'a4'}}).from(document.getElementById('invoiceBody')).save().then(()=>document.getElementById('pdfContainer').innerHTML=''); 
         } 
+    }
+
+    function exportCSV() {
+        if(!isAdmin) return;
+        if(orders.length === 0) return alert("No data available to export.");
+        let csvContent = "data:text/csv;charset=utf-8,\uFEFFRef No,Order Date,Handled By,Customer Name,Phone,Car Model,Chassis No,All Parts Details,Total,Deposit,Balance,Status,Remarks\n";
+        orders.forEach(o => {
+            const items = getSafeItems(o);
+            let allPartsText = items.map(i => `${i.qty||1}x ${i.part||''} [${i.partNo||''}] (Brd:${i.brand||''}, Sup:${i.supplier||''}) - RM${i.subTotal||0}`).join(" | ");
+            const row = `"${o.refNo}","${o.date}","${o.staff || ''}","${o.name}","${o.phone}","${o.car || ''}","${o.chassis || ''}","${allPartsText}","${o.total}","${o.deposit}","${o.balance}","${o.status}","${o.remarks}"`;
+            csvContent += row + "\n";
+        });
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a"); link.setAttribute("href", encodedUri); link.setAttribute("download", `MMC_Cloud_Database_${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link); link.click(); document.body.removeChild(link);
     }
 
     // ==========================================
@@ -743,7 +775,7 @@
         if(!part && !code) return; 
 
         const payload = {
-            part: part, code: code, brand: document.getElementById('r_brand').value, supp: document.getElementById('r_supp').value,
+            part: part, code: code, brand: document.getElementById('r_brand').value||"", supp: document.getElementById('r_supp').value||"",
             onHandQty: document.getElementById('r_onHand').value || "0", needOrderQty: document.getElementById('r_needOrder').value || "1",
             status: "Not Yet", date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
             timestamp: Date.now()
@@ -809,12 +841,12 @@
             tr.style.opacity = item.status === 'Ordered' ? '0.6' : '1';
             tr.innerHTML = `
                 <td><small style="color:#64748b; font-weight:bold;">${item.date}</small></td>
-                <td><strong style="color:#0f172a; font-size:15px;">${item.part || '-'}</strong></td>
+                <td><strong style="color:#0f172a; font-size:14px;">${item.part || '-'}</strong></td>
                 <td class="mono-text" style="color:#475569; font-weight:bold;">${item.code || '-'}</td>
                 <td>${item.brand || '-'}</td>
                 <td>${item.supp || '-'}</td>
-                <td style="text-align:center; font-weight:bold; font-size:15px;">${item.onHandQty || '0'}</td>
-                <td style="text-align:center; color:#ef4444; font-weight:bold; font-size:15px;">${item.needOrderQty || '0'}</td>
+                <td style="text-align:center; font-weight:bold; font-size:14px;">${item.onHandQty || '0'}</td>
+                <td style="text-align:center; color:#ef4444; font-weight:bold; font-size:14px;">${item.needOrderQty || '0'}</td>
                 <td style="text-align:center;"><span style="padding:6px 10px; border-radius:4px; font-size:12px; font-weight:bold; background:${item.status==='Ordered'?'#d1fae5':'#fef3c7'}; color:${item.status==='Ordered'?'#047857':'#b45309'};">${item.status}</span></td>
                 <td>${actionHtml}</td>
             `;
@@ -822,7 +854,7 @@
         });
     }
 
-    // Boss Daily WhatsApp Report Sender (Pulls exact filtered data)
+    // Boss Daily WhatsApp Report Sender
     function sendBossReport(phone, bossName) {
         const data = window.currentRestockPrintData || [];
         const dateRangeText = document.getElementById('rDateFilter').options[document.getElementById('rDateFilter').selectedIndex].text;
@@ -840,35 +872,34 @@
         window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank');
     }
 
-    // RESTOCK PDF (100% RELIABLE HTML BUILDER)
+    // RESTOCK PDF (HTML BUILDER)
     function getRestockHTML() {
         const data = window.currentRestockPrintData || [];
         let rows = '';
-        data.forEach((i, idx) => { rows += `<tr><td style="text-align:center;">${idx+1}</td><td>${i.date}</td><td><strong>${i.part||'-'}</strong></td><td>${i.code||'-'}</td><td>${i.brand||'-'}</td><td>${i.supp||'-'}</td><td style="text-align:center;">${i.onHandQty||0}</td><td style="text-align:center; color:red; font-weight:bold;">${i.needOrderQty||0}</td><td style="text-align:center;">${i.status}</td></tr>`; });
+        data.forEach((i, idx) => { rows += `<tr><td style="text-align:center; border:1px solid #000; padding:6px;">${idx+1}</td><td style="border:1px solid #000; padding:6px;">${i.date}</td><td style="border:1px solid #000; padding:6px;"><strong>${i.part||'-'}</strong></td><td style="border:1px solid #000; padding:6px;">${i.code||'-'}</td><td style="border:1px solid #000; padding:6px;">${i.brand||'-'}</td><td style="border:1px solid #000; padding:6px;">${i.supp||'-'}</td><td style="text-align:center; border:1px solid #000; padding:6px;">${i.onHandQty||0}</td><td style="text-align:center; color:red; font-weight:bold; border:1px solid #000; padding:6px;">${i.needOrderQty||0}</td><td style="text-align:center; border:1px solid #000; padding:6px;">${i.status}</td></tr>`; });
         const dateRangeText = document.getElementById('rDateFilter').options[document.getElementById('rDateFilter').selectedIndex].text;
         
-        return `<style>body{font-family:Arial,sans-serif;padding:20px;color:#1e293b;} table{width:100%;border-collapse:collapse;margin-top:15px;font-size:12px;} th,td{border:1px solid #cbd5e1;padding:8px;text-align:left;} th{background-color:#f1f5f9;text-transform:uppercase;font-size:11px;} .stats-table{width:100%;margin:20px 0;border:none;} .stats-table td{border:1px solid #cbd5e1;padding:15px;text-align:center;background:#f8fafc;font-size:16px;} .stats-table strong{font-size:20px;color:#0f172a;display:block;margin-top:5px;}</style><div id="rInvoiceBody"><h2 style="text-align:center;margin-bottom:5px;">RESTOCK SUMMARY REPORT</h2><p style="text-align:center;color:#64748b;margin-top:0;">Date Range: ${dateRangeText}</p><table class="stats-table"><tr><td>Total Items Added:<strong style="color:#0f172a;">${document.getElementById('s_total').innerText}</strong></td><td>Pending (Not Yet):<strong style="color:#ef4444;">${document.getElementById('s_notYet').innerText}</strong></td><td>Already Ordered:<strong style="color:#10b981;">${document.getElementById('s_ordered').innerText}</strong></td></tr></table><table><thead><tr><th style="width:4%;text-align:center;">No</th><th style="width:10%;">Date</th><th style="width:25%;">Part Description</th><th style="width:15%;">Item Code</th><th style="width:12%;">Brand</th><th style="width:12%;">Supplier</th><th style="width:7%;text-align:center;">On Hand</th><th style="width:7%;text-align:center;">Need</th><th style="width:8%;text-align:center;">Status</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+        return `<div id="rInvoiceBody" style="font-family:Arial,sans-serif; padding:20px; color:#000; width:100%;"><h2 style="text-align:center; margin-bottom:5px;">RESTOCK SUMMARY REPORT</h2><p style="text-align:center; color:#555; margin-top:0;">Date Range: ${dateRangeText}</p><table style="width:100%; border:none; margin:20px 0;"><tr><td style="text-align:center;">Total Items Added:<br><strong style="font-size:18px;">${document.getElementById('s_total').innerText}</strong></td><td style="text-align:center;">Pending (Not Yet):<br><strong style="font-size:18px; color:red;">${document.getElementById('s_notYet').innerText}</strong></td><td style="text-align:center;">Already Ordered:<br><strong style="font-size:18px; color:green;">${document.getElementById('s_ordered').innerText}</strong></td></tr></table><table style="width:100%; border-collapse:collapse; margin-top:15px; font-size:11px;"><thead><tr style="background:#eee;"><th style="border:1px solid #000; padding:6px; width:4%;">No</th><th style="border:1px solid #000; padding:6px; width:10%;">Date</th><th style="border:1px solid #000; padding:6px; width:25%;">Part Description</th><th style="border:1px solid #000; padding:6px; width:15%;">Item Code</th><th style="border:1px solid #000; padding:6px; width:12%;">Brand</th><th style="border:1px solid #000; padding:6px; width:12%;">Supplier</th><th style="border:1px solid #000; padding:6px; width:7%;">On Hand</th><th style="border:1px solid #000; padding:6px; width:7%;">Need</th><th style="border:1px solid #000; padding:6px; width:8%;">Status</th></tr></thead><tbody>${rows}</tbody></table></div>`;
     }
     
-    function printRestock() { const p = window.open('','_blank'); p.document.write(getRestockHTML()); p.document.close(); p.onload=()=>p.print(); }
+    function printRestock() { const p = window.open('','_blank'); p.document.write(`<html><head><title>Restock</title></head><body>${getRestockHTML()}<script>window.onload=function(){window.print();window.close();}<\/script></body></html>`); p.document.close(); }
     
     function savePdfRestock() { 
-        const element = document.createElement('div');
-        element.innerHTML = getRestockHTML();
-        html2pdf().set({margin:10, filename:`Restock_Summary.pdf`, jsPDF:{format:'a4', orientation:'landscape'}}).from(element).save(); 
+        document.getElementById('pdfContainer').innerHTML = getRestockHTML();
+        html2pdf().set({margin:10, filename:`Restock_Summary.pdf`, jsPDF:{format:'a4', orientation:'landscape'}}).from(document.getElementById('rInvoiceBody')).save().then(()=>document.getElementById('pdfContainer').innerHTML=''); 
     }
 
-    function exportCSV() {
+    function exportRestockCSV() {
         if(!isAdmin) return;
-        if(orders.length === 0) return alert("No data available to export.");
-        let csvContent = "data:text/csv;charset=utf-8,\uFEFFRef No,Order Date,Handled By,Customer Name,Phone,Car Model,Chassis No,All Parts,Total,Deposit,Balance,Status,Remarks\n";
-        orders.forEach(o => {
-            let allPartsText = o.items ? o.items.map(i => `${i.qty || 1}x ${i.part || i.partNo} (RM${i.subTotal})`).join(" + ") : "";
-            const row = `"${o.refNo}","${o.date}","${o.staff || ''}","${o.name}","${o.phone}","${o.car || ''}","${o.chassis || ''}","${allPartsText}","${o.total}","${o.deposit}","${o.balance}","${o.status}","${o.remarks}"`;
+        const data = window.currentRestockPrintData || restockItems;
+        if(data.length === 0) return alert("No data to export.");
+        let csvContent = "data:text/csv;charset=utf-8,\uFEFFDate Added,Part Description,Item Code,Brand,Supplier,On Hand Qty,Need Order Qty,Status\n";
+        data.forEach(i => {
+            const row = `"${i.date}","${i.part||''}","${i.code||''}","${i.brand||''}","${i.supp||''}","${i.onHandQty||0}","${i.needOrderQty||0}","${i.status}"`;
             csvContent += row + "\n";
         });
         const encodedUri = encodeURI(csvContent);
-        const link = document.createElement("a"); link.setAttribute("href", encodedUri); link.setAttribute("download", `MMC_Cloud_Database_${new Date().toISOString().split('T')[0]}.csv`);
+        const link = document.createElement("a"); link.setAttribute("href", encodedUri); link.setAttribute("download", `MMC_Restock_${new Date().toISOString().split('T')[0]}.csv`);
         document.body.appendChild(link); link.click(); document.body.removeChild(link);
     }
 </script>
