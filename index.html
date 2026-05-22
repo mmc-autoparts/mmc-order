@@ -9,8 +9,8 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
         /* Professional Login Screen Styles */
-        #loginScreen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(240, 242, 245, 0.98); z-index: 9999; display: flex; justify-content: center; align-items: center; }
-        .login-box { background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); text-align: center; max-width: 360px; width: 100%; }
+        #loginScreen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(240, 242, 245, 0.98); z-index: 9999; display: flex; justify-content: center; align-items: center; padding: 20px;}
+        .login-box { background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); text-align: center; max-width: 360px; width: 100%; box-sizing: border-box;}
         .login-box h3 { margin-top: 0; color: #1a1a1a; font-family: sans-serif; }
         .login-box input { padding: 12px; font-size: 14px; width: 100%; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 15px; }
         .login-btn { background-color: #0866ff; color: white; border: none; padding: 12px; font-weight: bold; border-radius: 4px; cursor: pointer; width: 100%; font-size: 16px; margin-bottom: 10px;}
@@ -21,12 +21,10 @@
         #mainApp { display: none; }
         
         body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; }
-        .container { max-width: 1250px; margin: auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .container { max-width: 1250px; margin: auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); box-sizing: border-box;}
         .header-flex { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e4e6eb; padding-bottom: 10px; margin-bottom: 20px;}
-        h2 { color: #1a1a1a; margin: 0; }
-        h2 a { color: #1a1a1a; text-decoration: none; }
-        h2 a:hover { color: #0866ff; text-decoration: underline; }
-        .logout-btn { background-color: #dc3545; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        h2 { color: #1a1a1a; margin: 0; font-size: 20px;}
+        .logout-btn { background-color: #dc3545; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; white-space: nowrap;}
         .logout-btn:hover { background-color: #c82333; }
 
         .form-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px; }
@@ -41,12 +39,13 @@
         button.cancel-btn:hover { background-color: #5a6268; }
 
         .top-controls { display: flex; gap: 10px; align-items: center; margin-top: 30px; margin-bottom: 15px; }
-        .search-bar { padding: 10px; width: 320px; border-radius: 20px; border: 1px solid #ccc; }
+        .search-bar { padding: 10px; width: 320px; border-radius: 20px; border: 1px solid #ccc; box-sizing: border-box;}
         
-        /* Export Excel Button (Hidden by default) */
-        #exportBtn { background-color: #107c41; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-left: auto; display: none; }
+        #exportBtn { background-color: #107c41; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-left: auto; display: none; white-space: nowrap;}
         
-        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        /* Table Responsive Wrapper */
+        .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 4px; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 900px; /* Forces table to stay wide so text doesn't squish */ }
         th, td { padding: 12px; border-bottom: 1px solid #eee; text-align: left; vertical-align: top;}
         th { background-color: #f8f9fa; color: #333; }
         
@@ -58,33 +57,47 @@
         .wa-btn { background-color: #25D366; color: white; text-decoration: none; padding: 6px; border-radius: 4px; font-weight: bold; display: block; text-align: center; font-size: 11px; margin-bottom: 4px;}
         .wa-btn-receipt { background-color: #128C7E; }
         
-        .action-btns { display: flex; gap: 6px; justify-content: center; }
+        .action-btns { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap;}
         .delete-btn { color: #dc3545; background: #ffe6e6; border: none; cursor: pointer; font-size: 14px; padding: 6px 8px; border-radius: 4px; font-weight: bold; }
-        .delete-btn:hover { background: #ffcccc; }
         .edit-btn { color: #0056b3; background: #e6f0ff; border: none; cursor: pointer; font-size: 14px; padding: 6px 8px; border-radius: 4px; font-weight: bold; }
-        .edit-btn:hover { background: #cce0ff; }
         .complete-btn { color: #155724; background: #d4edda; border: none; cursor: pointer; font-size: 14px; padding: 6px 8px; border-radius: 4px; font-weight: bold; }
-        .complete-btn:hover { background: #c3e6cb; }
 
         .ref-badge { background-color: #e9ecef; padding: 3px 6px; border-radius: 4px; font-family: monospace; font-weight: bold; color: #495057; font-size: 13px;}
         .staff-badge { background-color: #e6f7ff; color: #0050b3; border: 1px solid #91d5ff; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; display: inline-block; margin-top: 4px; }
         .notes-text { font-size: 12px; color: #6c757d; font-style: italic; margin-top: 4px;}
         .mono-text { font-family: monospace; font-size: 13px; color: #495057; }
 
-        /* Updated Photo Preview Styles for Multiple Images */
         .photo-preview-container { display: flex; flex-direction: column; gap: 10px; background: #f8f9fa; padding: 12px; border-radius: 4px; border: 1px dashed #ccc;}
         .photo-gallery { display: flex; gap: 10px; flex-wrap: wrap; }
         .photo-wrapper { position: relative; display: inline-block; }
         .photo-thumbnail { width: 60px; height: 60px; object-fit: cover; border-radius: 4px; cursor: pointer; border: 1px solid #ccc; transition: transform 0.2s;}
-        .photo-thumbnail:hover { transform: scale(1.1); box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         .remove-single-btn { position: absolute; top: -5px; right: -5px; background: #dc3545; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 10px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3);}
-        .remove-single-btn:hover { background: #c82333; transform: scale(1.1);}
         
         #photoModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; text-align: center; cursor: pointer; }
         #modalImg { max-width: 90%; max-height: 90%; margin-top: 5vh; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
-        
-        /* Admin Badge indicator */
         #adminBadge { display: none; background: #28a745; color: white; padding: 3px 8px; border-radius: 15px; font-size: 11px; font-weight: bold; vertical-align: middle; margin-left: 10px;}
+
+        /* 📱 MOBILE RESPONSIVE RULES (For iPhone/Android) */
+        @media (max-width: 800px) {
+            body { padding: 10px; }
+            .container { padding: 15px; }
+            .header-flex { flex-direction: column; align-items: flex-start; gap: 15px; }
+            .logout-btn { width: 100%; }
+            #adminBadge { margin-left: 0; margin-top: 5px; display: inline-block; }
+            
+            /* Stack form fields to 1 column */
+            .form-grid { grid-template-columns: 1fr; }
+            .col-span-2, .col-span-4 { grid-column: span 1; }
+            
+            /* Stack search and buttons */
+            .top-controls { flex-direction: column; align-items: stretch; }
+            .search-bar { width: 100%; }
+            #exportBtn { margin-left: 0; width: 100%; }
+            
+            /* Make buttons stack nicely */
+            .button-group { flex-direction: column; }
+            button.cancel-btn { width: 100%; }
+        }
     </style>
 </head>
 <body>
@@ -103,10 +116,8 @@
 <div id="mainApp" class="container">
     <div class="header-flex">
         <h2>
-            <a href="https://console.firebase.google.com/project/malaysia-motor-preorder/database/malaysia-motor-preorder-default-rtdb/data/~2F" target="_blank" title="Open Firebase Cloud Database">
-                Malaysia Motor Company - Special Orders Portal 🌐
-            </a>
-            <span id="adminBadge">👑 Boss Admin View</span>
+            Malaysia Motor Company - Secure Portal
+            <span id="adminBadge">👑 Boss View</span>
         </h2>
         <button class="logout-btn" onclick="logoutSystem()">🔒 Logout</button>
     </div>
@@ -126,9 +137,9 @@
         </div>
 
         <div style="display:flex; gap: 5px;" class="col-span-2">
-            <input type="number" id="totalPrice" placeholder="Total Price (RM)" oninput="calcBalance()">
-            <input type="number" id="deposit" placeholder="Deposit Paid (RM)" oninput="calcBalance()">
-            <input type="number" id="balance" placeholder="Balance Due (RM)" readonly style="background-color: #e9ecef;">
+            <input type="number" id="totalPrice" placeholder="Total Price (RM)" oninput="calcBalance()" style="width:33%;">
+            <input type="number" id="deposit" placeholder="Deposit (RM)" oninput="calcBalance()" style="width:33%;">
+            <input type="number" id="balance" placeholder="Bal (RM)" readonly style="background-color: #e9ecef; width:33%;">
         </div>
         <div>
             <small style="color: #666; font-size: 11px; display:block; margin-bottom:2px;">Order Taken By Staff</small>
@@ -159,31 +170,33 @@
     </div>
 
     <div class="top-controls">
-        <input type="text" id="searchInput" class="search-bar" placeholder="🔍 Search Name, Part ID, Chassis or Staff...">
-        <select id="viewFilter" onchange="renderTable()" style="font-weight: bold; color: #0866ff; width: auto;">
+        <input type="text" id="searchInput" class="search-bar" placeholder="🔍 Search Name, Part ID or Staff...">
+        <select id="viewFilter" onchange="renderTable()" style="font-weight: bold; color: #0866ff; width: 100%;">
             <option value="active">Active Orders Only</option>
             <option value="history">Completed History</option>
             <option value="all">All Records</option>
         </select>
-        <button id="exportBtn" class="export-btn" onclick="exportCSV()">📥 Download Excel Backup</button>
+        <button id="exportBtn" class="export-btn" onclick="exportCSV()">📥 Backup Data</button>
     </div>
 
-    <table>
-        <thead>
-            <tr>
-                <th>Order ID</th>
-                <th>Customer Details</th>
-                <th>Car & Chassis</th>
-                <th>Part Details</th>
-                <th>Supplier / ETA</th>
-                <th>Financials</th>
-                <th style="width: 100px;">Status</th>
-                <th style="width: 100px;">WhatsApp</th>
-                <th style="width: 110px; text-align:center;">Actions</th>
-            </tr>
-        </thead>
-        <tbody id="orderTableBody"></tbody>
-    </table>
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th>Customer Details</th>
+                    <th>Car & Chassis</th>
+                    <th>Part Details</th>
+                    <th>Supplier / ETA</th>
+                    <th>Financials</th>
+                    <th style="width: 100px;">Status</th>
+                    <th style="width: 100px;">WhatsApp</th>
+                    <th style="width: 110px; text-align:center;">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="orderTableBody"></tbody>
+        </table>
+    </div>
 </div>
 
 <div id="photoModal" onclick="closePhoto()">
@@ -204,23 +217,17 @@
         appId: "1:409637154704:web:ac1ed4603fb62bd0258d15"
     };
     
-    // Initialize Firebase Services
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.database();
-
-    // ------------------------------------------------------------------
-    // 👑 BOSS ADMIN SETTING: Type your exact admin email here
-    // ------------------------------------------------------------------
     const BOSS_EMAIL = "admin@mmc.com"; 
 
     let orders = [];
     let editingId = null; 
-    let currentPhotosArray = []; // UPDATED: Now an array to hold multiple photos
+    let currentPhotosArray = [];
     let isDataLoaded = false;
     let isAdmin = false; 
 
-    // 🔒 Monitor Login Status 
     auth.onAuthStateChanged((user) => {
         if (user) {
             if (user.email.toLowerCase() === BOSS_EMAIL.toLowerCase()) {
@@ -232,13 +239,11 @@
                 document.getElementById('exportBtn').style.display = 'none';
                 document.getElementById('adminBadge').style.display = 'none';
             }
-
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('mainApp').style.display = 'block';
             document.getElementById('loginError').style.display = 'none';
             document.getElementById('authEmail').value = '';
             document.getElementById('authPassword').value = '';
-            
             if (!isDataLoaded) { loadDatabaseData(); } else { renderTable(); }
         } else {
             document.getElementById('loginScreen').style.display = 'flex';
@@ -277,18 +282,14 @@
 
     document.getElementById('searchInput').addEventListener('input', renderTable);
 
-    // UPDATED: Function to handle multiple photos
     function compressAndPreview(event) {
         const files = event.target.files;
         if (!files || files.length === 0) return;
-
-        // Check if adding these new files exceeds the limit of 3
         if (currentPhotosArray.length + files.length > 3) {
             alert("⚠️ You can only upload a maximum of 3 photos per order!");
-            event.target.value = ''; // Reset input
+            event.target.value = ''; 
             return;
         }
-
         Array.from(files).forEach(file => {
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -302,24 +303,19 @@
                     canvas.width = width; canvas.height = height;
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, width, height);
-                    
-                    // Push the new compressed photo to our array
                     currentPhotosArray.push(canvas.toDataURL('image/jpeg', 0.5));
-                    renderPhotoGalleryUI(); // Update the screen
+                    renderPhotoGalleryUI(); 
                 };
                 img.src = e.target.result;
             };
             reader.readAsDataURL(file);
         });
-        
-        event.target.value = ''; // Reset input so user can pick the same file again if needed
+        event.target.value = ''; 
     }
 
-    // UPDATED: Display all photos in the edit form
     function renderPhotoGalleryUI() {
         const gallery = document.getElementById('photoGallery');
-        gallery.innerHTML = ''; // Clear current display
-        
+        gallery.innerHTML = ''; 
         currentPhotosArray.forEach((b64Data, index) => {
             gallery.innerHTML += `
                 <div class="photo-wrapper">
@@ -330,13 +326,11 @@
         });
     }
 
-    // UPDATED: Remove a specific photo from the array
     function removeSinglePhoto(index) {
-        currentPhotosArray.splice(index, 1); // Remove the item at that index
-        renderPhotoGalleryUI(); // Redraw the gallery
+        currentPhotosArray.splice(index, 1); 
+        renderPhotoGalleryUI(); 
     }
 
-    // Clean up function for clearing form
     function removeAllPhotos() {
         currentPhotosArray = [];
         document.getElementById('photoInput').value = '';
@@ -362,12 +356,10 @@
         document.getElementById('orderByStaff').value = order.staff || '';
         document.getElementById('remarks').value = order.remarks || '';
 
-        // Load existing photos into the array (handles both new array format and old single string format)
         currentPhotosArray = [];
         if (order.photos && Array.isArray(order.photos)) {
             currentPhotosArray = [...order.photos];
         } else if (order.photo) {
-            // Backwards compatibility for old orders with just one photo
             currentPhotosArray.push(order.photo);
         }
         renderPhotoGalleryUI();
@@ -408,7 +400,7 @@
 
         if (editingId) {
             await db.ref('orders/' + editingId).update({
-                name, phone, car, chassis, part, partNo, supplier, eta, total, deposit, balance, staff, remarks, photos: currentPhotosArray, photo: null // null removes old single photo format
+                name, phone, car, chassis, part, partNo, supplier, eta, total, deposit, balance, staff, remarks, photos: currentPhotosArray, photo: null
             });
             cancelEdit();
         } else {
@@ -418,7 +410,6 @@
             });
             const nextNum = snapshot.snapshot.val();
             const refNo = 'MMC-' + nextNum;
-
             const dateStr = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
             
             await db.ref('orders').push({
@@ -509,7 +500,6 @@
                 ? `<button class="status-btn status-completed">📦 Collected</button>`
                 : `<button class="status-btn ${order.status === 'waiting' ? 'status-waiting' : 'status-arrived'}" onclick="toggleStatus('${order.id}')">${order.status === 'waiting' ? '⏳ Waiting Supplier' : '✅ Stock Arrived'}</button>`;
 
-            // Combine old photo format and new photos array for display
             let combinedPhotos = [];
             if (order.photos) combinedPhotos = [...order.photos];
             else if (order.photo) combinedPhotos.push(order.photo);
