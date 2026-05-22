@@ -2,101 +2,103 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Malaysia Motor Company - Secure Portal</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
-        /* Professional Login Screen Styles */
+        /* Base & Login Styles */
+        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; }
         #loginScreen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(240, 242, 245, 0.98); z-index: 9999; display: flex; justify-content: center; align-items: center; padding: 20px;}
         .login-box { background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); text-align: center; max-width: 360px; width: 100%; box-sizing: border-box;}
         .login-box h3 { margin-top: 0; color: #1a1a1a; font-family: sans-serif; }
-        .login-box input { padding: 12px; font-size: 14px; width: 100%; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 15px; }
+        .login-box input { padding: 12px; font-size: 16px; width: 100%; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 15px; }
         .login-btn { background-color: #0866ff; color: white; border: none; padding: 12px; font-weight: bold; border-radius: 4px; cursor: pointer; width: 100%; font-size: 16px; margin-bottom: 10px;}
-        .login-btn:hover { background-color: #0050d1; }
         .error-msg { color: #dc3545; font-size: 13px; margin-top: -5px; margin-bottom: 15px; display: none; font-weight: bold; }
 
-        /* Main App Styles */
+        /* Main App & Header */
         #mainApp { display: none; }
-        
-        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; }
         .container { max-width: 1250px; margin: auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); box-sizing: border-box;}
         .header-flex { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e4e6eb; padding-bottom: 10px; margin-bottom: 20px;}
         h2 { color: #1a1a1a; margin: 0; font-size: 20px;}
-        .logout-btn { background-color: #dc3545; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; white-space: nowrap;}
-        .logout-btn:hover { background-color: #c82333; }
-
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px; }
-        input, select { padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; width: 100%; box-sizing: border-box;}
+        .logout-btn { background-color: #dc3545; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; white-space: nowrap;}
+        
+        /* 💻 DESKTOP GRID LAYOUT (4 Columns) */
+        .form-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 15px; }
+        input, select { padding: 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; width: 100%; box-sizing: border-box; }
         .col-span-2 { grid-column: span 2; }
         .col-span-4 { grid-column: span 4; }
         
+        .finance-group { display: flex; gap: 10px; }
+        .finance-group > div { flex: 1; }
+
         .button-group { display: flex; gap: 10px; grid-column: span 4; }
-        button.add-btn { background-color: #0866ff; color: white; border: none; padding: 12px; font-weight: bold; border-radius: 4px; cursor: pointer; width: 100%; font-size: 16px;}
-        button.add-btn:hover { background-color: #0050d1; }
-        button.cancel-btn { background-color: #6c757d; color: white; border: none; padding: 12px; font-weight: bold; border-radius: 4px; cursor: pointer; width: 30%; font-size: 16px; display: none;}
-        button.cancel-btn:hover { background-color: #5a6268; }
+        button.add-btn { background-color: #0866ff; color: white; border: none; padding: 14px; font-weight: bold; border-radius: 4px; cursor: pointer; width: 100%; font-size: 16px;}
+        button.cancel-btn { background-color: #6c757d; color: white; border: none; padding: 14px; font-weight: bold; border-radius: 4px; cursor: pointer; width: 30%; font-size: 16px; display: none;}
 
         .top-controls { display: flex; gap: 10px; align-items: center; margin-top: 30px; margin-bottom: 15px; }
-        .search-bar { padding: 10px; width: 320px; border-radius: 20px; border: 1px solid #ccc; box-sizing: border-box;}
-        
+        .search-bar { padding: 12px; width: 320px; border-radius: 20px; border: 1px solid #ccc; box-sizing: border-box;}
         #exportBtn { background-color: #107c41; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-left: auto; display: none; white-space: nowrap;}
         
-        /* Table Responsive Wrapper */
+        /* Table Styles */
         .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 4px; }
-        table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 900px; /* Forces table to stay wide so text doesn't squish */ }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 900px; }
         th, td { padding: 12px; border-bottom: 1px solid #eee; text-align: left; vertical-align: top;}
         th { background-color: #f8f9fa; color: #333; }
         
-        .status-btn { padding: 6px 12px; border: none; border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 12px; width: 100%; margin-bottom: 5px;}
+        .status-btn { padding: 8px 12px; border: none; border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 12px; width: 100%; margin-bottom: 5px;}
         .status-waiting { background-color: #fff3cd; color: #856404; }
         .status-arrived { background-color: #d4edda; color: #155724; }
         .status-completed { background-color: #e2e3e5; color: #383d41; cursor: default;}
         
-        .wa-btn { background-color: #25D366; color: white; text-decoration: none; padding: 6px; border-radius: 4px; font-weight: bold; display: block; text-align: center; font-size: 11px; margin-bottom: 4px;}
+        .wa-btn { background-color: #25D366; color: white; text-decoration: none; padding: 8px; border-radius: 4px; font-weight: bold; display: block; text-align: center; font-size: 12px; margin-bottom: 4px;}
         .wa-btn-receipt { background-color: #128C7E; }
         
         .action-btns { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap;}
-        .delete-btn { color: #dc3545; background: #ffe6e6; border: none; cursor: pointer; font-size: 14px; padding: 6px 8px; border-radius: 4px; font-weight: bold; }
-        .edit-btn { color: #0056b3; background: #e6f0ff; border: none; cursor: pointer; font-size: 14px; padding: 6px 8px; border-radius: 4px; font-weight: bold; }
-        .complete-btn { color: #155724; background: #d4edda; border: none; cursor: pointer; font-size: 14px; padding: 6px 8px; border-radius: 4px; font-weight: bold; }
+        .delete-btn, .edit-btn, .complete-btn { border: none; cursor: pointer; font-size: 14px; padding: 8px 10px; border-radius: 4px; font-weight: bold; }
+        .delete-btn { color: #dc3545; background: #ffe6e6; }
+        .edit-btn { color: #0056b3; background: #e6f0ff; }
+        .complete-btn { color: #155724; background: #d4edda; }
 
         .ref-badge { background-color: #e9ecef; padding: 3px 6px; border-radius: 4px; font-family: monospace; font-weight: bold; color: #495057; font-size: 13px;}
         .staff-badge { background-color: #e6f7ff; color: #0050b3; border: 1px solid #91d5ff; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; display: inline-block; margin-top: 4px; }
         .notes-text { font-size: 12px; color: #6c757d; font-style: italic; margin-top: 4px;}
         .mono-text { font-family: monospace; font-size: 13px; color: #495057; }
 
-        .photo-preview-container { display: flex; flex-direction: column; gap: 10px; background: #f8f9fa; padding: 12px; border-radius: 4px; border: 1px dashed #ccc;}
+        .photo-preview-container { display: flex; flex-direction: column; gap: 10px; background: #f8f9fa; padding: 15px; border-radius: 4px; border: 1px dashed #ccc;}
         .photo-gallery { display: flex; gap: 10px; flex-wrap: wrap; }
         .photo-wrapper { position: relative; display: inline-block; }
-        .photo-thumbnail { width: 60px; height: 60px; object-fit: cover; border-radius: 4px; cursor: pointer; border: 1px solid #ccc; transition: transform 0.2s;}
-        .remove-single-btn { position: absolute; top: -5px; right: -5px; background: #dc3545; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 10px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3);}
+        .photo-thumbnail { width: 70px; height: 70px; object-fit: cover; border-radius: 4px; cursor: pointer; border: 1px solid #ccc; transition: transform 0.2s;}
+        .remove-single-btn { position: absolute; top: -5px; right: -5px; background: #dc3545; color: white; border: none; border-radius: 50%; width: 22px; height: 22px; font-size: 12px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3);}
         
         #photoModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; text-align: center; cursor: pointer; }
         #modalImg { max-width: 90%; max-height: 90%; margin-top: 5vh; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
-        #adminBadge { display: none; background: #28a745; color: white; padding: 3px 8px; border-radius: 15px; font-size: 11px; font-weight: bold; vertical-align: middle; margin-left: 10px;}
+        #adminBadge { display: none; background: #28a745; color: white; padding: 4px 8px; border-radius: 15px; font-size: 11px; font-weight: bold; vertical-align: middle; margin-left: 10px;}
 
-        /* 📱 MOBILE RESPONSIVE RULES (For iPhone/Android) */
+        /* 📱 MOBILE RESPONSIVE RULES (ULTIMATE FIX) */
         @media (max-width: 800px) {
-            body { padding: 10px; }
-            .container { padding: 15px; }
-            .header-flex { flex-direction: column; align-items: flex-start; gap: 15px; }
-            .logout-btn { width: 100%; }
-            #adminBadge { margin-left: 0; margin-top: 5px; display: inline-block; }
+            body { padding: 5px; background-color: white; }
+            .container { padding: 10px; box-shadow: none; }
             
-            /* Stack form fields to 1 column */
-            .form-grid { grid-template-columns: 1fr; }
-            .col-span-2, .col-span-4 { grid-column: span 1; }
+            /* Header adjustments */
+            .header-flex { flex-direction: column; align-items: stretch; gap: 15px; padding-bottom: 15px;}
+            .logout-btn { width: 100%; padding: 12px; font-size: 16px;}
+            #adminBadge { display: block; width: fit-content; margin: 8px 0 0 0; }
             
-            /* Stack search and buttons */
-            .top-controls { flex-direction: column; align-items: stretch; }
-            .search-bar { width: 100%; }
-            #exportBtn { margin-left: 0; width: 100%; }
+            /* FORCE ALL FORM ITEMS TO STACK VERTICALLY */
+            .form-grid { display: flex; flex-direction: column; gap: 12px; }
             
-            /* Make buttons stack nicely */
+            /* Finance group side-by-side perfectly */
+            .finance-group { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+            
+            /* Stack controls */
+            .top-controls { flex-direction: column; align-items: stretch; margin-top: 20px; }
+            .search-bar, #viewFilter, #exportBtn { width: 100%; padding: 12px; font-size: 16px;}
+            
+            /* Button group stack */
             .button-group { flex-direction: column; }
-            button.cancel-btn { width: 100%; }
+            button.add-btn, button.cancel-btn { width: 100%; }
         }
     </style>
 </head>
@@ -131,18 +133,29 @@
         <input type="text" id="partDesc" placeholder="Part Needed (e.g., Lower Arm)">
         <input type="text" id="partNumber" placeholder="Part ID / OEM No (e.g., 51350-TBA-A00)">
         <input type="text" id="supplier" placeholder="Supplier">
+        
         <div>
-            <small style="color: #666; font-size: 11px; display:block; margin-bottom:2px;">Target ETA Date</small>
+            <small style="color: #666; font-size: 12px; display:block; margin-bottom:4px; font-weight:bold;">Target ETA Date</small>
             <input type="date" id="etaDate">
         </div>
 
-        <div style="display:flex; gap: 5px;" class="col-span-2">
-            <input type="number" id="totalPrice" placeholder="Total Price (RM)" oninput="calcBalance()" style="width:33%;">
-            <input type="number" id="deposit" placeholder="Deposit (RM)" oninput="calcBalance()" style="width:33%;">
-            <input type="number" id="balance" placeholder="Bal (RM)" readonly style="background-color: #e9ecef; width:33%;">
+        <div class="col-span-2 finance-group">
+            <div>
+                <small style="color: #666; font-size: 12px; display:block; margin-bottom:4px; font-weight:bold;">Total (RM)</small>
+                <input type="number" id="totalPrice" placeholder="Total" oninput="calcBalance()">
+            </div>
+            <div>
+                <small style="color: #666; font-size: 12px; display:block; margin-bottom:4px; font-weight:bold;">Deposit (RM)</small>
+                <input type="number" id="deposit" placeholder="Deposit" oninput="calcBalance()">
+            </div>
+            <div>
+                <small style="color: #666; font-size: 12px; display:block; margin-bottom:4px; font-weight:bold;">Balance</small>
+                <input type="number" id="balance" placeholder="Bal" readonly style="background-color: #e9ecef;">
+            </div>
         </div>
+
         <div>
-            <small style="color: #666; font-size: 11px; display:block; margin-bottom:2px;">Order Taken By Staff</small>
+            <small style="color: #666; font-size: 12px; display:block; margin-bottom:4px; font-weight:bold;">Order Taken By Staff</small>
             <select id="orderByStaff">
                 <option value="">-- Select Staff --</option>
                 <option value="Hock">Hock</option>
@@ -157,8 +170,8 @@
 
         <div class="col-span-4 photo-preview-container">
             <div>
-                <small style="color: #666; font-size: 12px; display:block; font-weight:bold; margin-bottom:4px;">📷 Upload Photos (Max 3 allowed)</small>
-                <input type="file" id="photoInput" accept="image/*" capture="environment" multiple onchange="compressAndPreview(event)" style="border:none; padding:0; width:100%;">
+                <small style="color: #666; font-size: 13px; display:block; font-weight:bold; margin-bottom:6px;">📷 Upload Photos (Max 3 allowed)</small>
+                <input type="file" id="photoInput" accept="image/*" capture="environment" multiple onchange="compressAndPreview(event)" style="border:none; padding:0; width:100%; font-size: 16px;">
             </div>
             <div id="photoGallery" class="photo-gallery"></div>
         </div>
@@ -171,7 +184,7 @@
 
     <div class="top-controls">
         <input type="text" id="searchInput" class="search-bar" placeholder="🔍 Search Name, Part ID or Staff...">
-        <select id="viewFilter" onchange="renderTable()" style="font-weight: bold; color: #0866ff; width: 100%;">
+        <select id="viewFilter" onchange="renderTable()" style="font-weight: bold; color: #0866ff; padding: 12px;">
             <option value="active">Active Orders Only</option>
             <option value="history">Completed History</option>
             <option value="all">All Records</option>
