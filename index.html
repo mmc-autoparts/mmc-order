@@ -8,102 +8,124 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
-        /* Base & Login Styles */
-        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; }
+        /* Base Styles */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #eef2f5; margin: 0; padding: 20px; }
         #loginScreen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(240, 242, 245, 0.98); z-index: 9999; display: flex; justify-content: center; align-items: center; padding: 20px;}
         .login-box { background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); text-align: center; max-width: 400px; width: 100%; box-sizing: border-box;}
-        .login-box h3 { margin-top: 0; color: #1a1a1a; font-family: sans-serif; margin-bottom: 5px; }
-        
+        .login-box h3 { margin-top: 0; color: #1a1a1a; margin-bottom: 5px; }
         .login-field { display: flex; align-items: center; background: #fff; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 15px; overflow: hidden; }
         .login-field label { background: #f8f9fa; color: #333; font-weight: bold; font-size: 14px; padding: 12px; width: 85px; text-align: left; border-right: 1px solid #ccc; margin: 0;}
         .login-input { border: none; padding: 12px; font-size: 16px; flex: 1; outline: none; background: transparent; width: 100%; box-sizing: border-box;}
-        
         .login-btn { background-color: #0866ff; color: white; border: none; padding: 12px; font-weight: bold; border-radius: 4px; cursor: pointer; width: 100%; font-size: 16px; margin-top: 5px; margin-bottom: 10px;}
         .error-msg { color: #dc3545; font-size: 13px; margin-top: -5px; margin-bottom: 15px; display: none; font-weight: bold; }
 
         /* Main App & Header */
         #mainApp { display: none; }
-        .container { max-width: 1250px; margin: auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); box-sizing: border-box;}
+        .container { max-width: 1300px; margin: auto; background: white; padding: 20px 25px; border-radius: 6px; box-shadow: 0 4px 8px rgba(0,0,0,0.08); box-sizing: border-box;}
         .header-flex { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e4e6eb; padding-bottom: 10px; margin-bottom: 20px;}
         h2 { color: #1a1a1a; margin: 0; font-size: 20px;}
-        .logout-btn { background-color: #dc3545; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; white-space: nowrap;}
+        .logout-btn { background-color: #dc3545; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; white-space: nowrap;}
         
-        /* Layout Grids */
+        /* Master Layout Grids */
         .form-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
-        input:not(.login-input), select { padding: 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; width: 100%; box-sizing: border-box; }
+        input:not(.login-input), select { padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; width: 100%; box-sizing: border-box; }
         .col-span-2 { grid-column: span 2; }
         .col-span-4 { grid-column: span 4; }
         .finance-group { display: flex; gap: 10px; }
         .finance-group > div { flex: 1; }
 
-        /* MULTI-ITEM CART STYLES */
-        .items-wrapper { background: #f8f9fa; border: 1px solid #e4e6eb; border-radius: 8px; padding: 15px; margin-bottom: 20px; grid-column: span 4;}
-        .items-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px dashed #ccc;}
-        .items-header h3 { margin: 0; color: #0056b3; font-size: 18px; }
-        .item-card { background: white; border: 1px solid #ccc; border-left: 4px solid #0866ff; border-radius: 6px; padding: 15px; margin-bottom: 15px; position: relative;}
-        .item-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 10px;}
+        /* =========================================
+           NEW POS-STYLE TABLE GRID (ERP Look)
+           ========================================= */
+        .items-wrapper { border: 1px solid #b3b3b3; border-radius: 4px; margin-bottom: 20px; grid-column: span 4; overflow: hidden; background: #fff;}
+        .items-header-bar { display: flex; justify-content: space-between; align-items: center; padding: 8px 15px; background-color: #e9ecef; border-bottom: 1px solid #b3b3b3;}
+        .items-header-bar h3 { margin: 0; font-size: 15px; color: #333; display: flex; align-items: center; gap: 8px;}
+        .add-item-btn { background-color: #28a745; color: white; border: none; padding: 6px 12px; font-weight: bold; border-radius: 3px; cursor: pointer; font-size: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.2);}
+        .add-item-btn:hover { background-color: #218838; }
+
+        .pos-table-header { display: grid; grid-template-columns: 40px 2.5fr 1.5fr 1.5fr 1fr 90px 40px; gap: 5px; background: #f4f5f7; padding: 8px 10px; border-bottom: 1px solid #ccc; font-weight: bold; font-size: 12px; color: #555;}
         
-        .add-item-btn { background-color: #28a745; color: white; border: none; padding: 10px 15px; font-weight: bold; border-radius: 4px; cursor: pointer; font-size: 14px;}
-        .remove-item-btn { color: #dc3545; background: #ffe6e6; border: none; padding: 6px 10px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px; position: absolute; top: 10px; right: 10px;}
+        .pos-table-row { display: grid; grid-template-columns: 40px 2.5fr 1.5fr 1.5fr 1fr 90px 40px; gap: 5px; padding: 6px 10px; border-bottom: 1px solid #eee; align-items: start;}
+        .pos-table-row:hover { background-color: #f8faff; }
         
-        .photo-preview-container { display: flex; flex-direction: column; gap: 8px; background: #f0f2f5; padding: 10px; border-radius: 4px; border: 1px dashed #ccc;}
-        .photo-gallery { display: flex; gap: 10px; flex-wrap: wrap; }
+        .row-num { font-size: 13px; color: #666; display: flex; align-items: center; justify-content: center; height: 35px; font-weight: bold;}
+        .pos-input { border: 1px solid #d1d5db !important; padding: 8px !important; height: 35px; border-radius: 3px !important; font-family: inherit;}
+        .pos-input:focus { border-color: #0866ff !important; outline: none; box-shadow: 0 0 0 2px rgba(8,102,255,0.2);}
+        
+        .remove-row-btn { color: white; background: #dc3545; border: none; height: 35px; width: 100%; border-radius: 3px; font-weight: bold; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center;}
+        .remove-row-btn:hover { background: #c82333; }
+
+        .photo-upload-btn { display: flex; align-items: center; justify-content: center; gap: 5px; background: #e0e6ed; border: 1px solid #c0c6cc; height: 35px; border-radius: 3px; cursor: pointer; font-size: 12px; font-weight: bold; color: #333;}
+        .photo-upload-btn:hover { background: #d0d6dc; }
+        
+        .row-gallery { grid-column: 2 / -1; display: flex; gap: 8px; flex-wrap: wrap; padding-top: 5px; }
         .photo-wrapper { position: relative; display: inline-block; }
-        .photo-thumbnail { width: 60px; height: 60px; object-fit: cover; border-radius: 4px; cursor: pointer; border: 1px solid #ccc; transition: transform 0.2s;}
-        .remove-single-btn { position: absolute; top: -5px; right: -5px; background: #dc3545; color: white; border: none; border-radius: 50%; width: 22px; height: 22px; font-size: 12px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center;}
+        .photo-thumbnail { width: 45px; height: 45px; object-fit: cover; border-radius: 3px; cursor: pointer; border: 1px solid #aaa; }
+        .remove-single-btn { position: absolute; top: -6px; right: -6px; background: #dc3545; color: white; border: none; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center;}
 
-        /* Main Buttons */
-        .button-group { display: flex; gap: 10px; grid-column: span 4; }
-        button.main-save-btn { background-color: #0866ff; color: white; border: none; padding: 14px; font-weight: bold; border-radius: 4px; cursor: pointer; width: 100%; font-size: 16px;}
-        button.cancel-btn { background-color: #6c757d; color: white; border: none; padding: 14px; font-weight: bold; border-radius: 4px; cursor: pointer; width: 30%; font-size: 16px; display: none;}
+        /* Mobile Labels (Hidden on Desktop) */
+        .mobile-label { display: none; font-size: 11px; color: #666; font-weight: bold; margin-bottom: 2px;}
 
-        /* Controls & Table */
+        /* Buttons & Table */
+        .button-group { display: flex; gap: 10px; grid-column: span 4; margin-top: 10px;}
+        button.main-save-btn { background-color: #0866ff; color: white; border: none; padding: 12px; font-weight: bold; border-radius: 4px; cursor: pointer; width: 100%; font-size: 15px;}
+        button.cancel-btn { background-color: #6c757d; color: white; border: none; padding: 12px; font-weight: bold; border-radius: 4px; cursor: pointer; width: 30%; font-size: 15px; display: none;}
+
         .top-controls { display: flex; gap: 10px; align-items: center; margin-top: 30px; margin-bottom: 15px; }
-        .search-bar { padding: 12px; width: 320px; border-radius: 20px; border: 1px solid #ccc; box-sizing: border-box;}
+        .search-bar { padding: 10px; width: 320px; border-radius: 20px; border: 1px solid #ccc; box-sizing: border-box;}
         #exportBtn { background-color: #107c41; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-left: auto; display: none; white-space: nowrap;}
         
-        .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 4px; }
-        table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 1000px; }
-        th, td { padding: 12px; border-bottom: 1px solid #eee; text-align: left; vertical-align: top;}
-        th { background-color: #f8f9fa; color: #333; }
+        .table-responsive { width: 100%; overflow-x: auto; border-radius: 4px; border: 1px solid #dee2e6;}
+        table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 1000px; }
+        th, td { padding: 10px 12px; border-bottom: 1px solid #dee2e6; text-align: left; vertical-align: top;}
+        th { background-color: #f8f9fa; color: #495057; font-weight: bold;}
         
-        .status-btn { padding: 8px 12px; border: none; border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 12px; width: 100%; margin-bottom: 5px;}
-        .status-waiting { background-color: #fff3cd; color: #856404; }
-        .status-arrived { background-color: #d4edda; color: #155724; }
+        .status-btn { padding: 6px 10px; border: none; border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 11px; width: 100%; margin-bottom: 5px;}
+        .status-waiting { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba;}
+        .status-arrived { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb;}
         .status-completed { background-color: #e2e3e5; color: #383d41; cursor: default;}
         
-        .wa-btn { background-color: #25D366; color: white; text-decoration: none; padding: 8px; border-radius: 4px; font-weight: bold; display: block; text-align: center; font-size: 12px; margin-bottom: 4px;}
+        .wa-btn { background-color: #25D366; color: white; text-decoration: none; padding: 6px; border-radius: 3px; font-weight: bold; display: block; text-align: center; font-size: 11px; margin-bottom: 4px;}
         .wa-btn-receipt { background-color: #128C7E; }
-        
-        .action-btns { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap;}
-        .delete-btn, .edit-btn, .complete-btn { border: none; cursor: pointer; font-size: 14px; padding: 8px 10px; border-radius: 4px; font-weight: bold; }
+        .action-btns { display: flex; gap: 4px; justify-content: center; flex-wrap: wrap;}
+        .delete-btn, .edit-btn, .complete-btn { border: none; cursor: pointer; font-size: 12px; padding: 6px 8px; border-radius: 3px; font-weight: bold; }
         .delete-btn { color: #dc3545; background: #ffe6e6; }
         .edit-btn { color: #0056b3; background: #e6f0ff; }
         .complete-btn { color: #155724; background: #d4edda; }
 
-        .ref-badge { background-color: #e9ecef; padding: 3px 6px; border-radius: 4px; font-family: monospace; font-weight: bold; color: #495057; font-size: 13px;}
-        .staff-badge { background-color: #e6f7ff; color: #0050b3; border: 1px solid #91d5ff; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; display: inline-block; margin-top: 4px; }
-        
+        .ref-badge { background-color: #e9ecef; padding: 3px 6px; border-radius: 4px; font-family: monospace; font-weight: bold; color: #495057; font-size: 12px;}
+        .staff-badge { background-color: #e6f7ff; color: #0050b3; border: 1px solid #91d5ff; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; display: inline-block; margin-top: 4px; }
         .table-item-list { margin: 0; padding-left: 15px; }
-        .table-item-list li { margin-bottom: 8px; border-bottom: 1px dashed #eee; padding-bottom: 8px;}
-        .table-item-list li:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0;}
+        .table-item-list li { margin-bottom: 6px; border-bottom: 1px dashed #eee; padding-bottom: 6px;}
 
         #photoModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; text-align: center; cursor: pointer; }
         #modalImg { max-width: 90%; max-height: 90%; margin-top: 5vh; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
         #adminBadge { display: none; background: #28a745; color: white; padding: 4px 8px; border-radius: 15px; font-size: 11px; font-weight: bold; vertical-align: middle; margin-left: 10px;}
 
-        /* 📱 MOBILE RESPONSIVE RULES */
+        /* 📱 SMART MOBILE FALLBACK (Transforms Table into Cards) */
         @media (max-width: 800px) {
-            body { padding: 5px; background-color: white; }
-            .container { padding: 10px; box-shadow: none; }
-            .header-flex { flex-direction: column; align-items: stretch; gap: 15px; padding-bottom: 15px;}
-            .logout-btn { width: 100%; padding: 12px; font-size: 16px;}
+            body { padding: 5px; background-color: #fff; }
+            .container { padding: 10px; box-shadow: none; border: none; }
+            .header-flex { flex-direction: column; align-items: stretch; gap: 10px; }
+            .logout-btn { width: 100%; padding: 12px;}
             #adminBadge { display: block; width: fit-content; margin: 8px 0 0 0; }
             .form-grid { display: flex; flex-direction: column; gap: 12px; }
-            .item-grid { display: flex; flex-direction: column; gap: 8px; }
             .finance-group { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+            
+            /* Destroy the table layout for mobile */
+            .pos-table-header { display: none; } /* Hide headers */
+            .pos-table-row { 
+                display: flex; flex-direction: column; gap: 8px; 
+                border: 1px solid #0866ff; border-radius: 6px; padding: 12px; margin: 10px;
+                background: #fdfdfd; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            }
+            .mobile-label { display: block; } /* Show labels above inputs */
+            .row-num { display: none; } /* Hide numbers */
+            .row-gallery { padding-top: 10px; border-top: 1px dashed #ccc; margin-top: 5px; }
+            .remove-row-btn { margin-top: 5px; padding: 10px;}
+            
             .top-controls { flex-direction: column; align-items: stretch; margin-top: 20px; }
-            .search-bar, #viewFilter, #exportBtn { width: 100%; padding: 12px; font-size: 16px;}
+            .search-bar, #viewFilter, #exportBtn { width: 100%; padding: 12px;}
             .button-group { flex-direction: column; }
             button.main-save-btn, button.cancel-btn { width: 100%; }
         }
@@ -138,38 +160,61 @@
     </div>
     
     <div class="form-grid">
-        <input type="text" id="custName" placeholder="Customer Name">
-        <input type="text" id="custPhone" placeholder="WhatsApp Number (e.g., 60123456789)">
-        <input type="text" id="carModel" placeholder="Car Model (e.g., Honda Civic)">
-        <input type="text" id="chassisNumber" placeholder="Chassis No (e.g., FC1)">
+        <div>
+            <small style="color: #666; font-size: 12px; font-weight:bold;">Customer Name</small>
+            <input type="text" id="custName" placeholder="Name">
+        </div>
+        <div>
+            <small style="color: #666; font-size: 12px; font-weight:bold;">WhatsApp Number</small>
+            <input type="text" id="custPhone" placeholder="60123456789">
+        </div>
+        <div>
+            <small style="color: #666; font-size: 12px; font-weight:bold;">Car Model</small>
+            <input type="text" id="carModel" placeholder="e.g. Honda Civic">
+        </div>
+        <div>
+            <small style="color: #666; font-size: 12px; font-weight:bold;">Chassis No.</small>
+            <input type="text" id="chassisNumber" placeholder="e.g. FC1">
+        </div>
         
         <div class="items-wrapper">
-            <div class="items-header">
-                <h3>🛒 Parts Ordered List</h3>
-                <button type="button" class="add-item-btn" onclick="addNewItemBlock()">+ Add Part</button>
+            <div class="items-header-bar">
+                <h3>📋 Order Items List</h3>
+                <button type="button" class="add-item-btn" onclick="addNewItemBlock()">➕ Add Row</button>
             </div>
+            
+            <div class="pos-table-header">
+                <div style="text-align:center;">No.</div>
+                <div>Description / Part Needed</div>
+                <div>Item Code / OEM No</div>
+                <div>Supplier Brand</div>
+                <div>ETA Date</div>
+                <div style="text-align:center;">Photos</div>
+                <div style="text-align:center;">Del</div>
+            </div>
+
             <div id="dynamicItemsContainer"></div>
         </div>
 
         <div class="col-span-2 finance-group">
             <div>
-                <small style="color: #666; font-size: 12px; display:block; margin-bottom:4px; font-weight:bold;">Total (RM)</small>
-                <input type="number" id="totalPrice" placeholder="Total" oninput="calcBalance()">
+                <small style="color: #666; font-size: 12px; font-weight:bold;">Total (RM)</small>
+                <input type="number" id="totalPrice" placeholder="0.00" oninput="calcBalance()">
             </div>
             <div>
-                <small style="color: #666; font-size: 12px; display:block; margin-bottom:4px; font-weight:bold;">Deposit (RM)</small>
-                <input type="number" id="deposit" placeholder="Deposit" oninput="calcBalance()">
+                <small style="color: #666; font-size: 12px; font-weight:bold;">Deposit (RM)</small>
+                <input type="number" id="deposit" placeholder="0.00" oninput="calcBalance()">
             </div>
             <div>
-                <small style="color: #666; font-size: 12px; display:block; margin-bottom:4px; font-weight:bold;">Balance</small>
-                <input type="number" id="balance" placeholder="Bal" readonly style="background-color: #e9ecef;">
+                <small style="color: #666; font-size: 12px; font-weight:bold;">Balance (RM)</small>
+                <input type="number" id="balance" placeholder="0.00" readonly style="background-color: #e9ecef;">
             </div>
         </div>
 
         <div>
-            <small style="color: #666; font-size: 12px; display:block; margin-bottom:4px; font-weight:bold;">Order Taken By Staff</small>
+            <small style="color: #666; font-size: 12px; font-weight:bold;">Handled By Staff</small>
             <select id="orderByStaff">
-                <option value="">-- Select Staff --</option>
+                <option value="">-- Select --</option>
                 <option value="Hock">Hock</option>
                 <option value="Kelvin">Kelvin</option>
                 <option value="Nana">Nana</option>
@@ -178,35 +223,38 @@
                 <option value="Lun">Lun</option>
             </select>
         </div>
-        <input type="text" id="remarks" placeholder="Internal Remarks (Optional)">
+        <div>
+            <small style="color: #666; font-size: 12px; font-weight:bold;">Internal Remarks</small>
+            <input type="text" id="remarks" placeholder="Optional notes...">
+        </div>
         
         <div class="button-group">
-            <button class="main-save-btn" id="mainBtn" onclick="saveOrUpdateOrder()">Save Entire Order to Cloud</button>
+            <button class="main-save-btn" id="mainBtn" onclick="saveOrUpdateOrder()">💾 Save Document & Sync</button>
             <button class="cancel-btn" id="cancelBtn" onclick="cancelEdit()">Cancel Edit</button>
         </div>
     </div>
 
     <div class="top-controls">
-        <input type="text" id="searchInput" class="search-bar" placeholder="🔍 Search Name, Part ID or Staff...">
-        <select id="viewFilter" onchange="renderTable()" style="font-weight: bold; color: #0866ff; padding: 12px;">
+        <input type="text" id="searchInput" class="search-bar" placeholder="🔍 Search Name, Item Code or Staff...">
+        <select id="viewFilter" onchange="renderTable()" style="font-weight: bold; color: #0866ff; padding: 10px;">
             <option value="active">Active Orders Only</option>
             <option value="history">Completed History</option>
             <option value="all">All Records</option>
         </select>
-        <button id="exportBtn" class="export-btn" onclick="exportCSV()">📥 Backup Data</button>
+        <button id="exportBtn" class="export-btn" onclick="exportCSV()">📥 Export Excel Data</button>
     </div>
 
     <div class="table-responsive">
         <table>
             <thead>
                 <tr>
-                    <th>Order ID</th>
-                    <th>Customer / Car</th>
+                    <th style="width:100px;">Doc No.</th>
+                    <th style="width:180px;">Customer / Car</th>
                     <th>Ordered Parts Details</th>
-                    <th>Financials</th>
-                    <th style="width: 100px;">Status</th>
-                    <th style="width: 100px;">WhatsApp</th>
-                    <th style="width: 110px; text-align:center;">Actions</th>
+                    <th style="width:120px;">Financials</th>
+                    <th style="width:100px;">Status</th>
+                    <th style="width:90px;">WhatsApp</th>
+                    <th style="width:120px; text-align:center;">Actions</th>
                 </tr>
             </thead>
             <tbody id="orderTableBody"></tbody>
@@ -215,7 +263,7 @@
 </div>
 
 <div id="photoModal" onclick="closePhoto()">
-    <img id="modalImg" src=""><div style="color:white; margin-top:10px;">Click anywhere to close full preview</div>
+    <img id="modalImg" src=""><div style="color:white; margin-top:10px;">Click anywhere to close</div>
 </div>
 
 <script>
@@ -242,9 +290,8 @@
     let isDataLoaded = false;
     let isAdmin = false; 
     
-    // NEW MULTI-ITEM STATE MANAGEMENT
-    let itemMapCounter = 0;
-    let itemPhotosMap = {}; // Tracks photos for each specific item box
+    let itemMapIdCounter = 0;
+    let itemPhotosMap = {}; 
 
     auth.onAuthStateChanged((user) => {
         if (user) {
@@ -296,42 +343,74 @@
     document.getElementById('searchInput').addEventListener('input', renderTable);
 
     // ==========================================
-    // MULTI-ITEM LOGIC (ADD, REMOVE, PHOTOS)
+    // ERP-STYLE TABLE LOGIC
     // ==========================================
+    function updateRowNumbers() {
+        const rows = document.querySelectorAll('.pos-table-row');
+        rows.forEach((row, index) => {
+            const numDiv = row.querySelector('.row-num');
+            if (numDiv) numDiv.innerText = index + 1;
+        });
+    }
+
     function addNewItemBlock(data = null) {
-        itemMapCounter++;
-        const currentId = 'item_box_' + itemMapCounter;
+        itemMapIdCounter++;
+        const currentId = 'item_row_' + itemMapIdCounter;
         itemPhotosMap[currentId] = data && data.photos ? [...data.photos] : [];
 
-        // Check if there is more than 1 item to show the delete button
         const container = document.getElementById('dynamicItemsContainer');
-        const showRemove = container.children.length > 0;
+        const isFirst = container.children.length === 0;
 
         const html = `
-        <div class="item-card" id="${currentId}">
-            ${showRemove ? `<button type="button" class="remove-item-btn" onclick="removeItemBlock('${currentId}')">✖ Remove</button>` : ''}
-            <div class="item-grid">
-                <input type="text" class="i-part" placeholder="Part Needed (e.g. Lower Arm)" value="${data ? data.part : ''}">
-                <input type="text" class="i-partNo" placeholder="Part ID / OEM No" value="${data && data.partNo ? data.partNo : ''}">
-                <input type="text" class="i-supplier" placeholder="Supplier" value="${data && data.supplier ? data.supplier : ''}">
-                <div>
-                    <small style="color:#666; font-size:11px; margin-bottom:2px; display:block;">ETA Date</small>
-                    <input type="date" class="i-eta" value="${data && data.eta ? data.eta : ''}">
-                </div>
+        <div class="pos-table-row" id="${currentId}">
+            <div class="row-num">0</div>
+            
+            <div>
+                <span class="mobile-label">Part Needed</span>
+                <input type="text" class="i-part pos-input" placeholder="Part Desc" value="${data ? data.part : ''}">
             </div>
-            <div class="photo-preview-container">
-                <small style="color: #666; font-weight:bold;">📷 Photos for this part (Max 5)</small>
-                <input type="file" accept="image/*" multiple onchange="processItemPhotos(event, '${currentId}')" style="font-size: 14px; padding:0; border:none;">
-                <div id="gallery_${currentId}" class="photo-gallery"></div>
+            <div>
+                <span class="mobile-label">Item Code / OEM No</span>
+                <input type="text" class="i-partNo pos-input" placeholder="OEM Code" value="${data && data.partNo ? data.partNo : ''}">
             </div>
+            <div>
+                <span class="mobile-label">Supplier</span>
+                <input type="text" class="i-supplier pos-input" placeholder="Supplier" value="${data && data.supplier ? data.supplier : ''}">
+            </div>
+            <div>
+                <span class="mobile-label">ETA Date</span>
+                <input type="date" class="i-eta pos-input" value="${data && data.eta ? data.eta : ''}">
+            </div>
+            
+            <div style="display:flex; justify-content:center; align-items:center;">
+                <label class="photo-upload-btn">
+                    📷 <span id="count_${currentId}">${itemPhotosMap[currentId].length}</span>/5
+                    <input type="file" accept="image/*" multiple onchange="processItemPhotos(event, '${currentId}')" style="display:none;">
+                </label>
+            </div>
+            
+            <div>
+                ${!isFirst || data !== null ? `<button type="button" class="remove-row-btn" onclick="removeItemBlock('${currentId}')" title="Delete Row">✖</button>` : `<div style="height:35px;"></div>`}
+            </div>
+            
+            <div id="gallery_${currentId}" class="row-gallery"></div>
         </div>`;
+        
         container.insertAdjacentHTML('beforeend', html);
         renderGalleryUI(currentId);
+        updateRowNumbers();
     }
 
     function removeItemBlock(id) {
         document.getElementById(id).remove();
         delete itemPhotosMap[id];
+        updateRowNumbers();
+        
+        // Ensure there is always at least one row
+        const container = document.getElementById('dynamicItemsContainer');
+        if (container.children.length === 0) {
+            addNewItemBlock();
+        }
     }
 
     function processItemPhotos(event, itemId) {
@@ -367,6 +446,9 @@
 
     function renderGalleryUI(itemId) {
         const gallery = document.getElementById('gallery_' + itemId);
+        const countSpan = document.getElementById('count_' + itemId);
+        if (countSpan) countSpan.innerText = itemPhotosMap[itemId].length;
+        
         gallery.innerHTML = ''; 
         itemPhotosMap[itemId].forEach((b64Data, index) => {
             gallery.innerHTML += `
@@ -387,7 +469,7 @@
     function closePhoto() { document.getElementById('photoModal').style.display = 'none'; }
 
     // ==========================================
-    // SAVE & EDIT
+    // DATABASE SAVE & EDIT
     // ==========================================
     function editOrder(id) {
         const order = orders.find(o => o.id === id);
@@ -401,11 +483,9 @@
         document.getElementById('orderByStaff').value = order.staff || '';
         document.getElementById('remarks').value = order.remarks || '';
 
-        // Clear current container
         document.getElementById('dynamicItemsContainer').innerHTML = '';
         itemPhotosMap = {};
 
-        // Backward compatibility: If it's an old order, convert to array format
         let itemsToLoad = [];
         if (order.items && order.items.length > 0) {
             itemsToLoad = order.items;
@@ -416,7 +496,6 @@
             itemsToLoad.push({ part: order.part, partNo: order.partNo, supplier: order.supplier, eta: order.eta, photos: oldPhotos });
         }
 
-        // Render each item block
         if(itemsToLoad.length === 0) addNewItemBlock();
         itemsToLoad.forEach(itemData => addNewItemBlock(itemData));
 
@@ -429,7 +508,7 @@
 
     function cancelEdit() {
         editingId = null;
-        document.getElementById('mainBtn').innerText = "Save Entire Order to Cloud";
+        document.getElementById('mainBtn').innerText = "💾 Save Document & Sync";
         document.getElementById('mainBtn').style.backgroundColor = "#0866ff";
         document.getElementById('cancelBtn').style.display = "none";
         document.querySelectorAll('input:not(.login-input)').forEach(input => { if(input.id !== 'searchInput') input.value = ''; });
@@ -451,9 +530,8 @@
         const staff = document.getElementById('orderByStaff').value;
         const remarks = document.getElementById('remarks').value;
 
-        // Scrape all items from the dynamic blocks
         let finalItemsArray = [];
-        document.querySelectorAll('.item-card').forEach(card => {
+        document.querySelectorAll('.pos-table-row').forEach(card => {
             const id = card.id;
             const part = card.querySelector('.i-part').value;
             const partNo = card.querySelector('.i-partNo').value;
@@ -461,19 +539,18 @@
             const eta = card.querySelector('.i-eta').value;
             const photos = itemPhotosMap[id] || [];
 
-            if (part) { // Only save if a part name was entered
+            if (part || partNo) { 
                 finalItemsArray.push({ part, partNo, supplier, eta, photos });
             }
         });
 
         if(!name) return alert("Please fill in Customer Name.");
-        if(finalItemsArray.length === 0) return alert("Please enter at least 1 Part Needed in the Cart.");
+        if(finalItemsArray.length === 0) return alert("Please enter at least 1 Part Description or Item Code.");
 
         if (editingId) {
             await db.ref('orders/' + editingId).update({
                 name, phone, car, chassis, total, deposit, balance, staff, remarks, 
                 items: finalItemsArray,
-                // Nullify legacy fields so database cleans itself up
                 part: null, partNo: null, supplier: null, eta: null, photos: null, photo: null
             });
             cancelEdit();
@@ -488,7 +565,7 @@
                 refNo, date: dateStr, name, phone, car, chassis, total, deposit, balance, staff, remarks, status: 'waiting', 
                 items: finalItemsArray, timestamp: Date.now()
             });
-            cancelEdit(); // Reset form
+            cancelEdit(); 
         }
     }
 
@@ -518,10 +595,9 @@
         if(orders.length === 0) return alert("No data available to export.");
         let csvContent = "data:text/csv;charset=utf-8,\uFEFFRef No,Order Date,Handled By,Customer Name,Phone,Car Model,Chassis No,All Parts,Total,Deposit,Balance,Status,Remarks\n";
         orders.forEach(o => {
-            // Combine all item names into one string for excel
             let allPartsText = "";
-            if(o.items) allPartsText = o.items.map(i => i.part).join(" + ");
-            else if(o.part) allPartsText = o.part; // Legacy
+            if(o.items) allPartsText = o.items.map(i => i.part || i.partNo).join(" + ");
+            else if(o.part) allPartsText = o.part; 
 
             const row = `"${o.refNo}","${o.date}","${o.staff || ''}","${o.name}","${o.phone}","${o.car || ''}","${o.chassis || ''}","${allPartsText}","${o.total}","${o.deposit}","${o.balance}","${o.status}","${o.remarks}"`;
             csvContent += row + "\n";
@@ -544,10 +620,9 @@
         else if (viewFilter === 'history') { filteredOrders = orders.filter(o => o.status === 'completed'); }
 
         filteredOrders = filteredOrders.filter(o => {
-            // Search inside the multi-item array
             let partMatch = false;
             if (o.items) {
-                partMatch = o.items.some(i => i.part.toLowerCase().includes(searchTerm) || (i.partNo && i.partNo.toLowerCase().includes(searchTerm)));
+                partMatch = o.items.some(i => (i.part && i.part.toLowerCase().includes(searchTerm)) || (i.partNo && i.partNo.toLowerCase().includes(searchTerm)));
             } else if (o.part) {
                 partMatch = o.part.toLowerCase().includes(searchTerm) || (o.partNo && o.partNo.toLowerCase().includes(searchTerm));
             }
@@ -557,7 +632,6 @@
         });
 
         filteredOrders.forEach(order => {
-            // Standardize old legacy orders vs new array orders
             let itemsToDisplay = order.items || [];
             if (itemsToDisplay.length === 0 && order.part) {
                 let oldPhotos = [];
@@ -566,24 +640,24 @@
                 itemsToDisplay.push({ part: order.part, partNo: order.partNo, supplier: order.supplier, eta: order.eta, photos: oldPhotos });
             }
 
-            // Generate HTML for the parts column (a bulleted list essentially)
             let partsHtml = `<ul class="table-item-list">`;
             let simplePartsListForWa = [];
             
             itemsToDisplay.forEach(item => {
+                const partDesc = item.part || 'No Desc';
                 const partNoText = item.partNo ? ` <small class="mono-text">[${item.partNo}]</small>` : '';
                 const supText = item.supplier ? ` • Supp: ${item.supplier}` : '';
                 const etaText = item.eta ? ` • ETA: ${item.eta}` : '';
                 
                 let photoHtml = '';
                 if (item.photos && item.photos.length > 0) {
-                    photoHtml = `<div style="display:flex; gap:3px; flex-wrap:wrap; margin-top:4px;">`;
-                    item.photos.forEach(p => { photoHtml += `<img src="${p}" class="photo-thumbnail" onclick="showPhoto('${p}')" style="width:35px; height:35px;">`; });
+                    photoHtml = `<div style="display:flex; gap:4px; flex-wrap:wrap; margin-top:4px;">`;
+                    item.photos.forEach(p => { photoHtml += `<img src="${p}" class="photo-thumbnail" onclick="showPhoto('${p}')" style="width:35px; height:35px; border:1px solid #ccc;">`; });
                     photoHtml += `</div>`;
                 }
                 
-                partsHtml += `<li><strong>${item.part}</strong>${partNoText}<br><small style="color:#666;">${supText} ${etaText}</small>${photoHtml}</li>`;
-                simplePartsListForWa.push(`- ${item.part} ${item.partNo ? '('+item.partNo+')' : ''}`);
+                partsHtml += `<li><strong>${partDesc}</strong>${partNoText}<br><small style="color:#666;">${supText} ${etaText}</small>${photoHtml}</li>`;
+                simplePartsListForWa.push(`- ${partDesc} ${item.partNo ? '('+item.partNo+')' : ''}`);
             });
             partsHtml += `</ul>`;
 
@@ -609,16 +683,16 @@
             tr.style.opacity = order.status === 'completed' ? '0.7' : '1';
 
             tr.innerHTML = `
-                <td><span class="ref-badge">${order.refNo || 'N/A'}</span><br><small>${order.date}</small><br>${order.staff ? `<span class="staff-badge">👤 ${order.staff}</span>` : ''}</td>
-                <td><strong>${order.name}</strong><br><small>${order.phone}</small><br><div style="margin-top:6px;"><strong>${order.car || '-'}</strong> <span class="mono-text">${order.chassis || ''}</span></div></td>
+                <td><span class="ref-badge">${order.refNo || 'N/A'}</span><br><small style="color:#666; margin-top:4px; display:inline-block;">${order.date}</small><br>${order.staff ? `<span class="staff-badge">👤 ${order.staff}</span>` : ''}</td>
+                <td><strong>${order.name}</strong><br><small>${order.phone}</small><br><div style="margin-top:8px; padding-top:8px; border-top:1px dashed #eee;"><strong>${order.car || '-'}</strong><br><span class="mono-text" style="color:#666;">${order.chassis || ''}</span></div></td>
                 <td>${partsHtml}<div class="notes-text">${order.remarks ? '📝 Remarks: ' + order.remarks : ''}</div></td>
-                <td><small>Total: RM${order.total}</small><br><small>Paid: RM${order.deposit}</small><br><strong>Bal: RM${order.balance}</strong></td>
+                <td><small style="color:#666;">Total: RM${order.total}</small><br><small style="color:#666;">Paid: RM${order.deposit}</small><br><strong style="font-size:14px; margin-top:4px; display:inline-block;">Bal: RM${order.balance}</strong></td>
                 <td>${statusHtml}</td>
                 <td>
                     ${order.phone && order.status !== 'completed' ? `
                         <a href="${linkReceipt}" target="_blank" class="wa-btn wa-btn-receipt">📄 Receipt</a>
                         <a href="${linkUpdate}" target="_blank" class="wa-btn">💬 Notify Status</a>
-                    ` : (order.status === 'completed' ? '<small>Closed</small>' : '<small>No Phone</small>')}
+                    ` : (order.status === 'completed' ? '<small style="color:#aaa;">Closed</small>' : '<small style="color:#aaa;">No Phone</small>')}
                 </td>
                 <td>
                     <div class="action-btns">
