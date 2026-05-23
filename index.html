@@ -1,28 +1,3 @@
-This is a brilliant set of additions! Adding **"On Hand"** and **"Order Qty"** directly into the Restock tab turns this into a true, professional inventory tool. And having a **Backup & Restore** button is the ultimate safety net for any business owner.
-
-I have strictly built this upon your pristine **Version 36 (V27 Base)**. I did not touch the Preorder mechanics at all.
-
-### 🌟 What is added in this Final Edition:
-
-**1. Restock Quantities Added 📦**
-You can now input `On Hand Qty` and `Order Qty`. These numbers will display in the table, and they will print perfectly in your Daily Summary PDF and WhatsApp messages!
-
-**2. "Undo" / Return to Not Yet Order ⏪**
-If a staff member or boss accidentally clicks "✔️ Done", the item moves to "Ordered". Now, an **"⏪ Return"** button appears in its place so anyone can push it back to the "Not Yet Order" active list!
-
-**3. Ultimate Boss Safety: Backup & Restore 🛡️**
-When you log in as Boss (`admin@mmc.com`), a new yellow **Admin Database Tools** banner appears at the very top.
-
-* **💾 Backup Database:** Instantly downloads a `.json` file containing your *entire* cloud database (All Preorders, All Restocks, Everything). Save this file to your computer once a week!
-* **📂 Restore Backup:** If a staff member accidentally deletes something, you click this, upload your `.json` file, and the entire system instantly resets to exactly how it was when you downloaded it!
-
----
-
-### Step 1: Update your GitHub `index.html`
-
-Copy this full code. **⚠️ Remember to paste your 4 Firebase Keys around lines 426-429 before saving!**
-
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -57,7 +32,9 @@ Copy this full code. **⚠️ Remember to paste your 4 Firebase Keys around line
         .header-flex { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 15px;}
         h2 { color: #0f172a; margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.5px;}
         .logout-btn { background-color: #ef4444; color: white; border: none; padding: 10px 18px; border-radius: 6px; cursor: pointer; font-weight: bold;}
-        
+        .sync-btn { background-color: #f8fafc; color: #334155; border: 1px solid #cbd5e1; padding: 10px 18px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-right: 10px; transition: 0.2s;}
+        .sync-btn:hover { background-color: #e2e8f0; }
+
         .tabs-nav { display: flex; gap: 10px; margin-bottom: 25px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; flex-wrap: wrap;}
         .tab-btn { background: transparent; border: none; padding: 10px 20px; font-size: 16px; font-weight: bold; color: #64748b; cursor: pointer; border-radius: 6px; transition: all 0.2s;}
         .tab-btn.active { background: #e0e7ff; color: #4338ca; box-shadow: inset 0 -3px 0 #4338ca; }
@@ -158,6 +135,7 @@ Copy this full code. **⚠️ Remember to paste your 4 Firebase Keys around line
             .top-controls { flex-direction: column; align-items: stretch;}
             .restock-row { display: flex; flex-direction: column; }
             #adminTools { flex-direction: column; align-items: stretch; text-align: center; }
+            .sync-btn { margin-right: 0; width: 100%; margin-bottom: 10px; }
         }
     </style>
 </head>
@@ -170,14 +148,17 @@ Copy this full code. **⚠️ Remember to paste your 4 Firebase Keys around line
         <div class="login-field"><label>Username</label><input type="text" id="authEmail" class="login-input" placeholder="e.g. staff" onkeydown="if(event.key==='Enter') document.getElementById('authPassword').focus()"></div>
         <div class="login-field"><label>Password</label><input type="password" id="authPassword" class="login-input" placeholder="••••••••" onkeydown="if(event.key==='Enter') loginSystem()"></div>
         <div id="loginError" class="error-msg">Login failed.</div>
-        <button class="login-btn" onclick="loginSystem()">Secure Login</button>
+        <button class="login-btn" id="loginBtnTrigger" onclick="loginSystem()">Secure Login</button>
     </div>
 </div>
 
 <div id="mainApp" class="container">
     <div class="header-flex">
         <h2>Malaysia Motor Company <span id="adminBadge">👑 Boss View</span></h2>
-        <button class="logout-btn" onclick="logoutSystem()">🔒 Logout</button>
+        <div>
+            <button class="sync-btn" onclick="forceDataSync()">🔄 Sync Cloud</button>
+            <button class="logout-btn" onclick="logoutSystem()">🔒 Logout</button>
+        </div>
     </div>
 
     <div id="adminTools">
@@ -363,7 +344,6 @@ Copy this full code. **⚠️ Remember to paste your 4 Firebase Keys around line
     let targetBarcodeFieldId = null; 
     let isRowScanner = false; 
 
-    // TAB SWITCHER
     function switchTab(tabId, btnElement) {
         document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -371,28 +351,33 @@ Copy this full code. **⚠️ Remember to paste your 4 Firebase Keys around line
         btnElement.classList.add('active');
     }
 
+    // --- BULLETPROOF LOGIN & SYNC SYTEM ---
     auth.onAuthStateChanged((user) => {
         if (user) {
-            if (user.email.toLowerCase() === BOSS_EMAIL.toLowerCase()) {
-                isAdmin = true;
-                document.getElementById('exportBtn').style.display = 'block';
-                document.getElementById('adminBadge').style.display = 'inline-block';
-                document.getElementById('adminTools').style.display = 'flex'; // Show Boss Tools
-            } else {
-                isAdmin = false;
-                document.getElementById('exportBtn').style.display = 'none';
-                document.getElementById('adminBadge').style.display = 'none';
-                document.getElementById('adminTools').style.display = 'none';
-            }
+            isAdmin = (user.email.toLowerCase() === BOSS_EMAIL.toLowerCase());
+            document.getElementById('exportBtn').style.display = isAdmin ? 'block' : 'none';
+            document.getElementById('adminBadge').style.display = isAdmin ? 'inline-block' : 'none';
+            document.getElementById('adminTools').style.display = isAdmin ? 'flex' : 'none';
+
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('mainApp').style.display = 'block';
             document.getElementById('loginError').style.display = 'none';
+            document.getElementById('loginBtnTrigger').innerText = "Secure Login";
             
-            if (!isDataLoaded) { loadDatabaseData(); loadRestockData(); addNewItemBlock(); } else { renderTable(); }
+            // Force Data Sync every time auth is verified (Solves "empty table" race condition)
+            forceDataSync();
+            
+            if (!isDataLoaded) {
+                addNewItemBlock(); 
+                isDataLoaded = true;
+            }
         } else {
             document.getElementById('loginScreen').style.display = 'flex';
             document.getElementById('mainApp').style.display = 'none';
             isAdmin = false; orders = []; restockItems = [];
+            // Remove listeners when logged out
+            db.ref('orders').off();
+            db.ref('restock').off();
         }
     });
 
@@ -400,17 +385,35 @@ Copy this full code. **⚠️ Remember to paste your 4 Firebase Keys around line
         let email = document.getElementById('authEmail').value.trim();
         if (email !== '' && !email.includes('@')) email = email + '@mmc.com';
         const password = document.getElementById('authPassword').value;
-        auth.signInWithEmailAndPassword(email, password).catch(() => { document.getElementById('loginError').style.display = 'block'; });
+        const btn = document.getElementById('loginBtnTrigger');
+        btn.innerText = "Connecting to Cloud..."; // UI Feedback
+        
+        auth.signInWithEmailAndPassword(email, password).catch(() => { 
+            document.getElementById('loginError').style.display = 'block'; 
+            btn.innerText = "Secure Login";
+        });
     }
+
     function logoutSystem() { auth.signOut(); }
 
+    function forceDataSync() {
+        // Stop old connections
+        db.ref('orders').off();
+        db.ref('restock').off();
+        // Start fresh secure connections
+        loadDatabaseData();
+        loadRestockData();
+    }
+
     function loadDatabaseData() {
-        isDataLoaded = true;
         db.ref('orders').on('value', (snapshot) => {
             orders = [];
             snapshot.forEach((childSnapshot) => { orders.push({ id: childSnapshot.key, ...childSnapshot.val() }); });
-            orders.sort((a,b) => b.timestamp - a.timestamp);
+            // Safe Sort: protects against missing timestamps
+            orders.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
             renderTable();
+        }, (error) => {
+            console.error("Firebase Sync Error:", error);
         });
     }
 
@@ -615,13 +618,13 @@ Copy this full code. **⚠️ Remember to paste your 4 Firebase Keys around line
     }
 
     // ==========================================
-    // RESTOCK SYSTEM V37 (With On Hand / Need Qty)
+    // RESTOCK SYSTEM V38 (With On Hand / Need Qty)
     // ==========================================
     function loadRestockData() {
         db.ref('restock').on('value', (snapshot) => {
             restockItems = [];
             snapshot.forEach((childSnapshot) => { restockItems.push({ id: childSnapshot.key, ...childSnapshot.val() }); });
-            restockItems.sort((a,b) => b.timestamp - a.timestamp);
+            restockItems.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
             renderRestockTable();
         });
     }
@@ -647,7 +650,6 @@ Copy this full code. **⚠️ Remember to paste your 4 Firebase Keys around line
 
     async function markRestockOrdered(id) { await db.ref('restock/' + id).update({ status: 'Ordered' }); }
     
-    // NEW: Return to "Not Yet Order"
     async function returnToNotYet(id) { await db.ref('restock/' + id).update({ status: 'Not Yet Order' }); }
 
     async function deleteRestock(id) {
@@ -712,7 +714,7 @@ Copy this full code. **⚠️ Remember to paste your 4 Firebase Keys around line
             rows += `<tr><td style="text-align:center;">${idx+1}</td><td>${i.date}</td><td><strong>${i.part||'-'}</strong></td><td>${i.code||'-'}</td><td>${i.brand||'-'}</td><td>${i.supp||'-'}</td><td style="text-align:center;">${i.onHandQty||'0'}</td><td style="text-align:center; color:red; font-weight:bold;">${i.needOrderQty||'1'}</td><td style="text-align:center;">${status}</td></tr>`; 
         });
         let dateText = document.getElementById('rDateFilter').value ? document.getElementById('rDateFilter').value : "All Dates";
-        return `<style>body{font-family:sans-serif;padding:30px;} table{width:100%;border-collapse:collapse;margin-top:20px;font-size:13px;} th,td{border:1px solid #ccc;padding:8px;} th{background:#f1f5f9;}</style><div id="rInvoiceBody"><h2 style="text-align:center; margin-bottom:5px;">RESTOCK SUMMARY REPORT</h2><p style="text-align:center; color:#555; margin-top:0;">Filtered Date: ${dateText}</p><table><thead><tr><th style="width:4%;">No</th><th style="width:10%;">Date</th><th style="text-align:left;">Part Description</th><th style="text-align:left;">Item Code</th><th style="text-align:left;">Brand</th><th style="text-align:left;">Supplier</th><th style="width:8%;">On Hand</th><th style="width:8%;">Order Qty</th><th style="width:10%;">Status</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+        return `<style>body{font-family:sans-serif;padding:30px;} table{width:100%;border-collapse:collapse;margin-top:20px;font-size:13px;} th,td{border:1px solid #ccc;padding:10px;} th{background:#f1f5f9;}</style><div id="rInvoiceBody"><h2 style="text-align:center; margin-bottom:5px;">RESTOCK SUMMARY REPORT</h2><p style="text-align:center; color:#555; margin-top:0;">Filtered Date: ${dateText}</p><table><thead><tr><th style="width:4%;">No</th><th style="width:10%;">Date</th><th style="text-align:left;">Part Description</th><th style="text-align:left;">Item Code</th><th style="text-align:left;">Brand</th><th style="text-align:left;">Supplier</th><th style="width:8%;">On Hand</th><th style="width:8%;">Order Qty</th><th style="width:10%;">Status</th></tr></thead><tbody>${rows}</tbody></table></div>`;
     }
     
     function printRestock() { const p = window.open('','_blank'); p.document.write(getRestockHTML()); p.document.close(); p.onload=()=>p.print(); }
@@ -724,6 +726,7 @@ Copy this full code. **⚠️ Remember to paste your 4 Firebase Keys around line
         let dateText = document.getElementById('rDateFilter').value ? document.getElementById('rDateFilter').value : "All Dates";
         let text = `📦 *MMC RESTOCK SUMMARY*\nTo: Boss ${bossName}\nDate Filter: ${dateText}\n\n`;
         let notYetCount = 0;
+        
         currentRestockView.forEach(i => {
             const status = i.status || 'Not Yet Order';
             if(status !== 'Ordered') {
@@ -731,11 +734,10 @@ Copy this full code. **⚠️ Remember to paste your 4 Firebase Keys around line
                 notYetCount++;
             }
         });
+        
         text += `\n*Total Pending Order:* ${notYetCount}`;
         window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank');
     }
 </script>
 </body>
 </html>
-
-```
