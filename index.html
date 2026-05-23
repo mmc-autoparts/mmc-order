@@ -33,7 +33,7 @@
         .container { max-width: 1450px; margin: auto; background: white; padding: 25px 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;}
         .header-flex { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 15px;}
         h2 { color: #0f172a; margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.5px;}
-        .logout-btn { background-color: #ef4444; color: white; border: none; padding: 10px 18px; border-radius: 6px; cursor: pointer; font-weight: bold;}
+        .logout-btn { background-color: #ef4444; color: white; border: none; padding: 10px 18px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: background 0.2s;}
         
         /* TABS */
         .tabs-nav { display: flex; gap: 10px; margin-bottom: 25px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; flex-wrap: wrap;}
@@ -131,7 +131,6 @@
         #barcodeModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.95); z-index: 2000; flex-direction: column; align-items: center; justify-content: center; }
         .barcode-container { background: white; padding: 20px; border-radius: 12px; width: 95%; max-width: 450px; text-align: center; }
         #adminBadge { display: none; background: #10b981; color: white; padding: 5px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; margin-left: 10px;}
-        #pdfContainer { position: absolute; left: -9999px; top: 0; width: 1000px; background: white; }
 
         @media (max-width: 800px) {
             body { padding: 5px; }
@@ -227,7 +226,7 @@
                 <option value="history">Completed History</option>
                 <option value="all">All Records</option>
             </select>
-            <button id="exportBtn" class="export-btn" onclick="exportCSV()" style="background:#059669; padding:12px 18px; border-radius:20px; color:white; font-weight:bold; border:none; cursor:pointer;">📥 Export Excel Data</button>
+            <button id="exportBtn" class="export-btn" onclick="exportCSV()" style="background:#059669; padding:12px 18px; border-radius:20px; color:white; font-weight:bold; border:none; cursor:pointer; display:none;">📥 Export Excel Data</button>
         </div>
 
         <div class="table-responsive">
@@ -294,7 +293,7 @@
             <div style="margin-left:auto; display:flex; gap:10px; flex-wrap:wrap;">
                 <button class="print-btn" onclick="printRestock()" style="padding:10px 15px; border-radius:6px; font-weight:bold; cursor:pointer;">🖨️ Print Summary</button>
                 <button class="pdf-btn" onclick="savePdfRestock()" style="padding:10px 15px; border-radius:6px; font-weight:bold; cursor:pointer;">📄 PDF Export</button>
-                <button id="rExportBtn" class="export-btn" onclick="exportRestockCSV()" style="display:none; background:#059669; padding:10px 15px; border-radius:6px; color:white; font-weight:bold; border:none; cursor:pointer;">📥 Excel</button>
+                <button id="rExportBtn" class="export-btn" onclick="exportRestockCSV()" style="display:none; background:#059669; padding:10px 15px; border-radius:6px; color:white; font-weight:bold; border:none; cursor:pointer;">📥 Excel Detail</button>
                 <button class="wa-btn wa-btn-boss" onclick="sendBossReport('60194482580', 'Hock')" style="margin:0; padding:10px 15px; border-radius:6px; font-size:13px;">📲 Boss Hock</button>
                 <button class="wa-btn wa-btn-boss" onclick="sendBossReport('60164401970', 'Kelvin')" style="margin:0; padding:10px 15px; border-radius:6px; font-size:13px;">📲 Boss Kelvin</button>
             </div>
@@ -321,7 +320,7 @@
     </div>
 </div>
 
-<div id="photoModal" onclick="closePhoto()"><img id="modalImg" src=""><div style="color:white; margin-top:15px; font-weight:bold;">Click to close</div></div>
+<div id="photoModal" onclick="closePhoto()"><img id="modalImg" src=""><div style="color:white; margin-top:15px; font-weight:bold; cursor:pointer;">Click to close</div></div>
 <div id="barcodeModal">
     <div class="barcode-container">
         <h3 style="margin-top:0;">📷 Scan Barcode</h3>
@@ -330,7 +329,7 @@
         <button onclick="closeScanner()" style="margin-top:20px; padding:14px; background:#ef4444; color:white; border:none; border-radius:6px; width:100%; font-weight:bold;">Cancel Scan</button>
     </div>
 </div>
-<div id="pdfContainer"></div>
+<div id="pdfContainer" style="position: absolute; left: -9999px; top: 0;"></div>
 
 <script>
     // ------------------------------------------------------------------
@@ -363,26 +362,36 @@
     let isRowScanner = false; 
     let isAutoSubmit = false;
 
-    // --- NEW SAFE DATA ENGINE ---
-    // Protects system from crashing if Firebase arrays are malformed or missing
+    // --- CRASH-PROOF SAFE DATA TRANSLATOR ---
     function getSafeItems(order) {
         try {
+            if (!order) return [];
             let items = [];
             if (order.items && Array.isArray(order.items)) {
                 items = order.items.filter(i => i != null);
             } else if (order.items && typeof order.items === 'object') {
                 items = Object.values(order.items).filter(i => i != null);
             }
-            if (items.length === 0 && order.part) {
+            if (items.length === 0 && (order.part || order.partNo)) {
                 let oldPhotos = [];
-                if(order.photos && Array.isArray(order.photos)) oldPhotos = [...order.photos].filter(Boolean);
-                else if(order.photos && typeof order.photos === 'object') oldPhotos = Object.values(order.photos).filter(Boolean);
-                else if(order.photo) oldPhotos.push(order.photo);
-                
+                if (order.photos) {
+                    if (Array.isArray(order.photos)) oldPhotos = order.photos.filter(Boolean);
+                    else if (typeof order.photos === 'object') oldPhotos = Object.values(order.photos).filter(Boolean);
+                    else if (typeof order.photos === 'string') oldPhotos = [order.photos];
+                } else if (order.photo) {
+                    if (typeof order.photo === 'string') oldPhotos.push(order.photo);
+                    else if (Array.isArray(order.photo)) oldPhotos = order.photo.filter(Boolean);
+                }
                 items.push({ part: order.part||'', partNo: order.partNo||'', brand: order.brand||'', supplier: order.supplier||'', eta: order.eta||'', photos: oldPhotos, qty: order.qty||'1', unitPrice: order.total||'0', subTotal: order.total||'0' });
             }
             return items;
-        } catch (e) { console.error("Data Load Error:", e); return []; }
+        } catch (e) { console.error("Safe Load Error:", e); return []; }
+    }
+
+    // --- SAFE STRING CLEANER FOR EXCEL ---
+    function cleanExcel(str) {
+        if (!str) return "";
+        return str.toString().replace(/"/g, '""').replace(/\n/g, ' ');
     }
 
     function switchTab(tabId, btnElement) {
@@ -404,7 +413,12 @@
             document.getElementById('mainApp').style.display = 'block';
             document.getElementById('loginError').style.display = 'none';
             
-            if (!isDataLoaded) { loadDatabaseData(); loadRestockData(); addNewItemBlock(); }
+            if (!isDataLoaded) { 
+                isDataLoaded = true;
+                try { loadDatabaseData(); } catch(e) { console.error(e); }
+                try { loadRestockData(); } catch(e) { console.error(e); }
+                try { addNewItemBlock(); } catch(e) { console.error(e); }
+            }
         } else {
             document.getElementById('loginScreen').style.display = 'flex';
             document.getElementById('mainApp').style.display = 'none';
@@ -419,36 +433,43 @@
     function logoutSystem() { auth.signOut(); }
 
     function loadDatabaseData() {
-        isDataLoaded = true;
         db.ref('orders').on('value', (snapshot) => {
-            orders = [];
-            snapshot.forEach(child => orders.push({ id: child.key, ...child.val() }));
-            orders.sort((a,b) => b.timestamp - a.timestamp);
-            renderTable();
+            try {
+                orders = [];
+                snapshot.forEach(child => orders.push({ id: child.key, ...child.val() }));
+                orders.sort((a,b) => (b.timestamp||0) - (a.timestamp||0));
+                renderTable();
+            } catch(e) { console.error("DB Load Error", e); }
         });
     }
 
     function loadRestockData() {
         db.ref('restock').on('value', (snapshot) => {
-            restockItems = [];
-            snapshot.forEach(child => restockItems.push({ id: child.key, ...child.val() }));
-            restockItems.sort((a,b) => b.timestamp - a.timestamp);
-            filterRestock();
+            try {
+                restockItems = [];
+                snapshot.forEach(child => restockItems.push({ id: child.key, ...child.val() }));
+                restockItems.sort((a,b) => (b.timestamp||0) - (a.timestamp||0));
+                filterRestock();
+            } catch(e) { console.error("Restock Load Error", e); }
         });
     }
 
     function calcRowTotal(rowId) {
-        const row = document.getElementById(rowId);
-        if(!row) return;
-        const qty = parseFloat(row.querySelector('.i-qty').value) || 0;
-        const price = parseFloat(row.querySelector('.i-unitPrice').value) || 0;
-        row.querySelector('.i-subTotal').value = (qty * price) > 0 ? (qty * price).toFixed(2) : '';
-        calcGrandTotal();
+        try {
+            const row = document.getElementById(rowId);
+            if(!row) return;
+            const qty = parseFloat(row.querySelector('.i-qty').value) || 0;
+            const price = parseFloat(row.querySelector('.i-unitPrice').value) || 0;
+            row.querySelector('.i-subTotal').value = (qty * price) > 0 ? (qty * price).toFixed(2) : '';
+            calcGrandTotal();
+        } catch(e) {}
     }
 
     function calcGrandTotal() {
         let grand = 0;
-        document.querySelectorAll('.pos-table-row').forEach(row => grand += parseFloat(row.querySelector('.i-subTotal').value) || 0);
+        document.querySelectorAll('.pos-table-row').forEach(row => {
+            try { grand += parseFloat(row.querySelector('.i-subTotal').value) || 0; } catch(e){}
+        });
         document.getElementById('totalPrice').value = grand > 0 ? grand.toFixed(2) : '';
         calcBalance();
     }
@@ -490,81 +511,89 @@
     }
 
     function addNewItemBlock(data = null) {
-        itemMapIdCounter++;
-        const currentId = 'item_row_' + itemMapIdCounter;
-        itemPhotosMap[currentId] = data && data.photos ? [...data.photos] : [];
-        const isFirst = document.getElementById('dynamicItemsContainer').children.length === 0;
+        try {
+            itemMapIdCounter++;
+            const currentId = 'item_row_' + itemMapIdCounter;
+            itemPhotosMap[currentId] = data && data.photos ? [...data.photos] : [];
+            const isFirst = document.getElementById('dynamicItemsContainer').children.length === 0;
 
-        const html = `
-        <div class="pos-table-row" id="${currentId}">
-            <div class="row-num">0</div>
-            <div><span class="mobile-label">Part Needed</span><input type="text" class="i-part pos-input" placeholder="Part Desc" value="${data ? data.part : ''}"></div>
-            <div>
-                <span class="mobile-label">Item Code / OEM No</span>
-                <div class="input-group">
-                    <input type="text" class="i-partNo pos-input" placeholder="OEM Code" value="${data && data.partNo ? data.partNo : ''}">
-                    <button type="button" class="scan-btn" onclick="openScanner('${currentId}', true)">🔳</button>
+            const html = `
+            <div class="pos-table-row" id="${currentId}">
+                <div class="row-num">0</div>
+                <div><span class="mobile-label">Part Needed</span><input type="text" class="i-part pos-input" placeholder="Part Desc" value="${data ? data.part : ''}"></div>
+                <div>
+                    <span class="mobile-label">Item Code / OEM No</span>
+                    <div class="input-group">
+                        <input type="text" class="i-partNo pos-input" placeholder="OEM Code" value="${data && data.partNo ? data.partNo : ''}">
+                        <button type="button" class="scan-btn" onclick="openScanner('${currentId}', true)">🔳</button>
+                    </div>
                 </div>
-            </div>
-            <div><span class="mobile-label">Brand</span><input type="text" class="i-brand pos-input" placeholder="Brand" value="${data && data.brand ? data.brand : ''}"></div>
-            <div><span class="mobile-label">Supplier</span><input type="text" class="i-supplier pos-input" placeholder="Supplier" value="${data && data.supplier ? data.supplier : ''}"></div>
-            <div class="mobile-grid-3">
-                <div><span class="mobile-label">Qty</span><input type="number" class="i-qty pos-input" placeholder="1" value="${data && data.qty ? data.qty : '1'}" oninput="calcRowTotal('${currentId}')" style="text-align:center;"></div>
-                <div><span class="mobile-label">U.Price (RM)</span><input type="number" class="i-unitPrice pos-input" placeholder="0.00" value="${data && data.unitPrice ? data.unitPrice : ''}" oninput="calcRowTotal('${currentId}')"></div>
-                <div><span class="mobile-label">Total (RM)</span><input type="number" class="i-subTotal pos-input readonly-input" placeholder="0.00" value="${data && data.subTotal ? data.subTotal : ''}" readonly></div>
-            </div>
-            <div><span class="mobile-label">ETA Date</span><input type="date" class="i-eta pos-input" value="${data && data.eta ? data.eta : ''}"></div>
-            <div style="display:flex; justify-content:center; align-items:center;">
-                <label class="photo-upload-btn">📷 <span id="count_${currentId}">${itemPhotosMap[currentId].length}</span>/5
-                    <input type="file" accept="image/*" multiple onchange="processItemPhotos(event, '${currentId}')" style="display:none;">
-                </label>
-            </div>
-            <div>${!isFirst || data !== null ? `<button type="button" class="remove-row-btn" onclick="removeItemBlock('${currentId}')">✖</button>` : `<div style="height:35px;"></div>`}</div>
-            <div id="gallery_${currentId}" class="row-gallery"></div>
-        </div>`;
-        document.getElementById('dynamicItemsContainer').insertAdjacentHTML('beforeend', html);
-        renderGalleryUI(currentId); updateRowNumbers();
-        if(data) calcRowTotal(currentId); 
+                <div><span class="mobile-label">Brand</span><input type="text" class="i-brand pos-input" placeholder="Brand" value="${data && data.brand ? data.brand : ''}"></div>
+                <div><span class="mobile-label">Supplier</span><input type="text" class="i-supplier pos-input" placeholder="Supplier" value="${data && data.supplier ? data.supplier : ''}"></div>
+                <div class="mobile-grid-3">
+                    <div><span class="mobile-label">Qty</span><input type="number" class="i-qty pos-input" placeholder="1" value="${data && data.qty ? data.qty : '1'}" oninput="calcRowTotal('${currentId}')" style="text-align:center;"></div>
+                    <div><span class="mobile-label">U.Price (RM)</span><input type="number" class="i-unitPrice pos-input" placeholder="0.00" value="${data && data.unitPrice ? data.unitPrice : ''}" oninput="calcRowTotal('${currentId}')"></div>
+                    <div><span class="mobile-label">Total (RM)</span><input type="number" class="i-subTotal pos-input readonly-input" placeholder="0.00" value="${data && data.subTotal ? data.subTotal : ''}" readonly></div>
+                </div>
+                <div><span class="mobile-label">ETA Date</span><input type="date" class="i-eta pos-input" value="${data && data.eta ? data.eta : ''}"></div>
+                <div style="display:flex; justify-content:center; align-items:center;">
+                    <label class="photo-upload-btn">📷 <span id="count_${currentId}">${itemPhotosMap[currentId].length}</span>/5
+                        <input type="file" accept="image/*" multiple onchange="processItemPhotos(event, '${currentId}')" style="display:none;">
+                    </label>
+                </div>
+                <div>${!isFirst || data !== null ? `<button type="button" class="remove-row-btn" onclick="removeItemBlock('${currentId}')">✖</button>` : `<div style="height:35px;"></div>`}</div>
+                <div id="gallery_${currentId}" class="row-gallery"></div>
+            </div>`;
+            document.getElementById('dynamicItemsContainer').insertAdjacentHTML('beforeend', html);
+            renderGalleryUI(currentId); updateRowNumbers();
+            if(data) calcRowTotal(currentId); 
+        } catch(e) { console.error("Add Row Error:", e); }
     }
 
     function removeItemBlock(id) {
-        document.getElementById(id).remove(); delete itemPhotosMap[id];
-        updateRowNumbers(); calcGrandTotal(); 
-        if (document.getElementById('dynamicItemsContainer').children.length === 0) addNewItemBlock();
+        try {
+            document.getElementById(id).remove(); delete itemPhotosMap[id];
+            updateRowNumbers(); calcGrandTotal(); 
+            if (document.getElementById('dynamicItemsContainer').children.length === 0) addNewItemBlock();
+        } catch(e){}
     }
 
     function processItemPhotos(event, itemId) {
-        const files = event.target.files;
-        if (!files || files.length === 0) return;
-        if (itemPhotosMap[itemId].length + files.length > 5) return alert("⚠️ Max 5 photos per item!");
-        
-        Array.from(files).forEach(file => {
-            const reader = new FileReader();
-            reader.onload = e => {
-                const img = new Image();
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    let width = img.width, height = img.height;
-                    if (width > height) { if(width > 800) { height *= 800/width; width = 800; } } else { if(height > 800) { width *= 800/height; height = 800; } }
-                    canvas.width = width; canvas.height = height;
-                    canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-                    itemPhotosMap[itemId].push(canvas.toDataURL('image/jpeg', 0.8));
-                    renderGalleryUI(itemId); 
+        try {
+            const files = event.target.files;
+            if (!files || files.length === 0) return;
+            if (itemPhotosMap[itemId].length + files.length > 5) return alert("⚠️ Max 5 photos per item!");
+            
+            Array.from(files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width, height = img.height;
+                        if (width > height) { if(width > 800) { height *= 800/width; width = 800; } } else { if(height > 800) { width *= 800/height; height = 800; } }
+                        canvas.width = width; canvas.height = height;
+                        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+                        itemPhotosMap[itemId].push(canvas.toDataURL('image/jpeg', 0.8));
+                        renderGalleryUI(itemId); 
+                    };
+                    img.src = e.target.result;
                 };
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
-        });
-        event.target.value = ''; 
+                reader.readAsDataURL(file);
+            });
+            event.target.value = ''; 
+        } catch(e){ console.error("Photo Error:", e); }
     }
 
     function renderGalleryUI(itemId) {
-        const gallery = document.getElementById('gallery_' + itemId);
-        document.getElementById('count_' + itemId).innerText = itemPhotosMap[itemId].length;
-        gallery.innerHTML = ''; 
-        itemPhotosMap[itemId].forEach((b64, index) => {
-            gallery.innerHTML += `<div class="photo-wrapper"><img src="${b64}" class="photo-thumbnail" onclick="showPhoto('${b64}')"><button type="button" class="remove-single-btn" onclick="removeSinglePhoto('${itemId}', ${index})">✖</button></div>`;
-        });
+        try {
+            const gallery = document.getElementById('gallery_' + itemId);
+            document.getElementById('count_' + itemId).innerText = itemPhotosMap[itemId].length;
+            gallery.innerHTML = ''; 
+            itemPhotosMap[itemId].forEach((b64, index) => {
+                gallery.innerHTML += `<div class="photo-wrapper"><img src="${b64}" class="photo-thumbnail" onclick="showPhoto('${b64}')"><button type="button" class="remove-single-btn" onclick="removeSinglePhoto('${itemId}', ${index})">✖</button></div>`;
+            });
+        } catch(e){}
     }
 
     function removeSinglePhoto(id, idx) { itemPhotosMap[id].splice(idx, 1); renderGalleryUI(id); }
@@ -572,25 +601,27 @@
     function closePhoto() { document.getElementById('photoModal').style.display = 'none'; }
 
     // ==========================================
-    // PREORDER LOGIC & SAFE RENDERING
+    // PREORDER LOGIC 
     // ==========================================
     function editOrder(id) {
-        const order = orders.find(o => o.id === id);
-        ['custName','custPhone','carModel','chassisNumber','totalPrice','deposit','balance','orderByStaff','remarks'].forEach(field => {
-            document.getElementById(field).value = order[field.replace('orderByStaff', 'staff').replace('custName', 'name').replace('custPhone', 'phone').replace('carModel', 'car').replace('chassisNumber', 'chassis').replace('totalPrice', 'total')] || '';
-        });
-        document.getElementById('dynamicItemsContainer').innerHTML = '';
-        itemPhotosMap = {};
-        
-        let itemsToLoad = getSafeItems(order);
-        if(itemsToLoad.length === 0) addNewItemBlock();
-        itemsToLoad.forEach(data => addNewItemBlock(data));
+        try {
+            const order = orders.find(o => o.id === id);
+            ['custName','custPhone','carModel','chassisNumber','totalPrice','deposit','balance','orderByStaff','remarks'].forEach(field => {
+                document.getElementById(field).value = order[field.replace('orderByStaff', 'staff').replace('custName', 'name').replace('custPhone', 'phone').replace('carModel', 'car').replace('chassisNumber', 'chassis').replace('totalPrice', 'total')] || '';
+            });
+            document.getElementById('dynamicItemsContainer').innerHTML = '';
+            itemPhotosMap = {};
+            
+            let itemsToLoad = getSafeItems(order);
+            if(itemsToLoad.length === 0) addNewItemBlock();
+            itemsToLoad.forEach(data => addNewItemBlock(data));
 
-        editingId = id;
-        document.getElementById('mainBtn').innerText = "Confirm Update Data";
-        document.getElementById('mainBtn').style.backgroundColor = "#10b981"; 
-        document.getElementById('cancelBtn').style.display = "block";
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+            editingId = id;
+            document.getElementById('mainBtn').innerText = "Confirm Update Data";
+            document.getElementById('mainBtn').style.backgroundColor = "#10b981"; 
+            document.getElementById('cancelBtn').style.display = "block";
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        } catch(e) { console.error("Edit Error:", e); }
     }
 
     function cancelEdit() {
@@ -613,11 +644,15 @@
                 balance: document.getElementById('balance').value || "0", staff: document.getElementById('orderByStaff').value || "",
                 remarks: document.getElementById('remarks').value || "", items: []
             };
+            
             document.querySelectorAll('.pos-table-row').forEach(card => {
-                const id = card.id;
-                const p = { part: card.querySelector('.i-part').value||"", partNo: card.querySelector('.i-partNo').value||"", brand: card.querySelector('.i-brand').value||"", supplier: card.querySelector('.i-supplier').value||"", qty: card.querySelector('.i-qty').value||"1", unitPrice: card.querySelector('.i-unitPrice').value||"0", subTotal: card.querySelector('.i-subTotal').value||"0", eta: card.querySelector('.i-eta').value||"", photos: itemPhotosMap[id] || [] };
-                if (p.part || p.partNo) payload.items.push(p);
+                try {
+                    const id = card.id;
+                    const p = { part: card.querySelector('.i-part').value||"", partNo: card.querySelector('.i-partNo').value||"", brand: card.querySelector('.i-brand').value||"", supplier: card.querySelector('.i-supplier').value||"", qty: card.querySelector('.i-qty').value||"1", unitPrice: card.querySelector('.i-unitPrice').value||"0", subTotal: card.querySelector('.i-subTotal').value||"0", eta: card.querySelector('.i-eta').value||"", photos: itemPhotosMap[id] || [] };
+                    if (p.part || p.partNo) payload.items.push(p);
+                } catch(err){}
             });
+            
             if(!payload.name) return alert("Please fill Customer Name.");
             if(payload.items.length === 0) return alert("Enter at least 1 Part.");
 
@@ -631,114 +666,120 @@
                 cancelEdit(); 
             }
         } catch(e) {
-            console.error(e);
-            alert("Save failed. Please ensure no empty fields.");
+            console.error("Save Error:", e);
+            alert("Save failed. Check connection or reload page.");
         }
     }
 
     async function toggleStatus(id) {
-        const order = orders.find(o => o.id === id);
-        if(order.status === 'completed') return; 
-        await db.ref('orders/' + id).update({ status: order.status === 'waiting' ? 'arrived' : 'waiting' });
+        try {
+            const order = orders.find(o => o.id === id);
+            if(order.status === 'completed') return; 
+            await db.ref('orders/' + id).update({ status: order.status === 'waiting' ? 'arrived' : 'waiting' });
+        } catch(e){}
     }
     async function markCompleted(id) { if(confirm("Confirm item collected?")) await db.ref('orders/' + id).update({ status: 'completed' }); }
     async function restoreOrder(id) { await db.ref('orders/' + id).update({ status: 'arrived' }); }
     async function deleteOrder(id) { if(isAdmin && confirm("Delete order?")) await db.ref('orders/' + id).remove(); }
 
     function renderTable() {
-        const tbody = document.getElementById('orderTableBody'); tbody.innerHTML = '';
-        const search = document.getElementById('searchInput').value.toLowerCase();
-        const view = document.getElementById('viewFilter').value;
+        try {
+            const tbody = document.getElementById('orderTableBody'); tbody.innerHTML = '';
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const view = document.getElementById('viewFilter').value;
 
-        let sumSales = 0, sumBal = 0, sumComp = 0;
-        orders.forEach(o => {
-            sumSales += parseFloat(o.total) || 0;
-            if(o.status !== 'completed') sumBal += parseFloat(o.balance) || 0;
-            if(o.status === 'completed') sumComp++;
-        });
+            let sumSales = 0, sumBal = 0, sumComp = 0;
+            orders.forEach(o => {
+                sumSales += parseFloat(o.total) || 0;
+                if(o.status !== 'completed') sumBal += parseFloat(o.balance) || 0;
+                if(o.status === 'completed') sumComp++;
+            });
 
-        if(isAdmin) {
-            document.getElementById('b_totalSales').innerText = "RM " + sumSales.toFixed(2);
-            document.getElementById('b_pendingBal').innerText = "RM " + sumBal.toFixed(2);
-            document.getElementById('b_completed').innerText = sumComp;
-        }
+            if(isAdmin) {
+                document.getElementById('b_totalSales').innerText = "RM " + sumSales.toFixed(2);
+                document.getElementById('b_pendingBal').innerText = "RM " + sumBal.toFixed(2);
+                document.getElementById('b_completed').innerText = sumComp;
+            }
 
-        let filtered = orders.filter(o => {
-            if (view === 'active' && o.status === 'completed') return false;
-            if (view === 'history' && o.status !== 'completed') return false;
-            const items = getSafeItems(o);
-            const itemMatch = items.some(i => (i.part||'').toLowerCase().includes(search) || (i.partNo||'').toLowerCase().includes(search));
-            return (o.name||'').toLowerCase().includes(search) || (o.car||'').toLowerCase().includes(search) || (o.refNo||'').toLowerCase().includes(search) || itemMatch;
-        });
+            let filtered = orders.filter(o => {
+                if (view === 'active' && o.status === 'completed') return false;
+                if (view === 'history' && o.status !== 'completed') return false;
+                const items = getSafeItems(o);
+                const itemMatch = items.some(i => (i.part||'').toLowerCase().includes(search) || (i.partNo||'').toLowerCase().includes(search));
+                return (o.name||'').toLowerCase().includes(search) || (o.car||'').toLowerCase().includes(search) || (o.refNo||'').toLowerCase().includes(search) || itemMatch;
+            });
 
-        filtered.forEach(order => {
-            try {
-                let itemsToDisplay = getSafeItems(order);
-                let partsHtml = `<ul class="table-item-list">`;
-                let waList = [];
-                
-                itemsToDisplay.forEach(item => {
-                    const qtyText = item.qty ? `<span style="background:#e2e8f0; padding:2px 6px; border-radius:10px; font-size:11px; margin-right:4px;">${item.qty}x</span>` : '';
-                    const partDesc = item.part || '-';
-                    const partNoText = item.partNo ? ` <small class="mono-text" style="color:#64748b; font-weight:bold;">[${item.partNo}]</small>` : '';
-                    const brandText = item.brand ? ` • Brd: ${item.brand}` : '';
-                    const supText = item.supplier ? ` • Sup: ${item.supplier}` : '';
-                    const etaText = item.eta ? ` • ETA: ${item.eta}` : '';
+            filtered.forEach(order => {
+                try {
+                    let itemsToDisplay = getSafeItems(order);
+                    let partsHtml = `<ul class="table-item-list">`;
+                    let waList = [];
                     
-                    let priceDetails = "";
-                    if (parseFloat(item.subTotal) > 0) { priceDetails = `<span style="float:right; font-size:12px; color:#64748b;">@ RM${item.unitPrice || 0} = <b style="color:#0f172a; font-size:13px;">RM${item.subTotal}</b></span>`; }
+                    itemsToDisplay.forEach(item => {
+                        const qtyText = item.qty ? `<span style="background:#e2e8f0; padding:2px 6px; border-radius:10px; font-size:11px; margin-right:4px;">${item.qty}x</span>` : '';
+                        const partDesc = item.part || '-';
+                        const partNoText = item.partNo ? ` <small class="mono-text" style="color:#64748b; font-weight:bold;">[${item.partNo}]</small>` : '';
+                        const brandText = item.brand ? ` • Brd: ${item.brand}` : '';
+                        const supText = item.supplier ? ` • Sup: ${item.supplier}` : '';
+                        const etaText = item.eta ? ` • ETA: ${item.eta}` : '';
+                        
+                        let priceDetails = "";
+                        if (parseFloat(item.subTotal) > 0) { priceDetails = `<span style="float:right; font-size:12px; color:#64748b;">@ RM${item.unitPrice || 0} = <b style="color:#0f172a; font-size:13px;">RM${item.subTotal}</b></span>`; }
 
-                    let photoHtml = '';
-                    if (item.photos && item.photos.length > 0) {
-                        photoHtml = `<div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:6px;">`;
-                        item.photos.forEach(p => { photoHtml += `<img src="${p}" class="photo-thumbnail" onclick="showPhoto('${p}')" style="width:45px; height:45px; border:1px solid #cbd5e1; border-radius:4px;">`; });
-                        photoHtml += `</div>`;
-                    }
+                        let photoHtml = '';
+                        if (item.photos && item.photos.length > 0) {
+                            photoHtml = `<div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:6px;">`;
+                            item.photos.forEach(p => { photoHtml += `<img src="${p}" class="photo-thumbnail" onclick="showPhoto('${p}')" style="width:45px; height:45px; border:1px solid #cbd5e1; border-radius:4px;">`; });
+                            photoHtml += `</div>`;
+                        }
+                        
+                        partsHtml += `<li><div style="margin-bottom:4px;">${qtyText}<strong style="color:#0f172a; font-size:14px;">${partDesc}</strong>${partNoText}${priceDetails}</div><small style="color:#64748b; font-weight:600;">${brandText}${supText}${etaText}</small>${photoHtml}</li>`;
+                        waList.push(`- ${item.qty||1}x ${partDesc} ${item.partNo ? '['+item.partNo+']' : ''}`);
+                    });
+                    partsHtml += `</ul>`;
+
+                    const carText = order.car ? order.car + ' ' : '';
+                    const chassisText = order.chassis ? '(' + order.chassis + ') ' : '';
+                    const allItemsMsg = waList.join('\n');
                     
-                    partsHtml += `<li><div style="margin-bottom:4px;">${qtyText}<strong style="color:#0f172a; font-size:14px;">${partDesc}</strong>${partNoText}${priceDetails}</div><small style="color:#64748b; font-weight:600;">${brandText}${supText}${etaText}</small>${photoHtml}</li>`;
-                    waList.push(`- ${item.qty||1}x ${partDesc} ${item.partNo ? '['+item.partNo+']' : ''}`);
-                });
-                partsHtml += `</ul>`;
-
-                const carText = order.car ? order.car + ' ' : '';
-                const chassisText = order.chassis ? '(' + order.chassis + ') ' : '';
-                const allItemsMsg = waList.join('\n');
-                
-                const msgReceipt = `🧾 *MALAYSIA MOTOR COMPANY - RESIT / RECEIPT*\n\nPelanggan yang dihormati ${order.name},\nTerima kasih. Pesanan istimewa anda telah disahkan!\n\nDear ${order.name},\nThank you. Your special order has been confirmed!\n\n*No. Pesanan / Order ID:* ${order.refNo}\n*Kenderaan / Car:* ${carText}${chassisText}\n*Barang / Items:*\n${allItemsMsg}\n\n*Jumlah / Total:* RM${order.total}\n*Deposit:* RM${order.deposit}\n*Baki / Balance Due:* RM${order.balance}\n\n(Handled by: ${order.staff || '-'})`;
-                const msgArrived = `*MALAYSIA MOTOR COMPANY*\n\nPelanggan yang dihormati ${order.name},\nBerita baik! Pesanan anda (No. Pesanan: ${order.refNo}) telah selamat tiba di kedai kami. Baki bayaran adalah sebanyak RM${order.balance}. Anda dialu-alukan untuk datang mengambil pesanan anda pada bila-bila masa yang kelapangan. Terima kasih atas sokongan berterusan anda!\n\nDear ${order.name},\nGood news! Your order (${order.refNo}) has safely arrived at our shop. The balance due is RM${order.balance}. You are most welcome to drop by and collect it at your convenience. Thank you so much for your continued support!`;
-                const msgNotFound = `*MALAYSIA MOTOR COMPANY*\n\nPelanggan yang dihormati ${order.name},\nKami memohon maaf atas segala kesulitan, dukacita dimaklumkan bahawa barang pesanan anda (No. Pesanan: ${order.refNo}) pada masa ini kehabisan stok dan tidak dapat dibekalkan oleh pembekal kami. Sila hubungi kami untuk urusan pemulangan penuh deposit anda (RM${order.deposit}). Kami amat kesal atas kesulitan yang timbul dan amat menghargai kesabaran anda.\n\nDear ${order.name},\nWe sincerely apologize, but we regret to inform you that your ordered item(s) (${order.refNo}) are currently out of stock and cannot be sourced by our suppliers. Please kindly contact us to arrange for a full refund of your deposit (RM${order.deposit}). We are truly sorry for the inconvenience caused and deeply appreciate your understanding.`;
-                
-                const tr = document.createElement('tr');
-                tr.style.opacity = order.status === 'completed' ? '0.6' : '1';
-                tr.innerHTML = `
-                    <td><span class="ref-badge">${order.refNo}</span><br><small style="color:#64748b; margin-top:6px; display:inline-block; font-weight:700;">${order.date}</small><br>${order.staff ? `<span class="staff-badge">👤 ${order.staff}</span>` : ''}</td>
-                    <td><strong style="color:#0f172a;">${order.name}</strong><br><small style="color:#3b82f6; font-weight:bold;">${order.phone}</small><br><div style="margin-top:8px; padding-top:8px; border-top:1px dashed #e2e8f0;"><strong style="color:#334155;">${order.car||'-'}</strong><br><span class="mono-text" style="color:#64748b; font-size:12px;">${order.chassis||''}</span></div></td>
-                    <td>${partsHtml}<div class="notes-text" style="margin-top:8px; color:#059669; font-weight:600;">${order.remarks ? '📝 Remarks: ' + order.remarks : ''}</div></td>
-                    <td><small style="color:#64748b;">Total: RM${order.total}</small><br><small style="color:#64748b;">Paid: RM${order.deposit}</small><br><strong style="font-size:15px; margin-top:6px; display:inline-block; color:#0f172a;">Bal: RM${order.balance}</strong></td>
-                    <td><button class="status-btn ${order.status==='completed'?'status-completed':(order.status==='waiting'?'status-waiting clickable':'status-arrived clickable')}" onclick="${order.status!=='completed'?`toggleStatus('${order.id}')`:''}">${order.status==='waiting'?'⏳ Wait':(order.status==='arrived'?'✅ Arrived':'📦 Done')}</button></td>
-                    <td>
-                        <div class="action-btns" style="flex-direction:column; align-items:stretch;">
-                            ${order.phone && order.status !== 'completed' ? `<a href="https://wa.me/${order.phone}?text=${encodeURIComponent(msgReceipt)}" target="_blank" class="wa-btn wa-btn-receipt">📄 WA Receipt</a><a href="https://wa.me/${order.phone}?text=${encodeURIComponent(msgArrived)}" target="_blank" class="wa-btn wa-btn-arrived">💬 Inform Arrived</a><a href="https://wa.me/${order.phone}?text=${encodeURIComponent(msgNotFound)}" target="_blank" class="wa-btn wa-btn-cancel">❌ Item Not Found</a>` : ''}
-                        </div>
-                    </td>
-                    <td>
-                        <div class="action-btns" style="margin-bottom:6px;"><button class="print-btn" onclick="printOrder('${order.id}')">🖨️ Print</button><button class="pdf-btn" onclick="savePdfOrder('${order.id}')">📄 PDF</button></div>
-                        <div class="action-btns">${order.status !== 'completed' ? `<button class="complete-btn" onclick="markCompleted('${order.id}')">✔️ Done</button>` : `<button class="edit-btn" onclick="restoreOrder('${order.id}')">⏪ Return</button>`}<button class="edit-btn" onclick="editOrder('${order.id}')">✏️ Edit</button>${isAdmin?`<button class="delete-btn" onclick="deleteOrder('${order.id}')">✖ Del</button>`:''}</div>
-                    </td>`;
-                tbody.appendChild(tr);
-            } catch(e) { console.error("Render error on order", order.id, e); }
-        });
+                    const msgReceipt = `🧾 *MALAYSIA MOTOR COMPANY - RESIT / RECEIPT*\n\nPelanggan yang dihormati ${order.name},\nTerima kasih. Pesanan istimewa anda telah disahkan!\n\nDear ${order.name},\nThank you. Your special order has been confirmed!\n\n*No. Pesanan / Order ID:* ${order.refNo}\n*Kenderaan / Car:* ${carText}${chassisText}\n*Barang / Items:*\n${allItemsMsg}\n\n*Jumlah / Total:* RM${order.total}\n*Deposit:* RM${order.deposit}\n*Baki / Balance Due:* RM${order.balance}\n\n(Handled by: ${order.staff || '-'})`;
+                    const msgArrived = `*MALAYSIA MOTOR COMPANY*\n\nPelanggan yang dihormati ${order.name},\nBerita baik! Pesanan anda (No. Pesanan: ${order.refNo}) telah selamat tiba di kedai kami. Baki bayaran adalah sebanyak RM${order.balance}. Anda dialu-alukan untuk datang mengambil pesanan anda pada bila-bila masa yang kelapangan. Terima kasih atas sokongan berterusan anda!\n\nDear ${order.name},\nGood news! Your order (${order.refNo}) has safely arrived at our shop. The balance due is RM${order.balance}. You are most welcome to drop by and collect it at your convenience. Thank you so much for your continued support!`;
+                    const msgNotFound = `*MALAYSIA MOTOR COMPANY*\n\nPelanggan yang dihormati ${order.name},\nKami memohon maaf atas segala kesulitan, dukacita dimaklumkan bahawa barang pesanan anda (No. Pesanan: ${order.refNo}) pada masa ini kehabisan stok dan tidak dapat dibekalkan oleh pembekal kami. Sila hubungi kami untuk urusan pemulangan penuh deposit anda (RM${order.deposit}). Kami amat kesal atas kesulitan yang timbul dan amat menghargai kesabaran anda.\n\nDear ${order.name},\nWe sincerely apologize, but we regret to inform you that your ordered item(s) (${order.refNo}) are currently out of stock and cannot be sourced by our suppliers. Please kindly contact us to arrange for a full refund of your deposit (RM${order.deposit}). We are truly sorry for the inconvenience caused and deeply appreciate your understanding.`;
+                    
+                    const tr = document.createElement('tr');
+                    tr.style.opacity = order.status === 'completed' ? '0.6' : '1';
+                    tr.innerHTML = `
+                        <td><span class="ref-badge">${order.refNo}</span><br><small style="color:#64748b; margin-top:6px; display:inline-block; font-weight:700;">${order.date}</small><br>${order.staff ? `<span class="staff-badge">👤 ${order.staff}</span>` : ''}</td>
+                        <td><strong style="color:#0f172a;">${order.name}</strong><br><small style="color:#3b82f6; font-weight:bold;">${order.phone}</small><br><div style="margin-top:8px; padding-top:8px; border-top:1px dashed #e2e8f0;"><strong style="color:#334155;">${order.car||'-'}</strong><br><span class="mono-text" style="color:#64748b; font-size:12px;">${order.chassis||''}</span></div></td>
+                        <td>${partsHtml}<div class="notes-text" style="margin-top:8px; color:#059669; font-weight:600;">${order.remarks ? '📝 Remarks: ' + order.remarks : ''}</div></td>
+                        <td><small style="color:#64748b;">Total: RM${order.total}</small><br><small style="color:#64748b;">Paid: RM${order.deposit}</small><br><strong style="font-size:15px; margin-top:6px; display:inline-block; color:#0f172a;">Bal: RM${order.balance}</strong></td>
+                        <td><button class="status-btn ${order.status==='completed'?'status-completed':(order.status==='waiting'?'status-waiting clickable':'status-arrived clickable')}" onclick="${order.status!=='completed'?`toggleStatus('${order.id}')`:''}">${order.status==='waiting'?'⏳ Wait':(order.status==='arrived'?'✅ Arrived':'📦 Done')}</button></td>
+                        <td>
+                            <div class="action-btns" style="flex-direction:column; align-items:stretch;">
+                                ${order.phone && order.status !== 'completed' ? `<a href="https://wa.me/${order.phone}?text=${encodeURIComponent(msgReceipt)}" target="_blank" class="wa-btn wa-btn-receipt">📄 WA Receipt</a><a href="https://wa.me/${order.phone}?text=${encodeURIComponent(msgArrived)}" target="_blank" class="wa-btn wa-btn-arrived">💬 Inform Arrived</a><a href="https://wa.me/${order.phone}?text=${encodeURIComponent(msgNotFound)}" target="_blank" class="wa-btn wa-btn-cancel">❌ Item Not Found</a>` : ''}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="action-btns" style="margin-bottom:6px;"><button class="print-btn" onclick="printOrder('${order.id}')">🖨️ Print</button><button class="pdf-btn" onclick="savePdfOrder('${order.id}')">📄 PDF</button></div>
+                            <div class="action-btns">${order.status !== 'completed' ? `<button class="complete-btn" onclick="markCompleted('${order.id}')">✔️ Done</button>` : `<button class="edit-btn" onclick="restoreOrder('${order.id}')">⏪ Return</button>`}<button class="edit-btn" onclick="editOrder('${order.id}')">✏️ Edit</button>${isAdmin?`<button class="delete-btn" onclick="deleteOrder('${order.id}')">✖ Del</button>`:''}</div>
+                        </td>`;
+                    tbody.appendChild(tr);
+                } catch(e) { console.error("Row render error", e); }
+            });
+        } catch (e) { console.error("Table render error", e); }
     }
 
     // PREORDER PDF (100% RELIABLE HTML BUILDER)
     function getInvoiceHTML(order) {
-        let itemsToDisplay = getSafeItems(order);
-        let itemsHtml = '';
-        itemsToDisplay.forEach((item, idx) => {
-            itemsHtml += `<tr><td style="text-align:center; padding:8px; border:1px solid #000;">${idx+1}</td><td style="text-align:center; padding:8px; border:1px solid #000;">[ &nbsp; ]</td><td style="padding:8px; border:1px solid #000;"><strong>${item.part||'-'}</strong></td><td style="padding:8px; border:1px solid #000;">${item.partNo||'-'}</td><td style="padding:8px; border:1px solid #000;">${item.brand||'-'}</td><td style="padding:8px; border:1px solid #000;">${item.supplier||'-'}</td><td style="text-align:center; padding:8px; border:1px solid #000;">${item.qty||'1'}</td><td style="text-align:right; padding:8px; border:1px solid #000;">RM ${parseFloat(item.unitPrice||0).toFixed(2)}</td><td style="text-align:right; padding:8px; border:1px solid #000;"><strong>RM ${parseFloat(item.subTotal||0).toFixed(2)}</strong></td></tr>`;
-        });
-        
-        return `<div id="invoiceBody" style="font-family:Arial,sans-serif; padding:20px; color:#000; width:100%; max-width:800px; margin:auto;"><div style="text-align:center; border-bottom:2px solid #000; padding-bottom:15px; margin-bottom:20px;"><div style="font-size:24px; font-weight:bold; letter-spacing:1px;">MALAYSIA MOTOR COMPANY</div></div><h2 style="text-align:center; margin-bottom:20px; font-size:18px;">ORDER LIST / PACKING LIST</h2><table style="width:100%; margin-bottom:20px; border:none;"><tr><td style="vertical-align:top; width:50%;"><strong>Customer:</strong> ${order.name}<br><strong>Contact:</strong> ${order.phone||'-'}<br><strong>Car:</strong> ${order.car||'-'} ${order.chassis?'('+order.chassis+')':''}</td><td style="vertical-align:top; text-align:right;"><strong>Order No:</strong> ${order.refNo}<br><strong>Date:</strong> ${order.date}<br><strong>Status:</strong> ${order.status==='completed'?'Collected':'Pending'}</td></tr></table><table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:12px;"><thead><tr style="background:#eee;"><th style="padding:8px; border:1px solid #000;">No.</th><th style="padding:8px; border:1px solid #000;">Pack</th><th style="padding:8px; border:1px solid #000; text-align:left;">Part Description</th><th style="padding:8px; border:1px solid #000; text-align:left;">Item Code</th><th style="padding:8px; border:1px solid #000; text-align:left;">Brand</th><th style="padding:8px; border:1px solid #000; text-align:left;">Supplier</th><th style="padding:8px; border:1px solid #000;">QTY</th><th style="padding:8px; border:1px solid #000; text-align:right;">U.Price</th><th style="padding:8px; border:1px solid #000; text-align:right;">Total</th></tr></thead><tbody>${itemsHtml}</tbody></table><div style="text-align:right; font-size:14px;"><p style="margin:4px 0;">Total Amount: <strong>RM ${parseFloat(order.total||0).toFixed(2)}</strong></p><p style="margin:4px 0;">Deposit Paid: RM ${parseFloat(order.deposit||0).toFixed(2)}</p><p style="font-size:16px; margin-top:10px;">Balance Due: <strong>RM ${parseFloat(order.balance||0).toFixed(2)}</strong></p></div><div style="margin-top:30px; font-size:11px; text-align:center; color:#555; border-top:1px solid #ccc; padding-top:15px;">Thank you for choosing Malaysia Motor Company. Please retain this list for your records.<br>${order.remarks?'Internal Remarks: '+order.remarks:''}</div></div>`;
+        try {
+            let itemsToDisplay = getSafeItems(order);
+            let itemsHtml = '';
+            itemsToDisplay.forEach((item, idx) => {
+                itemsHtml += `<tr><td style="text-align:center; padding:8px; border:1px solid #000;">${idx+1}</td><td style="text-align:center; padding:8px; border:1px solid #000;">[ &nbsp; ]</td><td style="padding:8px; border:1px solid #000;"><strong>${item.part||'-'}</strong></td><td style="padding:8px; border:1px solid #000;">${item.partNo||'-'}</td><td style="padding:8px; border:1px solid #000;">${item.brand||'-'}</td><td style="padding:8px; border:1px solid #000;">${item.supplier||'-'}</td><td style="text-align:center; padding:8px; border:1px solid #000;">${item.qty||'1'}</td><td style="text-align:right; padding:8px; border:1px solid #000;">RM ${parseFloat(item.unitPrice||0).toFixed(2)}</td><td style="text-align:right; padding:8px; border:1px solid #000;"><strong>RM ${parseFloat(item.subTotal||0).toFixed(2)}</strong></td></tr>`;
+            });
+            
+            return `<div id="invoiceBody" style="font-family:Arial,sans-serif; padding:20px; color:#000; width:100%; max-width:800px; margin:auto;"><div style="text-align:center; border-bottom:2px solid #000; padding-bottom:15px; margin-bottom:20px;"><div style="font-size:24px; font-weight:bold; letter-spacing:1px;">MALAYSIA MOTOR COMPANY</div></div><h2 style="text-align:center; margin-bottom:20px; font-size:18px;">ORDER LIST / PACKING LIST</h2><table style="width:100%; margin-bottom:20px; border:none;"><tr><td style="vertical-align:top; width:50%;"><strong>Customer:</strong> ${order.name}<br><strong>Contact:</strong> ${order.phone||'-'}<br><strong>Car:</strong> ${order.car||'-'} ${order.chassis?'('+order.chassis+')':''}</td><td style="vertical-align:top; text-align:right;"><strong>Order No:</strong> ${order.refNo}<br><strong>Date:</strong> ${order.date}<br><strong>Status:</strong> ${order.status==='completed'?'Collected':'Pending'}</td></tr></table><table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:12px;"><thead><tr style="background:#eee;"><th style="padding:8px; border:1px solid #000;">No.</th><th style="padding:8px; border:1px solid #000;">Pack</th><th style="padding:8px; border:1px solid #000; text-align:left;">Part Description</th><th style="padding:8px; border:1px solid #000; text-align:left;">Item Code</th><th style="padding:8px; border:1px solid #000; text-align:left;">Brand</th><th style="padding:8px; border:1px solid #000; text-align:left;">Supplier</th><th style="padding:8px; border:1px solid #000;">QTY</th><th style="padding:8px; border:1px solid #000; text-align:right;">U.Price</th><th style="padding:8px; border:1px solid #000; text-align:right;">Total</th></tr></thead><tbody>${itemsHtml}</tbody></table><div style="text-align:right; font-size:14px;"><p style="margin:4px 0;">Total Amount: <strong>RM ${parseFloat(order.total||0).toFixed(2)}</strong></p><p style="margin:4px 0;">Deposit Paid: RM ${parseFloat(order.deposit||0).toFixed(2)}</p><p style="font-size:16px; margin-top:10px;">Balance Due: <strong>RM ${parseFloat(order.balance||0).toFixed(2)}</strong></p></div><div style="margin-top:30px; font-size:11px; text-align:center; color:#555; border-top:1px solid #ccc; padding-top:15px;">Thank you for choosing Malaysia Motor Company. Please retain this list for your records.<br>${order.remarks?'Internal Remarks: '+order.remarks:''}</div></div>`;
+        } catch(e) { return "<h2>Error generating PDF layout</h2>"; }
     }
     
     function printOrder(id) { const o = orders.find(x=>x.id===id); if(o){ const p = window.open('','_blank'); p.document.write(`<html><head><title>${o.refNo}</title></head><body>${getInvoiceHTML(o)}<script>window.onload=function(){window.print();window.close();}<\/script></body></html>`); p.document.close(); } }
@@ -756,33 +797,37 @@
         if(orders.length === 0) return alert("No data available to export.");
         let csvContent = "data:text/csv;charset=utf-8,\uFEFFRef No,Order Date,Handled By,Customer Name,Phone,Car Model,Chassis No,All Parts Details,Total,Deposit,Balance,Status,Remarks\n";
         orders.forEach(o => {
-            const items = getSafeItems(o);
-            let allPartsText = items.map(i => `${i.qty||1}x ${i.part||''} [${i.partNo||''}] (Brd:${i.brand||''}, Sup:${i.supplier||''}) - RM${i.subTotal||0}`).join(" | ");
-            const row = `"${o.refNo}","${o.date}","${o.staff || ''}","${o.name}","${o.phone}","${o.car || ''}","${o.chassis || ''}","${allPartsText}","${o.total}","${o.deposit}","${o.balance}","${o.status}","${o.remarks}"`;
-            csvContent += row + "\n";
+            try {
+                const items = getSafeItems(o);
+                let allPartsText = items.map(i => `${i.qty||1}x ${i.part||''} [${i.partNo||''}] (Brd:${i.brand||''}, Sup:${i.supplier||''}) - RM${i.subTotal||0}`).join(" | ");
+                const row = `"${cleanExcel(o.refNo)}","${cleanExcel(o.date)}","${cleanExcel(o.staff)}","${cleanExcel(o.name)}","${cleanExcel(o.phone)}","${cleanExcel(o.car)}","${cleanExcel(o.chassis)}","${cleanExcel(allPartsText)}","${cleanExcel(o.total)}","${cleanExcel(o.deposit)}","${cleanExcel(o.balance)}","${cleanExcel(o.status)}","${cleanExcel(o.remarks)}"`;
+                csvContent += row + "\n";
+            } catch(e){}
         });
         const encodedUri = encodeURI(csvContent);
-        const link = document.createElement("a"); link.setAttribute("href", encodedUri); link.setAttribute("download", `MMC_Cloud_Database_${new Date().toISOString().split('T')[0]}.csv`);
+        const link = document.createElement("a"); link.setAttribute("href", encodedUri); link.setAttribute("download", `MMC_Preorders_${new Date().toISOString().split('T')[0]}.csv`);
         document.body.appendChild(link); link.click(); document.body.removeChild(link);
     }
 
     // ==========================================
-    // RESTOCK SYSTEM V31
+    // RESTOCK SYSTEM V32
     // ==========================================
     async function addRestockItem() {
-        const part = document.getElementById('r_part').value;
-        const code = document.getElementById('r_code').value;
-        if(!part && !code) return; 
+        try {
+            const part = document.getElementById('r_part').value;
+            const code = document.getElementById('r_code').value;
+            if(!part && !code) return; 
 
-        const payload = {
-            part: part, code: code, brand: document.getElementById('r_brand').value||"", supp: document.getElementById('r_supp').value||"",
-            onHandQty: document.getElementById('r_onHand').value || "0", needOrderQty: document.getElementById('r_needOrder').value || "1",
-            status: "Not Yet", date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
-            timestamp: Date.now()
-        };
-        await db.ref('restock').push(payload);
-        
-        ['r_part','r_code','r_brand','r_supp','r_onHand','r_needOrder'].forEach(id => document.getElementById(id).value = '');
+            const payload = {
+                part: part, code: code, brand: document.getElementById('r_brand').value||"", supp: document.getElementById('r_supp').value||"",
+                onHandQty: document.getElementById('r_onHand').value || "0", needOrderQty: document.getElementById('r_needOrder').value || "1",
+                status: "Not Yet", date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+                timestamp: Date.now()
+            };
+            await db.ref('restock').push(payload);
+            
+            ['r_part','r_code','r_brand','r_supp','r_onHand','r_needOrder'].forEach(id => document.getElementById(id).value = '');
+        } catch(e) { console.error("Add Restock Error", e); }
     }
 
     async function markRestockOrdered(id) { await db.ref('restock/' + id).update({ status: 'Ordered' }); }
@@ -794,67 +839,66 @@
     }
 
     function filterRestock() {
-        const search = document.getElementById('rSearchInput').value.toLowerCase();
-        const view = document.getElementById('rViewFilter').value;
-        const datePreset = document.getElementById('rDateFilter').value;
-        
-        let startTs = 0, endTs = Number.MAX_SAFE_INTEGER;
-        const now = new Date(); now.setHours(0,0,0,0);
-        
-        if (datePreset === 'today') { startTs = now.getTime(); endTs = startTs + 86400000; }
-        else if (datePreset === 'yesterday') { startTs = now.getTime() - 86400000; endTs = now.getTime(); }
-        else if (datePreset === 'week') { const mon = new Date(now); mon.setDate(now.getDate() - (now.getDay()||7) + 1); startTs = mon.getTime(); }
-        else if (datePreset === 'month') { const first = new Date(now.getFullYear(), now.getMonth(), 1); startTs = first.getTime(); }
-        else if (datePreset === 'custom') {
-            const s = document.getElementById('rStartDate').value; const e = document.getElementById('rEndDate').value;
-            if(s) startTs = new Date(s).getTime();
-            if(e) { const endD = new Date(e); endD.setHours(23,59,59,999); endTs = endD.getTime(); }
-        }
-
-        let filtered = restockItems.filter(i => {
-            if (i.timestamp < startTs || i.timestamp > endTs) return false;
-            if (view === 'active' && i.status === 'Ordered') return false;
-            if (view === 'history' && i.status !== 'Ordered') return false;
-            return (i.part||'').toLowerCase().includes(search) || (i.code||'').toLowerCase().includes(search) || (i.brand||'').toLowerCase().includes(search) || (i.supp||'').toLowerCase().includes(search);
-        });
-
-        // Update Stats Dashboard
-        let tAdd=0, tNot=0, tOrd=0;
-        filtered.forEach(i => { tAdd++; if(i.status==='Ordered') tOrd++; else tNot++; });
-        document.getElementById('s_total').innerText = tAdd;
-        document.getElementById('s_notYet').innerText = tNot;
-        document.getElementById('s_ordered').innerText = tOrd;
-        window.currentRestockPrintData = filtered; 
-
-        // Render Table
-        const tbody = document.getElementById('restockTableBody'); tbody.innerHTML = '';
-        filtered.forEach(item => {
-            let actionHtml = '';
-            if (item.status !== 'Ordered') { 
-                actionHtml += `<button class="complete-btn" onclick="markRestockOrdered('${item.id}')" style="width:100%; margin-bottom:5px; background:#10b981; color:white; border:none; padding:8px; border-radius:4px; font-weight:bold; cursor:pointer;">✔️ Mark Ordered</button>`; 
-            }
-            if (isAdmin) { 
-                actionHtml += `<button class="delete-btn" onclick="deleteRestock('${item.id}')" style="width:100%; padding:6px; border-radius:4px; font-weight:bold;">✖ Del</button>`; 
-            }
+        try {
+            const search = document.getElementById('rSearchInput').value.toLowerCase();
+            const view = document.getElementById('rViewFilter').value;
+            const datePreset = document.getElementById('rDateFilter').value;
             
-            const tr = document.createElement('tr');
-            tr.style.opacity = item.status === 'Ordered' ? '0.6' : '1';
-            tr.innerHTML = `
-                <td><small style="color:#64748b; font-weight:bold;">${item.date}</small></td>
-                <td><strong style="color:#0f172a; font-size:14px;">${item.part || '-'}</strong></td>
-                <td class="mono-text" style="color:#475569; font-weight:bold;">${item.code || '-'}</td>
-                <td>${item.brand || '-'}</td>
-                <td>${item.supp || '-'}</td>
-                <td style="text-align:center; font-weight:bold; font-size:14px;">${item.onHandQty || '0'}</td>
-                <td style="text-align:center; color:#ef4444; font-weight:bold; font-size:14px;">${item.needOrderQty || '0'}</td>
-                <td style="text-align:center;"><span style="padding:6px 10px; border-radius:4px; font-size:12px; font-weight:bold; background:${item.status==='Ordered'?'#d1fae5':'#fef3c7'}; color:${item.status==='Ordered'?'#047857':'#b45309'};">${item.status}</span></td>
-                <td>${actionHtml}</td>
-            `;
-            tbody.appendChild(tr);
-        });
+            let startTs = 0, endTs = Number.MAX_SAFE_INTEGER;
+            const now = new Date(); now.setHours(0,0,0,0);
+            
+            if (datePreset === 'today') { startTs = now.getTime(); endTs = startTs + 86400000; }
+            else if (datePreset === 'yesterday') { startTs = now.getTime() - 86400000; endTs = now.getTime(); }
+            else if (datePreset === 'week') { const mon = new Date(now); mon.setDate(now.getDate() - (now.getDay()||7) + 1); startTs = mon.getTime(); }
+            else if (datePreset === 'month') { const first = new Date(now.getFullYear(), now.getMonth(), 1); startTs = first.getTime(); }
+            else if (datePreset === 'custom') {
+                const s = document.getElementById('rStartDate').value; const e = document.getElementById('rEndDate').value;
+                if(s) startTs = new Date(s).getTime();
+                if(e) { const endD = new Date(e); endD.setHours(23,59,59,999); endTs = endD.getTime(); }
+            }
+
+            let filtered = restockItems.filter(i => {
+                if (i.timestamp < startTs || i.timestamp > endTs) return false;
+                if (view === 'active' && i.status === 'Ordered') return false;
+                if (view === 'history' && i.status !== 'Ordered') return false;
+                return (i.part||'').toLowerCase().includes(search) || (i.code||'').toLowerCase().includes(search) || (i.brand||'').toLowerCase().includes(search) || (i.supp||'').toLowerCase().includes(search);
+            });
+
+            let tAdd=0, tNot=0, tOrd=0;
+            filtered.forEach(i => { tAdd++; if(i.status==='Ordered') tOrd++; else tNot++; });
+            document.getElementById('s_total').innerText = tAdd;
+            document.getElementById('s_notYet').innerText = tNot;
+            document.getElementById('s_ordered').innerText = tOrd;
+            window.currentRestockPrintData = filtered; 
+
+            const tbody = document.getElementById('restockTableBody'); tbody.innerHTML = '';
+            filtered.forEach(item => {
+                let actionHtml = '';
+                if (item.status !== 'Ordered') { 
+                    actionHtml += `<button class="complete-btn" onclick="markRestockOrdered('${item.id}')" style="width:100%; margin-bottom:5px; background:#10b981; color:white; border:none; padding:8px; border-radius:4px; font-weight:bold; cursor:pointer;">✔️ Mark Ordered</button>`; 
+                }
+                if (isAdmin) { 
+                    actionHtml += `<button class="delete-btn" onclick="deleteRestock('${item.id}')" style="width:100%; padding:6px; border-radius:4px; font-weight:bold;">✖ Del</button>`; 
+                }
+                
+                const tr = document.createElement('tr');
+                tr.style.opacity = item.status === 'Ordered' ? '0.6' : '1';
+                tr.innerHTML = `
+                    <td><small style="color:#64748b; font-weight:bold;">${item.date}</small></td>
+                    <td><strong style="color:#0f172a; font-size:14px;">${item.part || '-'}</strong></td>
+                    <td class="mono-text" style="color:#475569; font-weight:bold;">${item.code || '-'}</td>
+                    <td>${item.brand || '-'}</td>
+                    <td>${item.supp || '-'}</td>
+                    <td style="text-align:center; font-weight:bold; font-size:14px;">${item.onHandQty || '0'}</td>
+                    <td style="text-align:center; color:#ef4444; font-weight:bold; font-size:14px;">${item.needOrderQty || '0'}</td>
+                    <td style="text-align:center;"><span style="padding:6px 10px; border-radius:4px; font-size:12px; font-weight:bold; background:${item.status==='Ordered'?'#d1fae5':'#fef3c7'}; color:${item.status==='Ordered'?'#047857':'#b45309'};">${item.status}</span></td>
+                    <td>${actionHtml}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        } catch(e) { console.error("Filter Restock Error", e); }
     }
 
-    // Boss Daily WhatsApp Report Sender
     function sendBossReport(phone, bossName) {
         const data = window.currentRestockPrintData || [];
         const dateRangeText = document.getElementById('rDateFilter').options[document.getElementById('rDateFilter').selectedIndex].text;
@@ -872,7 +916,6 @@
         window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank');
     }
 
-    // RESTOCK PDF (HTML BUILDER)
     function getRestockHTML() {
         const data = window.currentRestockPrintData || [];
         let rows = '';
@@ -895,7 +938,7 @@
         if(data.length === 0) return alert("No data to export.");
         let csvContent = "data:text/csv;charset=utf-8,\uFEFFDate Added,Part Description,Item Code,Brand,Supplier,On Hand Qty,Need Order Qty,Status\n";
         data.forEach(i => {
-            const row = `"${i.date}","${i.part||''}","${i.code||''}","${i.brand||''}","${i.supp||''}","${i.onHandQty||0}","${i.needOrderQty||0}","${i.status}"`;
+            const row = `"${cleanExcel(i.date)}","${cleanExcel(i.part)}","${cleanExcel(i.code)}","${cleanExcel(i.brand)}","${cleanExcel(i.supp)}","${cleanExcel(i.onHandQty)}","${cleanExcel(i.needOrderQty)}","${cleanExcel(i.status)}"`;
             csvContent += row + "\n";
         });
         const encodedUri = encodeURI(csvContent);
