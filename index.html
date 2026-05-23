@@ -261,7 +261,7 @@
 
             <div class="col-span-2 finance-group">
                 <div><span class="label-text">Quotation Grand Total (RM)</span><input type="number" id="qTotalPrice" placeholder="0.00" class="readonly-input" readonly></div>
-                </div>
+            </div>
 
             <div>
                 <span class="label-text">Quoted By Staff</span>
@@ -642,7 +642,11 @@
                 const sub = parseFloat(item.subTotal) > 0 ? `<span style="float:right;font-size:12px;color:#64748b;">@ RM${item.unitPrice||0} = <b style="color:#0f172a;">RM${item.subTotal}</b></span>` : '';
                 let photoHtml = ''; if (item.photos && item.photos.length > 0) { photoHtml = `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;">`; item.photos.forEach(p => { photoHtml += `<img src="${p}" class="photo-thumbnail" onclick="showPhoto('${p}')" style="width:40px;height:40px;border:1px solid #cbd5e1;">`; }); photoHtml += `</div>`; }
                 partsHtml += `<li><div><span style="background:#e2e8f0;padding:2px 6px;border-radius:10px;font-size:11px;margin-right:4px;">${item.qty||1}x</span><strong>${item.part||'-'}</strong> <small>[${item.partNo||''}]</small>${sub}</div><small style="color:#64748b;">Brd: ${item.brand||'-'} • Sup: ${item.supplier||'-'}</small>${photoHtml}</li>`;
-                waList.push(`- ${item.qty||1}x ${item.part||'-'} [${item.partNo||''}]`);
+                
+                // WA FORMAT FIX: Adding Brand Name
+                const partNoText = item.partNo ? `[${item.partNo}] ` : '';
+                const brandText = item.brand ? `(Brand: ${item.brand}) ` : '';
+                waList.push(`- ${item.qty||1}x ${item.part||'-'} ${partNoText}${brandText}`);
             }); partsHtml += `</ul>`;
             
             const msgR = `🧾 *MALAYSIA MOTOR COMPANY - RESIT / RECEIPT*\n\nPelanggan yang dihormati ${order.name},\nTerima kasih. Pesanan anda disahkan!\n\n*Order ID:* ${order.refNo}\n*Car:* ${order.car||''}\n*Items:*\n${waList.join('\n')}\n\n*Total:* RM${order.total}\n*Deposit:* RM${order.deposit}\n*Balance Due:* RM${order.balance}`;
@@ -795,7 +799,11 @@
                 const sub = parseFloat(item.subTotal) > 0 ? `<span style="float:right;font-size:12px;color:#64748b;">@ RM${item.unitPrice||0} = <b style="color:#0f172a;">RM${item.subTotal}</b></span>` : '';
                 let photoHtml = ''; if (item.photos && item.photos.length > 0) { photoHtml = `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;">`; item.photos.forEach(p => { photoHtml += `<img src="${p}" class="photo-thumbnail" onclick="showPhoto('${p}')" style="width:40px;height:40px;border:1px solid #cbd5e1;">`; }); photoHtml += `</div>`; }
                 partsHtml += `<li><div><span style="background:#e2e8f0;padding:2px 6px;border-radius:10px;font-size:11px;margin-right:4px;">${item.qty||1}x</span><strong>${item.part||'-'}</strong> <small>[${item.partNo||''}]</small>${sub}</div><small style="color:#64748b;">Brd: ${item.brand||'-'} • Sup: ${item.supplier||'-'}</small>${photoHtml}</li>`;
-                waList.push(`- ${item.qty||1}x ${item.part||'-'} [${item.partNo||''}] (RM${item.subTotal||0})`);
+                
+                // WA FORMAT FIX: Adding Brand Name for Quote
+                const partNoText = item.partNo ? `[${item.partNo}] ` : '';
+                const brandText = item.brand ? `(Brand: ${item.brand}) ` : '';
+                waList.push(`- ${item.qty||1}x ${item.part||'-'} ${partNoText}${brandText}(RM${item.subTotal||0})`);
             }); partsHtml += `</ul>`;
             
             const msgQ = `📄 *MALAYSIA MOTOR COMPANY - SEBUTHARGA / QUOTATION*\n\nPelanggan yang dihormati ${quote.name},\nBerikut adalah sebutharga untuk rujukan anda:\n\nDear ${quote.name},\nHere is the quotation for your reference:\n\n*No. Sebutharga / Quote ID:* ${quote.refNo}\n*Kenderaan / Car:* ${quote.car||''}\n*Senarai Barang / Items:*\n${waList.join('\n')}\n\n*Jumlah / Grand Total:* RM${quote.total}\n\nSila beritahu kami jika anda ingin meneruskan pesanan. / Please let us know if you wish to proceed with the order.\nTerima kasih! / Thank you!`;
