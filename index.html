@@ -17,163 +17,122 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <style>
-        /* 🎨 PRO UI/UX BASE STYLES */
         body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; background-color: #f1f5f9; margin: 0; padding: 20px; color: #334155; }
-        
-        #loginScreen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(241, 245, 249, 0.95); z-index: 9999; display: flex; justify-content: center; align-items: center; padding: 20px; backdrop-filter: blur(5px);}
-        .login-box { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; max-width: 400px; width: 100%; box-sizing: border-box; border: 1px solid #e2e8f0;}
+        #loginScreen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(241, 245, 249, 0.95); z-index: 9999; display: flex; justify-content: center; align-items: center; padding: 20px;}
+        .login-box { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; max-width: 400px; width: 100%; border: 1px solid #e2e8f0;}
         .login-box h3 { margin-top: 0; color: #0f172a; margin-bottom: 5px; font-size: 22px; font-weight: 800;}
-        .login-field { display: flex; align-items: center; background: #fff; border: 1px solid #cbd5e1; border-radius: 8px; margin-bottom: 15px; overflow: hidden; transition: border-color 0.2s;}
-        .login-field:focus-within { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+        .login-field { display: flex; align-items: center; background: #fff; border: 1px solid #cbd5e1; border-radius: 8px; margin-bottom: 15px; overflow: hidden; }
         .login-field label { background: #f8fafc; color: #475569; font-weight: bold; font-size: 14px; padding: 14px; width: 85px; text-align: left; border-right: 1px solid #cbd5e1; margin: 0;}
-        .login-input { border: none; padding: 14px; font-size: 16px; flex: 1; outline: none; background: transparent; width: 100%; box-sizing: border-box;}
-        .login-btn { background-color: #2563eb; color: white; border: none; padding: 14px; font-weight: bold; border-radius: 8px; cursor: pointer; width: 100%; font-size: 16px; margin-top: 10px; margin-bottom: 10px; transition: background 0.2s;}
-        .login-btn:hover { background-color: #1d4ed8; }
+        .login-input { border: none; padding: 14px; font-size: 16px; flex: 1; outline: none; width: 100%;}
+        .login-btn { background-color: #2563eb; color: white; border: none; padding: 14px; font-weight: bold; border-radius: 8px; cursor: pointer; width: 100%; font-size: 16px; margin-top: 10px;}
         .error-msg { color: #ef4444; font-size: 13px; margin-top: -5px; margin-bottom: 15px; display: none; font-weight: bold; }
 
-        /* Main App & Header */
         #mainApp { display: none; }
-        .container { max-width: 1400px; margin: auto; background: white; padding: 25px 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); box-sizing: border-box; border: 1px solid #e2e8f0;}
+        .container { max-width: 1400px; margin: auto; background: white; padding: 25px 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;}
         .header-flex { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 15px;}
         h2 { color: #0f172a; margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.5px;}
-        .logout-btn { background-color: #ef4444; color: white; border: none; padding: 10px 18px; border-radius: 6px; cursor: pointer; font-weight: bold; white-space: nowrap; transition: background 0.2s;}
-        .logout-btn:hover { background-color: #dc2626; }
+        .logout-btn { background-color: #ef4444; color: white; border: none; padding: 10px 18px; border-radius: 6px; cursor: pointer; font-weight: bold;}
         
-        /* 📑 TABS NAVIGATION */
-        .tabs-nav { display: flex; gap: 10px; margin-bottom: 25px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
+        .tabs-nav { display: flex; gap: 10px; margin-bottom: 25px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; flex-wrap: wrap;}
         .tab-btn { background: transparent; border: none; padding: 10px 20px; font-size: 16px; font-weight: bold; color: #64748b; cursor: pointer; border-radius: 6px; transition: all 0.2s;}
-        .tab-btn:hover { background: #f1f5f9; color: #0f172a;}
         .tab-btn.active { background: #e0e7ff; color: #4338ca; box-shadow: inset 0 -3px 0 #4338ca; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
 
-        /* Master Layout Grids */
         .form-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-bottom: 25px; }
-        input:not(.login-input), select { padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; width: 100%; box-sizing: border-box; transition: all 0.2s; color:#0f172a; }
-        input:not(.login-input):focus, select:focus { border-color: #3b82f6; outline: none; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+        input:not(.login-input), select { padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; width: 100%; box-sizing: border-box; color:#0f172a; }
         .col-span-2 { grid-column: span 2; }
-        .col-span-4 { grid-column: span 4; }
         .finance-group { display: flex; gap: 12px; }
         .finance-group > div { flex: 1; }
-        .label-text { color: #64748b; font-size: 12px; font-weight: 700; display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;}
+        .label-text { color: #64748b; font-size: 12px; font-weight: 700; display: block; margin-bottom: 6px; text-transform: uppercase;}
 
-        /* =========================================
-           POS-STYLE TABLE GRID WITH QTY & SCANNER
-           ========================================= */
-        .items-wrapper { border: 1px solid #cbd5e1; border-radius: 8px; margin-bottom: 20px; grid-column: span 4; overflow: hidden; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.02);}
+        .items-wrapper { border: 1px solid #cbd5e1; border-radius: 8px; margin-bottom: 20px; grid-column: span 4; overflow: hidden; background: #fff;}
         .items-header-bar { display: flex; justify-content: space-between; align-items: center; padding: 12px 18px; background-color: #f8fafc; border-bottom: 1px solid #cbd5e1;}
-        .items-header-bar h3 { margin: 0; font-size: 16px; color: #0f172a; display: flex; align-items: center; gap: 8px; font-weight: 700;}
-        .add-item-btn { background-color: #10b981; color: white; border: none; padding: 8px 16px; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 13px; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2); transition: background 0.2s;}
-        .add-item-btn:hover { background-color: #059669; }
+        .items-header-bar h3 { margin: 0; font-size: 16px; color: #0f172a;}
+        .add-item-btn { background-color: #10b981; color: white; border: none; padding: 8px 16px; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 13px;}
         
         .pos-table-header { display: grid; grid-template-columns: 35px 2fr 1.5fr 1fr 1fr 50px 80px 90px 110px 70px 40px; gap: 6px; background: #e2e8f0; padding: 10px 12px; border-bottom: 1px solid #cbd5e1; font-weight: 700; font-size: 11px; color: #475569; text-transform: uppercase;}
         .pos-table-row { display: grid; grid-template-columns: 35px 2fr 1.5fr 1fr 1fr 50px 80px 90px 110px 70px 40px; gap: 6px; padding: 8px 12px; border-bottom: 1px solid #f1f5f9; align-items: start;}
-        .pos-table-row:hover { background-color: #f8fafc; }
-        
         .row-num { font-size: 14px; color: #64748b; display: flex; align-items: center; justify-content: center; height: 38px; font-weight: 700;}
-        .pos-input { border: 1px solid #cbd5e1 !important; padding: 8px 6px !important; height: 38px; border-radius: 4px !important; font-family: inherit;}
-        .readonly-input { background-color: #f1f5f9; color: #0f172a; font-weight: 700; border-color: #e2e8f0 !important;}
+        .pos-input { border: 1px solid #cbd5e1 !important; padding: 8px 6px !important; height: 38px; border-radius: 4px !important;}
+        .readonly-input { background-color: #f1f5f9; color: #0f172a; font-weight: 700;}
         
         .input-group { display: flex; gap: 4px; }
-        .scan-btn { background: #334155; color: white; border: none; border-radius: 4px; width: 42px; height: 38px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.2); transition: background 0.2s;}
-        .scan-btn:hover { background: #0f172a; }
-
-        .remove-row-btn { color: #ef4444; background: #fee2e2; border: 1px solid #fecaca; height: 38px; width: 100%; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; transition: all 0.2s;}
-        .remove-row-btn:hover { background: #fca5a5; color: #b91c1c;}
+        .scan-btn { background: #334155; color: white; border: none; border-radius: 4px; width: 42px; height: 38px; cursor: pointer; display: flex; align-items: center; justify-content: center;}
+        .remove-row-btn { color: #ef4444; background: #fee2e2; border: 1px solid #fecaca; height: 38px; width: 100%; border-radius: 4px; font-weight: bold; cursor: pointer;}
         
-        .photo-upload-btn { display: flex; align-items: center; justify-content: center; gap: 5px; background: #f8fafc; border: 1px solid #cbd5e1; height: 38px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 700; color: #475569; transition: background 0.2s;}
-        .photo-upload-btn:hover { background: #e2e8f0; }
+        .photo-upload-btn { display: flex; align-items: center; justify-content: center; gap: 5px; background: #f8fafc; border: 1px solid #cbd5e1; height: 38px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 700;}
         .row-gallery { grid-column: 2 / -1; display: flex; gap: 8px; flex-wrap: wrap; padding-top: 6px; }
+        .photo-thumbnail { width: 48px; height: 48px; object-fit: cover; border-radius: 4px; cursor: pointer; border: 1px solid #cbd5e1;}
         .photo-wrapper { position: relative; display: inline-block; }
-        .photo-thumbnail { width: 48px; height: 48px; object-fit: cover; border-radius: 4px; cursor: pointer; border: 1px solid #cbd5e1; box-shadow: 0 1px 2px rgba(0,0,0,0.05);}
-        .remove-single-btn { position: absolute; top: -6px; right: -6px; background: #ef4444; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 10px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);}
+        .remove-single-btn { position: absolute; top: -6px; right: -6px; background: #ef4444; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 10px; font-weight: bold; cursor: pointer;}
 
         .mobile-grid-3 { display: contents; } 
         .mobile-label { display: none; font-size: 11px; color: #64748b; font-weight: 700; margin-bottom: 4px; text-transform: uppercase;}
 
-        /* Buttons & Controls */
         .button-group { display: flex; gap: 12px; grid-column: span 4; margin-top: 10px;}
-        button.main-save-btn { background-color: #2563eb; color: white; border: none; padding: 14px; font-weight: bold; border-radius: 6px; cursor: pointer; width: 100%; font-size: 16px; box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2); transition: background 0.2s;}
-        button.main-save-btn:hover { background-color: #1d4ed8; }
+        button.main-save-btn { background-color: #2563eb; color: white; border: none; padding: 14px; font-weight: bold; border-radius: 6px; cursor: pointer; width: 100%; font-size: 16px;}
         button.cancel-btn { background-color: #64748b; color: white; border: none; padding: 14px; font-weight: bold; border-radius: 6px; cursor: pointer; width: 30%; font-size: 16px; display: none;}
         
         .top-controls { display: flex; gap: 12px; align-items: center; margin-top: 35px; margin-bottom: 18px; flex-wrap:wrap;}
-        .search-bar { padding: 12px 15px; width: 350px; border-radius: 20px; border: 1px solid #cbd5e1; box-sizing: border-box; box-shadow: inset 0 1px 2px rgba(0,0,0,0.02);}
-        #exportBtn { background-color: #059669; color: white; border: none; padding: 12px 18px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-left: auto; display: none; white-space: nowrap; box-shadow: 0 2px 4px rgba(5, 150, 105, 0.2);}
+        .search-bar { padding: 12px 15px; width: 350px; border-radius: 20px; border: 1px solid #cbd5e1;}
+        #exportBtn { background-color: #059669; color: white; border: none; padding: 12px 18px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-left: auto; display: none;}
         
-        /* Table Bottom */
-        .table-responsive { width: 100%; overflow-x: auto; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.02);}
+        .table-responsive { width: 100%; overflow-x: auto; border-radius: 8px; border: 1px solid #e2e8f0; background: white;}
         table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 1050px; }
-        th, td { padding: 14px 16px; border-bottom: 1px solid #e2e8f0; text-align: left; vertical-align: top;}
-        th { background-color: #f8fafc; color: #334155; font-weight: 700; border-bottom: 2px solid #cbd5e1; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px;}
+        th, td { padding: 14px 16px; border-bottom: 1px solid #e2e8f0; text-align: left; vertical-align: middle;}
+        th { background-color: #f8fafc; color: #334155; font-weight: 700; border-bottom: 2px solid #cbd5e1; text-transform: uppercase; font-size: 12px;}
         
-        .status-btn { padding: 8px 12px; border: none; border-radius: 20px; cursor: pointer; font-weight: 700; font-size: 12px; width: 100%; margin-bottom: 6px; transition: transform 0.1s;}
-        .status-btn:active { transform: scale(0.95); }
+        .status-btn { padding: 8px 12px; border: none; border-radius: 20px; font-weight: 700; font-size: 12px; width: 100%; margin-bottom: 6px;}
         .status-waiting { background-color: #fef3c7; color: #b45309; border: 1px solid #fde68a;}
         .status-arrived { background-color: #d1fae5; color: #047857; border: 1px solid #a7f3d0;}
-        .status-completed { background-color: #f1f5f9; color: #64748b; cursor: default; border: 1px solid #e2e8f0;}
+        .status-completed { background-color: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0;}
         
         .action-btns { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap;}
-        .action-btns button { border: none; cursor: pointer; font-size: 12px; padding: 8px 10px; border-radius: 4px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 4px; flex: 1; min-width: 60px; transition: opacity 0.2s;}
-        .action-btns button:hover { opacity: 0.8; }
+        .action-btns button { border: none; cursor: pointer; font-size: 12px; padding: 8px 10px; border-radius: 4px; font-weight: 700; flex: 1; min-width: 60px;}
         .delete-btn { color: #ef4444; background: #fee2e2; }
         .edit-btn { color: #2563eb; background: #dbeafe; }
         .complete-btn { color: #059669; background: #d1fae5; }
-        .print-btn { color: #334155; background: #e2e8f0; border: 1px solid #cbd5e1;}
+        .print-btn { color: #334155; background: #f1f5f9; border: 1px solid #cbd5e1;}
         .pdf-btn { color: #b91c1c; background: #fee2e2; border: 1px solid #fecaca;}
         
-        .wa-btn { color: #fff; text-decoration: none; padding: 8px; border-radius: 4px; font-weight: 700; display: block; text-align: center; font-size: 12px; margin-bottom: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); transition: opacity 0.2s; border:none; cursor:pointer;}
-        .wa-btn:hover { opacity: 0.85; }
+        .wa-btn { color: #fff; text-decoration: none; padding: 8px; border-radius: 4px; font-weight: 700; display: block; text-align: center; font-size: 12px; margin-bottom: 6px; cursor: pointer; border: none;}
         .wa-btn-receipt { background-color: #0ea5e9; }
         .wa-btn-arrived { background-color: #22c55e; }
         .wa-btn-cancel { background-color: #ef4444; }
         
-        .ref-badge { background-color: #e2e8f0; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-weight: 700; color: #334155; font-size: 13px;}
+        .ref-badge { background-color: #e2e8f0; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-weight: 700; color: #334155;}
         .staff-badge { background-color: #dbeafe; color: #1d4ed8; border: 1px solid #bfdbfe; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; display: inline-block; margin-top: 6px; }
         .table-item-list { margin: 0; padding-left: 15px; }
         .table-item-list li { margin-bottom: 8px; border-bottom: 1px dashed #e2e8f0; padding-bottom: 8px;}
 
-        /* Restock UI Specifics */
-        .restock-row { display: grid; grid-template-columns: 2fr 1.5fr 1fr 1fr 100px; gap: 10px; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 15px; align-items: end;}
+        /* Restock Upgraded Layout */
+        .restock-row { display: grid; grid-template-columns: 2fr 1.5fr 1fr 1fr 80px 80px 100px; gap: 10px; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 15px; align-items: end;}
 
-        /* Modals */
         #photoModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.9); z-index: 1000; text-align: center; cursor: pointer; }
-        #modalImg { max-width: 90%; max-height: 90%; margin-top: 5vh; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
-        
+        #modalImg { max-width: 90%; max-height: 90%; margin-top: 5vh; border-radius: 8px;}
         #barcodeModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.95); z-index: 2000; flex-direction: column; align-items: center; justify-content: center; }
-        .barcode-container { background: white; padding: 20px; border-radius: 12px; width: 95%; max-width: 450px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);}
+        .barcode-container { background: white; padding: 20px; border-radius: 12px; width: 95%; max-width: 450px; text-align: center;}
+        
+        #adminBadge { display: none; background: #10b981; color: white; padding: 5px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; margin-left: 10px;}
+        #adminTools { display: none; background: #fef08a; padding: 10px 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #f59e0b; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;}
 
-        #adminBadge { display: none; background: #10b981; color: white; padding: 5px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; vertical-align: middle; margin-left: 10px;}
-
-        /* PDF Hidden Container */
         #pdfContainer { position: absolute; left: -9999px; top: 0; width: 800px; background: white; }
 
-        /* 📱 SMART MOBILE FALLBACK */
         @media (max-width: 800px) {
-            body { padding: 5px; background-color: #f1f5f9; }
-            .container { padding: 15px; border-radius: 8px;}
-            .header-flex { flex-direction: column; align-items: stretch; gap: 12px; }
-            .logout-btn { width: 100%; padding: 14px;}
-            #adminBadge { display: block; width: fit-content; margin: 8px 0 0 0; }
+            body { padding: 5px; }
+            .container { padding: 15px; }
+            .header-flex { flex-direction: column; gap: 12px; }
             .form-grid { display: flex; flex-direction: column; gap: 15px; }
             .finance-group { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
-            
             .pos-table-header { display: none; }
-            .pos-table-row { display: flex; flex-direction: column; gap: 10px; border: 2px solid #bfdbfe; border-radius: 8px; padding: 15px; margin: 10px 0; background: #fff; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
-            .mobile-label { display: block; } 
-            .row-num { display: none; }
-            
+            .pos-table-row { display: flex; flex-direction: column; gap: 10px; border: 2px solid #bfdbfe; border-radius: 8px; padding: 15px; margin: 10px 0;}
+            .mobile-label { display: block; } .row-num { display: none; }
             .mobile-grid-3 { display: grid; grid-template-columns: 1fr 1.5fr 1.5fr; gap: 10px; }
             .mobile-grid-3 > div { display: flex; flex-direction: column; }
-
-            .row-gallery { padding-top: 12px; border-top: 1px dashed #cbd5e1; margin-top: 8px; }
-            .remove-row-btn { margin-top: 10px; padding: 12px;}
-            
-            .top-controls { flex-direction: column; align-items: stretch; margin-top: 25px; }
-            .search-bar, #viewFilter, #exportBtn { width: 100%; padding: 14px;}
-            .button-group { flex-direction: column; }
-            button.main-save-btn, button.cancel-btn { width: 100%; }
+            .top-controls { flex-direction: column; align-items: stretch;}
             .restock-row { display: flex; flex-direction: column; }
+            #adminTools { flex-direction: column; align-items: stretch; text-align: center; }
         }
     </style>
 </head>
@@ -183,107 +142,68 @@
     <div class="login-box">
         <h3>🔐 MMC Staff Login</h3>
         <p style="color: #64748b; font-size: 14px; margin-bottom: 25px;">Please sign in to access cloud records.</p>
-        <div class="login-field">
-            <label>Username</label>
-            <input type="text" id="authEmail" class="login-input" placeholder="e.g. staff" onkeydown="if(event.key==='Enter') document.getElementById('authPassword').focus()">
-        </div>
-        <div class="login-field">
-            <label>Password</label>
-            <input type="password" id="authPassword" class="login-input" placeholder="••••••••" onkeydown="if(event.key==='Enter') loginSystem()">
-        </div>
-        <div id="loginError" class="error-msg">Login failed. Check username or password.</div>
+        <div class="login-field"><label>Username</label><input type="text" id="authEmail" class="login-input" placeholder="e.g. staff" onkeydown="if(event.key==='Enter') document.getElementById('authPassword').focus()"></div>
+        <div class="login-field"><label>Password</label><input type="password" id="authPassword" class="login-input" placeholder="••••••••" onkeydown="if(event.key==='Enter') loginSystem()"></div>
+        <div id="loginError" class="error-msg">Login failed.</div>
         <button class="login-btn" onclick="loginSystem()">Secure Login</button>
     </div>
 </div>
 
 <div id="mainApp" class="container">
     <div class="header-flex">
-        <h2>
-            Malaysia Motor Company - Secure Portal
-            <span id="adminBadge">👑 Boss View</span>
-        </h2>
+        <h2>Malaysia Motor Company <span id="adminBadge">👑 Boss View</span></h2>
         <button class="logout-btn" onclick="logoutSystem()">🔒 Logout</button>
+    </div>
+
+    <div id="adminTools">
+        <div style="color: #b45309; font-weight: 800; font-size: 15px;">🛡️ System Admin Tools</div>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <button onclick="backupDatabase()" style="background:#b45309; color:white; border:none; padding:10px 15px; border-radius:6px; font-weight:bold; cursor:pointer;">💾 Backup Database</button>
+            <label style="background:#b45309; color:white; border:none; padding:10px 15px; border-radius:6px; font-weight:bold; cursor:pointer;">
+                📂 Restore Backup
+                <input type="file" id="restoreFileInput" accept=".json" style="display:none;" onchange="restoreDatabase(event)">
+            </label>
+        </div>
     </div>
 
     <div class="tabs-nav">
         <button class="tab-btn active" onclick="switchTab('ordersTab', this)">📝 Preorder Management</button>
-        <button class="tab-btn" onclick="switchTab('restockTab', this)">📦 Restock Register (Low Stock)</button>
+        <button class="tab-btn" onclick="switchTab('restockTab', this)">📦 Restock Register</button>
     </div>
     
     <div id="ordersTab" class="tab-content active">
         <div class="form-grid">
-            <div>
-                <span class="label-text">Customer Name</span>
-                <input type="text" id="custName" placeholder="Name">
-            </div>
-            <div>
-                <span class="label-text">WhatsApp Number</span>
-                <input type="text" id="custPhone" placeholder="60123456789">
-            </div>
-            <div>
-                <span class="label-text">Car Model</span>
-                <input type="text" id="carModel" placeholder="e.g. Honda Civic">
-            </div>
-            <div>
-                <span class="label-text">Chassis No.</span>
-                <input type="text" id="chassisNumber" placeholder="e.g. FC1">
-            </div>
+            <div><span class="label-text">Customer Name</span><input type="text" id="custName" placeholder="Name"></div>
+            <div><span class="label-text">WhatsApp Number</span><input type="text" id="custPhone" placeholder="60123456789"></div>
+            <div><span class="label-text">Car Model</span><input type="text" id="carModel" placeholder="e.g. Honda Civic"></div>
+            <div><span class="label-text">Chassis No.</span><input type="text" id="chassisNumber" placeholder="e.g. FC1"></div>
             
             <div class="items-wrapper">
                 <div class="items-header-bar">
                     <h3>📋 Order Items List</h3>
                     <button type="button" class="add-item-btn" onclick="addNewItemBlock()">➕ Add Row</button>
                 </div>
-                
                 <div class="pos-table-header">
-                    <div style="text-align:center;">No.</div>
-                    <div>Part Desc</div>
-                    <div>Item Code</div>
-                    <div>Brand</div>
-                    <div>Supplier</div>
-                    <div>QTY</div>
-                    <div>U.Price</div>
-                    <div>Total</div>
-                    <div>ETA</div>
-                    <div style="text-align:center;">Photos</div>
-                    <div style="text-align:center;">Del</div>
+                    <div style="text-align:center;">No.</div><div>Part Desc</div><div>Item Code</div><div>Brand</div><div>Supplier</div><div>QTY</div><div>U.Price</div><div>Total</div><div>ETA</div><div style="text-align:center;">Photos</div><div style="text-align:center;">Del</div>
                 </div>
-
                 <div id="dynamicItemsContainer"></div>
             </div>
 
             <div class="col-span-2 finance-group">
-                <div>
-                    <span class="label-text">Grand Total (RM)</span>
-                    <input type="number" id="totalPrice" placeholder="0.00" oninput="calcBalance()" class="readonly-input">
-                </div>
-                <div>
-                    <span class="label-text">Deposit (RM)</span>
-                    <input type="number" id="deposit" placeholder="0.00" oninput="calcBalance()">
-                </div>
-                <div>
-                    <span class="label-text">Balance (RM)</span>
-                    <input type="number" id="balance" placeholder="0.00" readonly class="readonly-input">
-                </div>
+                <div><span class="label-text">Grand Total (RM)</span><input type="number" id="totalPrice" placeholder="0.00" oninput="calcBalance()" class="readonly-input"></div>
+                <div><span class="label-text">Deposit (RM)</span><input type="number" id="deposit" placeholder="0.00" oninput="calcBalance()"></div>
+                <div><span class="label-text">Balance (RM)</span><input type="number" id="balance" placeholder="0.00" readonly class="readonly-input"></div>
             </div>
 
             <div>
                 <span class="label-text">Handled By Staff</span>
                 <select id="orderByStaff">
-                    <option value="">-- Select --</option>
-                    <option value="Hock">Hock</option>
-                    <option value="Kelvin">Kelvin</option>
-                    <option value="Nana">Nana</option>
-                    <option value="Adi">Adi</option>
-                    <option value="Khairul">Khairul</option>
-                    <option value="Sani">Sani</option>
-                    <option value="Lun">Lun</option>
+                    <option value="">-- Select --</option><option value="Hock">Hock</option><option value="Kelvin">Kelvin</option>
+                    <option value="Nana">Nana</option><option value="Adi">Adi</option><option value="Khairul">Khairul</option>
+                    <option value="Sani">Sani</option><option value="Lun">Lun</option>
                 </select>
             </div>
-            <div>
-                <span class="label-text">Internal Remarks</span>
-                <input type="text" id="remarks" placeholder="Optional notes...">
-            </div>
+            <div><span class="label-text">Internal Remarks</span><input type="text" id="remarks" placeholder="Optional notes..."></div>
             
             <div class="button-group">
                 <button class="main-save-btn" id="mainBtn" onclick="saveOrUpdateOrder()">💾 Save Document & Sync</button>
@@ -304,15 +224,7 @@
         <div class="table-responsive">
             <table>
                 <thead>
-                    <tr>
-                        <th style="width:110px;">Doc No.</th>
-                        <th style="width:180px;">Customer / Car</th>
-                        <th>Ordered Parts Details</th>
-                        <th style="width:130px;">Financials</th>
-                        <th style="width:110px;">Status</th>
-                        <th style="width:160px; text-align:center;">WhatsApp Notify</th>
-                        <th style="width:150px; text-align:center;">Actions</th>
-                    </tr>
+                    <tr><th style="width:110px;">Doc No.</th><th style="width:180px;">Customer / Car</th><th>Ordered Parts Details</th><th style="width:130px;">Financials</th><th style="width:110px;">Status</th><th style="width:160px; text-align:center;">WhatsApp Notify</th><th style="width:150px; text-align:center;">Actions</th></tr>
                 </thead>
                 <tbody id="orderTableBody"></tbody>
             </table>
@@ -322,27 +234,22 @@
     <div id="restockTab" class="tab-content">
         <div style="background: #eef2ff; padding: 20px; border-radius: 8px; border: 1px solid #c7d2fe; margin-bottom: 25px;">
             <h3 style="margin-top:0; color:#3730a3;">Scanner Input (Low Stock)</h3>
-            <p style="font-size:13px; color:#4f46e5; margin-top:-5px; margin-bottom:15px;">Scan an empty box or key in details to add to the Boss's restock list.</p>
+            <p style="font-size:13px; color:#4f46e5; margin-top:-5px; margin-bottom:15px;">Scan empty box or key in details. System autosaves instantly.</p>
             <div class="restock-row">
-                <div>
-                    <span class="label-text">Part Description</span>
-                    <input type="text" id="r_part" placeholder="e.g. Brake Pad">
-                </div>
+                <div><span class="label-text">Part Description</span><input type="text" id="r_part" placeholder="e.g. Brake Pad"></div>
                 <div>
                     <span class="label-text">Item Code / OEM No</span>
                     <div class="input-group">
-                        <input type="text" id="r_code" placeholder="OEM Code">
+                        <input type="text" id="r_code" placeholder="OEM Code" onkeypress="if(event.key==='Enter') addRestockItem()">
                         <button type="button" class="scan-btn" onclick="openScanner('r_code')" title="Scan">🔳</button>
                     </div>
                 </div>
-                <div>
-                    <span class="label-text">Brand</span>
-                    <input type="text" id="r_brand" placeholder="e.g. TRW">
-                </div>
-                <div>
-                    <span class="label-text">Supplier</span>
-                    <input type="text" id="r_supp" placeholder="e.g. Emerald">
-                </div>
+                <div><span class="label-text">Brand</span><input type="text" id="r_brand" placeholder="e.g. TRW"></div>
+                <div><span class="label-text">Supplier</span><input type="text" id="r_supp" placeholder="e.g. Emerald"></div>
+                
+                <div><span class="label-text">On Hand Qty</span><input type="number" id="r_onHand" placeholder="0"></div>
+                <div><span class="label-text">Order Qty</span><input type="number" id="r_needOrder" placeholder="1"></div>
+                
                 <button class="add-item-btn" onclick="addRestockItem()" style="height:42px; width:100%;">➕ Add</button>
             </div>
         </div>
@@ -361,8 +268,8 @@
             </div>
             
             <div style="margin-left:auto; display:flex; gap:10px; flex-wrap:wrap;">
-                <button class="print-btn" onclick="printRestock()" style="padding:10px 15px; border-radius:6px; font-weight:bold; cursor:pointer;">🖨️ Print Summary</button>
-                <button class="pdf-btn" onclick="savePdfRestock()" style="padding:10px 15px; border-radius:6px; font-weight:bold; cursor:pointer;">📄 Save PDF</button>
+                <button class="print-btn" onclick="printRestock()" style="padding:10px 15px; border-radius:6px; font-weight:bold; cursor:pointer;">🖨️ Print</button>
+                <button class="pdf-btn" onclick="savePdfRestock()" style="padding:10px 15px; border-radius:6px; font-weight:bold; cursor:pointer;">📄 PDF</button>
                 <button class="wa-btn" style="background:#25D366; margin:0; padding:10px 15px; border-radius:6px; font-size:13px;" onclick="sendRestockWA('60194482580', 'Hock')">📲 WA Hock</button>
                 <button class="wa-btn" style="background:#25D366; margin:0; padding:10px 15px; border-radius:6px; font-size:13px;" onclick="sendRestockWA('60164401970', 'Kelvin')">📲 WA Kelvin</button>
             </div>
@@ -372,12 +279,14 @@
             <table>
                 <thead>
                     <tr>
-                        <th>Date Added</th>
+                        <th style="width:100px;">Date Added</th>
                         <th>Part Description</th>
                         <th>Item Code / OEM</th>
                         <th>Brand</th>
-                        <th>Supplier Target</th>
-                        <th style="text-align:center;">Status</th>
+                        <th>Supplier</th>
+                        <th style="text-align:center; width: 80px;">On Hand</th>
+                        <th style="text-align:center; width: 90px;">Order Qty</th>
+                        <th style="text-align:center; width: 100px;">Status</th>
                         <th style="text-align:center; width: 120px;">Actions</th>
                     </tr>
                 </thead>
@@ -387,10 +296,7 @@
     </div>
 </div>
 
-<div id="photoModal" onclick="closePhoto()">
-    <img id="modalImg" src=""><div style="color:white; margin-top:15px; font-weight:bold; letter-spacing:1px;">Click anywhere to close</div>
-</div>
-
+<div id="photoModal" onclick="closePhoto()"><img id="modalImg" src=""><div style="color:white; margin-top:15px; font-weight:bold; letter-spacing:1px;">Click anywhere to close</div></div>
 <div id="barcodeModal">
     <div class="barcode-container">
         <h3 style="margin-top:0; color:#0f172a; font-weight:800;">📷 Scan Barcode</h3>
@@ -399,7 +305,6 @@
         <button onclick="closeScanner()" style="margin-top:20px; padding:14px; background:#ef4444; color:white; border:none; border-radius:6px; width:100%; font-weight:bold; cursor:pointer; font-size:15px;">Cancel Scan</button>
     </div>
 </div>
-
 <div id="pdfContainer"></div>
 
 <script>
@@ -423,14 +328,12 @@
 
     let orders = [];
     let restockItems = [];
-    let currentRestockView = []; // Used for Print/PDF/WA filtering
+    let currentRestockView = []; 
     let editingId = null; 
     let isDataLoaded = false;
     let isAdmin = false; 
-    
     let itemMapIdCounter = 0;
     let itemPhotosMap = {}; 
-    
     let html5QrcodeScanner = null;
     let targetBarcodeFieldId = null; 
     let isRowScanner = false; 
@@ -449,22 +352,18 @@
                 isAdmin = true;
                 document.getElementById('exportBtn').style.display = 'block';
                 document.getElementById('adminBadge').style.display = 'inline-block';
+                document.getElementById('adminTools').style.display = 'flex'; // Show Boss Tools
             } else {
                 isAdmin = false;
                 document.getElementById('exportBtn').style.display = 'none';
                 document.getElementById('adminBadge').style.display = 'none';
+                document.getElementById('adminTools').style.display = 'none';
             }
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('mainApp').style.display = 'block';
             document.getElementById('loginError').style.display = 'none';
             
-            if (!isDataLoaded) { 
-                loadDatabaseData(); 
-                loadRestockData();
-                addNewItemBlock(); 
-            } else { 
-                renderTable(); 
-            }
+            if (!isDataLoaded) { loadDatabaseData(); loadRestockData(); addNewItemBlock(); } else { renderTable(); }
         } else {
             document.getElementById('loginScreen').style.display = 'flex';
             document.getElementById('mainApp').style.display = 'none';
@@ -484,14 +383,57 @@
         isDataLoaded = true;
         db.ref('orders').on('value', (snapshot) => {
             orders = [];
-            snapshot.forEach((childSnapshot) => {
-                orders.push({ id: childSnapshot.key, ...childSnapshot.val() });
-            });
+            snapshot.forEach((childSnapshot) => { orders.push({ id: childSnapshot.key, ...childSnapshot.val() }); });
             orders.sort((a,b) => b.timestamp - a.timestamp);
             renderTable();
         });
     }
 
+    // ==========================================
+    // BACKUP & RESTORE DATABASE (BOSS ONLY)
+    // ==========================================
+    async function backupDatabase() {
+        if(!isAdmin) return;
+        const snap = await db.ref('/').once('value');
+        const data = snap.val();
+        const jsonStr = JSON.stringify(data, null, 2);
+        const blob = new Blob([jsonStr], {type: "application/json"});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const dateStr = new Date().toLocaleDateString('en-GB').replace(/\//g, '-');
+        a.download = `MMC_Database_Backup_${dateStr}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+
+    function restoreDatabase(event) {
+        if(!isAdmin) return;
+        const file = event.target.files[0];
+        if(!file) return;
+        if(!confirm("⚠️ WARNING! Restoring will OVERWRITE the current live cloud database with this file. Are you absolutely sure?")) {
+            event.target.value = ''; return;
+        }
+        const reader = new FileReader();
+        reader.onload = async function(e) {
+            try {
+                const jsonData = JSON.parse(e.target.result);
+                if(jsonData && (jsonData.orders || jsonData.restock || jsonData.orderCounter)) {
+                    await db.ref('/').set(jsonData);
+                    alert("✅ Database successfully restored!");
+                } else {
+                    alert("Invalid backup file format.");
+                }
+            } catch(err) { alert("Error reading file: " + err.message); }
+            event.target.value = ''; 
+        };
+        reader.readAsText(file);
+    }
+
+    // ==========================================
+    // PREORDER LOGIC (100% V27)
+    // ==========================================
     function calcRowTotal(rowId) {
         const row = document.getElementById(rowId);
         if(!row) return;
@@ -501,17 +443,12 @@
         row.querySelector('.i-subTotal').value = sub > 0 ? sub.toFixed(2) : '';
         calcGrandTotal();
     }
-
     function calcGrandTotal() {
         let grand = 0;
-        document.querySelectorAll('.pos-table-row').forEach(row => {
-            const sub = parseFloat(row.querySelector('.i-subTotal').value) || 0;
-            grand += sub;
-        });
+        document.querySelectorAll('.pos-table-row').forEach(row => { grand += parseFloat(row.querySelector('.i-subTotal').value) || 0; });
         document.getElementById('totalPrice').value = grand > 0 ? grand.toFixed(2) : '';
         calcBalance();
     }
-
     function calcBalance() {
         const total = parseFloat(document.getElementById('totalPrice').value) || 0;
         const deposit = parseFloat(document.getElementById('deposit').value) || 0;
@@ -520,178 +457,58 @@
     document.getElementById('searchInput').addEventListener('input', renderTable);
 
     function openScanner(targetId, isRow = false) {
-        targetBarcodeFieldId = targetId;
-        isRowScanner = isRow;
+        targetBarcodeFieldId = targetId; isRowScanner = isRow;
         document.getElementById('barcodeModal').style.display = 'flex';
-        
         html5QrcodeScanner = new Html5Qrcode("qr-reader");
-        const config = { fps: 10, qrbox: { width: 250, height: 100 } }; 
-        
-        html5QrcodeScanner.start({ facingMode: "environment" }, config, onScanSuccess)
-        .catch(err => { alert("Camera access denied or error."); closeScanner(); });
+        html5QrcodeScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 100 } }, onScanSuccess).catch(err => { alert("Camera error."); closeScanner(); });
     }
-
     function onScanSuccess(decodedText, decodedResult) {
         if (targetBarcodeFieldId) {
-            if(isRowScanner) {
-                const row = document.getElementById(targetBarcodeFieldId);
-                if (row) row.querySelector('.i-partNo').value = decodedText;
-            } else {
-                document.getElementById(targetBarcodeFieldId).value = decodedText;
-            }
+            if(isRowScanner) { document.getElementById(targetBarcodeFieldId).querySelector('.i-partNo').value = decodedText; } 
+            else { document.getElementById(targetBarcodeFieldId).value = decodedText; }
         }
-        const audio = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
-        audio.play().catch(e => {});
+        new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg').play().catch(e => {});
         closeScanner();
     }
+    function closeScanner() { document.getElementById('barcodeModal').style.display = 'none'; if (html5QrcodeScanner) html5QrcodeScanner.stop().catch(err => console.log(err)); }
 
-    function closeScanner() {
-        document.getElementById('barcodeModal').style.display = 'none';
-        if (html5QrcodeScanner) {
-            html5QrcodeScanner.stop().then(ignore => {}).catch(err => console.log(err));
-        }
-    }
-
-    function updateRowNumbers() {
-        const rows = document.querySelectorAll('.pos-table-row');
-        rows.forEach((row, index) => {
-            const numDiv = row.querySelector('.row-num');
-            if (numDiv) numDiv.innerText = index + 1;
-        });
-    }
+    function updateRowNumbers() { document.querySelectorAll('.pos-table-row').forEach((row, index) => { const numDiv = row.querySelector('.row-num'); if (numDiv) numDiv.innerText = index + 1; }); }
 
     function addNewItemBlock(data = null) {
         itemMapIdCounter++;
         const currentId = 'item_row_' + itemMapIdCounter;
         itemPhotosMap[currentId] = data && data.photos ? [...data.photos] : [];
-
         const container = document.getElementById('dynamicItemsContainer');
         const isFirst = container.children.length === 0;
 
-        const html = `
-        <div class="pos-table-row" id="${currentId}">
-            <div class="row-num">0</div>
-            
-            <div>
-                <span class="mobile-label">Part Needed</span>
-                <input type="text" class="i-part pos-input" placeholder="Part Desc" value="${data ? data.part : ''}">
-            </div>
-            
-            <div>
-                <span class="mobile-label">Item Code / OEM No</span>
-                <div class="input-group">
-                    <input type="text" class="i-partNo pos-input" placeholder="OEM Code" value="${data && data.partNo ? data.partNo : ''}">
-                    <button type="button" class="scan-btn" onclick="openScanner('${currentId}', true)" title="Scan Barcode">🔳</button>
-                </div>
-            </div>
-            
-            <div>
-                <span class="mobile-label">Brand</span>
-                <input type="text" class="i-brand pos-input" placeholder="Brand" value="${data && data.brand ? data.brand : ''}">
-            </div>
-
-            <div>
-                <span class="mobile-label">Supplier</span>
-                <input type="text" class="i-supplier pos-input" placeholder="Supplier" value="${data && data.supplier ? data.supplier : ''}">
-            </div>
-
-            <div class="mobile-grid-3">
-                <div>
-                    <span class="mobile-label">Qty</span>
-                    <input type="number" class="i-qty pos-input" placeholder="1" value="${data && data.qty ? data.qty : '1'}" oninput="calcRowTotal('${currentId}')" style="text-align:center;">
-                </div>
-                <div>
-                    <span class="mobile-label">U.Price (RM)</span>
-                    <input type="number" class="i-unitPrice pos-input" placeholder="0.00" value="${data && data.unitPrice ? data.unitPrice : ''}" oninput="calcRowTotal('${currentId}')">
-                </div>
-                <div>
-                    <span class="mobile-label">Total (RM)</span>
-                    <input type="number" class="i-subTotal pos-input readonly-input" placeholder="0.00" value="${data && data.subTotal ? data.subTotal : ''}" readonly>
-                </div>
-            </div>
-
-            <div>
-                <span class="mobile-label">ETA Date</span>
-                <input type="date" class="i-eta pos-input" value="${data && data.eta ? data.eta : ''}">
-            </div>
-            
-            <div style="display:flex; justify-content:center; align-items:center;">
-                <label class="photo-upload-btn">
-                    📷 <span id="count_${currentId}">${itemPhotosMap[currentId].length}</span>/5
-                    <input type="file" accept="image/*" multiple onchange="processItemPhotos(event, '${currentId}')" style="display:none;">
-                </label>
-            </div>
-            
-            <div>
-                ${!isFirst || data !== null ? `<button type="button" class="remove-row-btn" onclick="removeItemBlock('${currentId}')" title="Delete Row">✖</button>` : `<div style="height:35px;"></div>`}
-            </div>
-            
-            <div id="gallery_${currentId}" class="row-gallery"></div>
-        </div>`;
-        
+        const html = `<div class="pos-table-row" id="${currentId}"><div class="row-num">0</div><div><span class="mobile-label">Part Needed</span><input type="text" class="i-part pos-input" placeholder="Part Desc" value="${data ? data.part : ''}"></div><div><span class="mobile-label">Item Code / OEM No</span><div class="input-group"><input type="text" class="i-partNo pos-input" placeholder="OEM Code" value="${data && data.partNo ? data.partNo : ''}"><button type="button" class="scan-btn" onclick="openScanner('${currentId}', true)" title="Scan Barcode">🔳</button></div></div><div><span class="mobile-label">Brand</span><input type="text" class="i-brand pos-input" placeholder="Brand" value="${data && data.brand ? data.brand : ''}"></div><div><span class="mobile-label">Supplier</span><input type="text" class="i-supplier pos-input" placeholder="Supplier" value="${data && data.supplier ? data.supplier : ''}"></div><div class="mobile-grid-3"><div><span class="mobile-label">Qty</span><input type="number" class="i-qty pos-input" placeholder="1" value="${data && data.qty ? data.qty : '1'}" oninput="calcRowTotal('${currentId}')" style="text-align:center;"></div><div><span class="mobile-label">U.Price (RM)</span><input type="number" class="i-unitPrice pos-input" placeholder="0.00" value="${data && data.unitPrice ? data.unitPrice : ''}" oninput="calcRowTotal('${currentId}')"></div><div><span class="mobile-label">Total (RM)</span><input type="number" class="i-subTotal pos-input readonly-input" placeholder="0.00" value="${data && data.subTotal ? data.subTotal : ''}" readonly></div></div><div><span class="mobile-label">ETA Date</span><input type="date" class="i-eta pos-input" value="${data && data.eta ? data.eta : ''}"></div><div style="display:flex; justify-content:center; align-items:center;"><label class="photo-upload-btn">📷 <span id="count_${currentId}">${itemPhotosMap[currentId].length}</span>/5<input type="file" accept="image/*" multiple onchange="processItemPhotos(event, '${currentId}')" style="display:none;"></label></div><div>${!isFirst || data !== null ? `<button type="button" class="remove-row-btn" onclick="removeItemBlock('${currentId}')" title="Delete Row">✖</button>` : `<div style="height:35px;"></div>`}</div><div id="gallery_${currentId}" class="row-gallery"></div></div>`;
         container.insertAdjacentHTML('beforeend', html);
-        renderGalleryUI(currentId);
-        updateRowNumbers();
-        if(data) calcRowTotal(currentId); 
+        renderGalleryUI(currentId); updateRowNumbers(); if(data) calcRowTotal(currentId); 
     }
 
-    function removeItemBlock(id) {
-        document.getElementById(id).remove();
-        delete itemPhotosMap[id];
-        updateRowNumbers();
-        calcGrandTotal(); 
-        
-        const container = document.getElementById('dynamicItemsContainer');
-        if (container.children.length === 0) {
-            addNewItemBlock();
-        }
-    }
+    function removeItemBlock(id) { document.getElementById(id).remove(); delete itemPhotosMap[id]; updateRowNumbers(); calcGrandTotal(); if (document.getElementById('dynamicItemsContainer').children.length === 0) addNewItemBlock(); }
 
     function processItemPhotos(event, itemId) {
-        const files = event.target.files;
-        if (!files || files.length === 0) return;
-        
-        if (itemPhotosMap[itemId].length + files.length > 5) {
-            alert("⚠️ Max 5 photos per item!");
-            event.target.value = ''; return;
-        }
+        const files = event.target.files; if (!files || files.length === 0) return;
+        if (itemPhotosMap[itemId].length + files.length > 5) { alert("⚠️ Max 5 photos per item!"); event.target.value = ''; return; }
         Array.from(files).forEach(file => {
             const reader = new FileReader();
             reader.onload = function(e) {
-                const img = new Image();
-                img.onload = function() {
-                    const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 800; const MAX_HEIGHT = 800;
-                    let width = img.width; let height = img.height;
-                    if (width > height) { if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; } } 
-                    else { if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; } }
-                    canvas.width = width; canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
-                    itemPhotosMap[itemId].push(canvas.toDataURL('image/jpeg', 0.8));
-                    renderGalleryUI(itemId); 
-                };
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
-        });
-        event.target.value = ''; 
+                const img = new Image(); img.onload = function() {
+                    const canvas = document.createElement('canvas'); let width = img.width; let height = img.height;
+                    if (width > height) { if(width > 800) { height *= 800/width; width = 800; } } else { if(height > 800) { width *= 800/height; height = 800; } }
+                    canvas.width = width; canvas.height = height; canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+                    itemPhotosMap[itemId].push(canvas.toDataURL('image/jpeg', 0.8)); renderGalleryUI(itemId); 
+                }; img.src = e.target.result;
+            }; reader.readAsDataURL(file);
+        }); event.target.value = ''; 
     }
 
     function renderGalleryUI(itemId) {
         const gallery = document.getElementById('gallery_' + itemId);
-        const countSpan = document.getElementById('count_' + itemId);
-        if (countSpan) countSpan.innerText = itemPhotosMap[itemId].length;
-        
+        document.getElementById('count_' + itemId).innerText = itemPhotosMap[itemId].length;
         gallery.innerHTML = ''; 
-        itemPhotosMap[itemId].forEach((b64Data, index) => {
-            gallery.innerHTML += `
-                <div class="photo-wrapper">
-                    <img src="${b64Data}" class="photo-thumbnail" onclick="showPhoto('${b64Data}')">
-                    <button type="button" class="remove-single-btn" onclick="removeSinglePhoto('${itemId}', ${index})">✖</button>
-                </div>
-            `;
-        });
+        itemPhotosMap[itemId].forEach((b64Data, index) => { gallery.innerHTML += `<div class="photo-wrapper"><img src="${b64Data}" class="photo-thumbnail" onclick="showPhoto('${b64Data}')"><button type="button" class="remove-single-btn" onclick="removeSinglePhoto('${itemId}', ${index})">✖</button></div>`; });
     }
 
     function removeSinglePhoto(itemId, index) { itemPhotosMap[itemId].splice(index, 1); renderGalleryUI(itemId); }
@@ -700,357 +517,85 @@
 
     function editOrder(id) {
         const order = orders.find(o => o.id === id);
-        document.getElementById('custName').value = order.name || '';
-        document.getElementById('custPhone').value = order.phone || '';
-        document.getElementById('carModel').value = order.car || '';
-        document.getElementById('chassisNumber').value = order.chassis || '';
-        document.getElementById('totalPrice').value = order.total || '';
-        document.getElementById('deposit').value = order.deposit || '';
-        document.getElementById('balance').value = order.balance || '';
-        document.getElementById('orderByStaff').value = order.staff || '';
-        document.getElementById('remarks').value = order.remarks || '';
-
-        document.getElementById('dynamicItemsContainer').innerHTML = '';
-        itemPhotosMap = {};
-
-        let itemsToLoad = order.items || [];
-        if(itemsToLoad.length === 0) addNewItemBlock();
-        itemsToLoad.forEach(itemData => addNewItemBlock(itemData));
-
-        editingId = id;
-        document.getElementById('mainBtn').innerText = "Confirm Update Data (Cloud)";
-        document.getElementById('mainBtn').style.backgroundColor = "#10b981"; 
-        document.getElementById('cancelBtn').style.display = "block";
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        ['custName','custPhone','carModel','chassisNumber','totalPrice','deposit','balance','orderByStaff','remarks'].forEach(f => document.getElementById(f).value = order[f.replace('orderByStaff','staff').replace('custName','name').replace('custPhone','phone').replace('carModel','car').replace('chassisNumber','chassis').replace('totalPrice','total')] || '');
+        document.getElementById('dynamicItemsContainer').innerHTML = ''; itemPhotosMap = {};
+        const itemsToLoad = order.items || []; if(itemsToLoad.length === 0) addNewItemBlock();
+        itemsToLoad.forEach(data => addNewItemBlock(data));
+        editingId = id; document.getElementById('mainBtn').innerText = "Confirm Update Data (Cloud)"; document.getElementById('mainBtn').style.backgroundColor = "#10b981"; document.getElementById('cancelBtn').style.display = "block"; window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function cancelEdit() {
-        editingId = null;
-        document.getElementById('mainBtn').innerText = "💾 Save Document & Sync";
-        document.getElementById('mainBtn').style.backgroundColor = "#2563eb";
-        document.getElementById('cancelBtn').style.display = "none";
-        document.querySelectorAll('#ordersTab input:not(.login-input)').forEach(input => { if(input.id !== 'searchInput') input.value = ''; });
-        document.getElementById('orderByStaff').value = '';
-        
-        document.getElementById('dynamicItemsContainer').innerHTML = '';
-        itemPhotosMap = {};
-        addNewItemBlock();
+        editingId = null; document.getElementById('mainBtn').innerText = "💾 Save Document & Sync"; document.getElementById('mainBtn').style.backgroundColor = "#2563eb"; document.getElementById('cancelBtn').style.display = "none";
+        document.querySelectorAll('#ordersTab input:not(.login-input)').forEach(i => { if(i.id !== 'searchInput') i.value = ''; });
+        document.getElementById('orderByStaff').value = ''; document.getElementById('dynamicItemsContainer').innerHTML = ''; itemPhotosMap = {}; addNewItemBlock();
     }
 
     async function saveOrUpdateOrder() {
-        const name = document.getElementById('custName').value;
-        const phone = document.getElementById('custPhone').value.replace(/[^0-9]/g, '');
-        const car = document.getElementById('carModel').value;
-        const chassis = document.getElementById('chassisNumber').value;
-        const total = document.getElementById('totalPrice').value || "0";
-        const deposit = document.getElementById('deposit').value || "0";
-        const balance = document.getElementById('balance').value || "0";
-        const staff = document.getElementById('orderByStaff').value;
-        const remarks = document.getElementById('remarks').value;
-
-        let finalItemsArray = [];
+        const payload = { name: document.getElementById('custName').value, phone: document.getElementById('custPhone').value.replace(/[^0-9]/g, ''), car: document.getElementById('carModel').value, chassis: document.getElementById('chassisNumber').value, total: document.getElementById('totalPrice').value || "0", deposit: document.getElementById('deposit').value || "0", balance: document.getElementById('balance').value || "0", staff: document.getElementById('orderByStaff').value, remarks: document.getElementById('remarks').value, items: [] };
         document.querySelectorAll('.pos-table-row').forEach(card => {
-            const id = card.id;
-            const part = card.querySelector('.i-part').value;
-            const partNo = card.querySelector('.i-partNo').value;
-            const brand = card.querySelector('.i-brand').value;
-            const supplier = card.querySelector('.i-supplier').value;
-            const qty = card.querySelector('.i-qty').value || "1";
-            const unitPrice = card.querySelector('.i-unitPrice').value || "0";
-            const subTotal = card.querySelector('.i-subTotal').value || "0";
-            const eta = card.querySelector('.i-eta').value;
-            const photos = itemPhotosMap[id] || [];
-
-            if (part || partNo) { 
-                finalItemsArray.push({ part, partNo, brand, supplier, qty, unitPrice, subTotal, eta, photos });
-            }
+            const id = card.id; const p = { part: card.querySelector('.i-part').value, partNo: card.querySelector('.i-partNo').value, brand: card.querySelector('.i-brand').value, supplier: card.querySelector('.i-supplier').value, qty: card.querySelector('.i-qty').value || "1", unitPrice: card.querySelector('.i-unitPrice').value || "0", subTotal: card.querySelector('.i-subTotal').value || "0", eta: card.querySelector('.i-eta').value, photos: itemPhotosMap[id] || [] };
+            if (p.part || p.partNo) payload.items.push(p);
         });
+        if(!payload.name) return alert("Please fill Customer Name."); if(payload.items.length === 0) return alert("Enter at least 1 Part.");
 
-        if(!name) return alert("Please fill in Customer Name.");
-        if(finalItemsArray.length === 0) return alert("Please enter at least 1 Part Description or Item Code.");
-
-        if (editingId) {
-            await db.ref('orders/' + editingId).update({
-                name, phone, car, chassis, total, deposit, balance, staff, remarks, 
-                items: finalItemsArray,
-                part: null, partNo: null, supplier: null, eta: null, photos: null, photo: null
-            });
-            cancelEdit();
-        } else {
-            const counterRef = db.ref('orderCounter');
-            const snapshot = await counterRef.transaction((currentValue) => { return (currentValue || 1000) + 1; });
-            const nextNum = snapshot.snapshot.val();
-            const refNo = 'MMC-' + nextNum;
-            const dateStr = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-            
-            await db.ref('orders').push({
-                refNo, date: dateStr, name, phone, car, chassis, total, deposit, balance, staff, remarks, status: 'waiting', 
-                items: finalItemsArray, timestamp: Date.now()
-            });
-            cancelEdit(); 
+        if (editingId) { await db.ref('orders/' + editingId).update(payload); cancelEdit(); } 
+        else {
+            const snapshot = await db.ref('orderCounter').transaction(cv => (cv || 1000) + 1);
+            payload.refNo = 'MMC-' + snapshot.snapshot.val(); payload.date = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }); payload.status = 'waiting'; payload.timestamp = Date.now();
+            await db.ref('orders').push(payload); cancelEdit(); 
         }
     }
 
-    async function toggleStatus(id) {
-        const order = orders.find(o => o.id === id);
-        if(order.status === 'completed') return; 
-        const newStatus = order.status === 'waiting' ? 'arrived' : 'waiting';
-        await db.ref('orders/' + id).update({ status: newStatus });
-    }
-    async function markCompleted(id) {
-        if(confirm("Confirm item collected and balance cleared? This will hide the order into History.")){
-            await db.ref('orders/' + id).update({ status: 'completed' });
-        }
-    }
+    async function toggleStatus(id) { const order = orders.find(o => o.id === id); if(order.status === 'completed') return; await db.ref('orders/' + id).update({ status: order.status === 'waiting' ? 'arrived' : 'waiting' }); }
+    async function markCompleted(id) { if(confirm("Confirm item collected?")) await db.ref('orders/' + id).update({ status: 'completed' }); }
     async function restoreOrder(id) { await db.ref('orders/' + id).update({ status: 'arrived' }); }
-    async function deleteOrder(id) {
-        if(!isAdmin) return alert("You do not have permission to delete orders.");
-        if(confirm("Are you absolutely sure you want to delete this order from the cloud?")) {
-            await db.ref('orders/' + id).remove();
-        }
-    }
+    async function deleteOrder(id) { if(isAdmin && confirm("Delete order?")) await db.ref('orders/' + id).remove(); else if(!isAdmin) alert("Admin only."); }
 
     function getInvoiceHTML(order) {
-        let itemsHtml = '';
-        let itemsToDisplay = order.items || [];
-        
-        itemsToDisplay.forEach((item, index) => {
-            itemsHtml += `
-                <tr>
-                    <td style="text-align:center;">${index + 1}</td>
-                    <td style="text-align:center;"><div class="check-box"></div></td>
-                    <td><strong>${item.part || 'N/A'}</strong></td>
-                    <td>${item.partNo || '-'}</td>
-                    <td>${item.brand || '-'}</td>
-                    <td>${item.supplier || '-'}</td>
-                    <td style="text-align:center;">${item.qty || '1'}</td>
-                    <td style="text-align:right;">RM ${parseFloat(item.unitPrice || 0).toFixed(2)}</td>
-                    <td style="text-align:right;"><strong>RM ${parseFloat(item.subTotal || 0).toFixed(2)}</strong></td>
-                </tr>
-            `;
-        });
-
-        return `
-            <style>
-                body { font-family: 'Segoe UI', Arial, sans-serif; padding: 30px; color: #1e293b; margin: auto; }
-                .header { text-align: center; border-bottom: 2px solid #1e293b; padding-bottom: 20px; margin-bottom: 30px; }
-                .logo { font-size: 28px; font-weight: 800; letter-spacing: 1px;}
-                .info-grid { display: flex; justify-content: space-between; margin-bottom: 30px; }
-                .info-box { background: #f8fafc; padding: 15px; border-radius: 6px; width: 45%; border: 1px solid #e2e8f0; }
-                .info-box p { margin: 5px 0; font-size: 14px; }
-                table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
-                th, td { border: 1px solid #cbd5e1; padding: 12px; text-align: left; font-size: 13px;}
-                th { background: #f1f5f9; text-transform: uppercase; font-size: 11px;}
-                .check-box { width: 16px; height: 16px; border: 1px solid #64748b; display: inline-block; border-radius: 2px; }
-                .totals { text-align: right; font-size: 15px; }
-                .totals p { margin: 5px 0; }
-                .footer { margin-top: 50px; font-size: 12px; text-align: center; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 20px;}
-            </style>
-            <div id="invoiceBody">
-                <div class="header">
-                    <div class="logo">MALAYSIA MOTOR COMPANY</div>
-                </div>
-                <h2 style="text-align:center; margin-bottom:30px; letter-spacing: 1px;">ORDER LIST / PACKING LIST</h2>
-                <div class="info-grid">
-                    <div class="info-box">
-                        <p><strong>Customer Name:</strong> ${order.name}</p>
-                        <p><strong>Contact:</strong> ${order.phone || '-'}</p>
-                        <p><strong>Car Details:</strong> ${order.car || '-'} ${order.chassis ? '('+order.chassis+')' : ''}</p>
-                    </div>
-                    <div class="info-box">
-                        <p><strong>Order No:</strong> ${order.refNo}</p>
-                        <p><strong>Date:</strong> ${order.date}</p>
-                        <p><strong>Served By:</strong> ${order.staff || '-'}</p>
-                        <p><strong>Status:</strong> ${order.status === 'completed' ? 'Collected' : 'Pending Fulfillment'}</p>
-                    </div>
-                </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th style="width:5%; text-align:center;">No.</th>
-                            <th style="width:5%; text-align:center;">Pack</th>
-                            <th style="width:25%;">Part Description</th>
-                            <th style="width:15%;">Item Code</th>
-                            <th style="width:12%;">Brand</th>
-                            <th style="width:13%;">Supplier</th>
-                            <th style="width:5%; text-align:center;">QTY</th>
-                            <th style="width:10%; text-align:right;">U.Price</th>
-                            <th style="width:10%; text-align:right;">Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>${itemsHtml}</tbody>
-                </table>
-                <div class="totals">
-                    <p>Total Amount: <strong>RM ${parseFloat(order.total || 0).toFixed(2)}</strong></p>
-                    <p>Deposit Paid: RM ${parseFloat(order.deposit || 0).toFixed(2)}</p>
-                    <p style="font-size: 18px; margin-top: 10px;">Balance Due: <strong style="color: #ef4444;">RM ${parseFloat(order.balance || 0).toFixed(2)}</strong></p>
-                </div>
-                <div class="footer">
-                    Thank you for choosing Malaysia Motor Company. Please retain this list for your records.<br>
-                    ${order.remarks ? 'Internal Remarks: ' + order.remarks : ''}
-                </div>
-            </div>
-        `;
+        let itemsHtml = ''; (order.items || []).forEach((item, index) => { itemsHtml += `<tr><td style="text-align:center;">${index + 1}</td><td style="text-align:center;"><div class="check-box"></div></td><td><strong>${item.part || 'N/A'}</strong></td><td>${item.partNo || '-'}</td><td>${item.brand || '-'}</td><td>${item.supplier || '-'}</td><td style="text-align:center;">${item.qty || '1'}</td><td style="text-align:right;">RM ${parseFloat(item.unitPrice || 0).toFixed(2)}</td><td style="text-align:right;"><strong>RM ${parseFloat(item.subTotal || 0).toFixed(2)}</strong></td></tr>`; });
+        return `<style>body{font-family:'Segoe UI',Arial,sans-serif;padding:30px;color:#1e293b;margin:auto;} .header{text-align:center;border-bottom:2px solid #1e293b;padding-bottom:20px;margin-bottom:30px;} .logo{font-size:28px;font-weight:800;letter-spacing:1px;} .info-grid{display:flex;justify-content:space-between;margin-bottom:30px;} .info-box{background:#f8fafc;padding:15px;border-radius:6px;width:45%;border:1px solid #e2e8f0;} .info-box p{margin:5px 0;font-size:14px;} table{width:100%;border-collapse:collapse;margin-bottom:30px;} th,td{border:1px solid #cbd5e1;padding:12px;text-align:left;font-size:13px;} th{background:#f1f5f9;text-transform:uppercase;font-size:11px;} .check-box{width:16px;height:16px;border:1px solid #64748b;display:inline-block;border-radius:2px;} .totals{text-align:right;font-size:15px;} .totals p{margin:5px 0;} .footer{margin-top:50px;font-size:12px;text-align:center;color:#64748b;border-top:1px solid #e2e8f0;padding-top:20px;}</style><div id="invoiceBody"><div class="header"><div class="logo">MALAYSIA MOTOR COMPANY</div></div><h2 style="text-align:center;margin-bottom:30px;letter-spacing:1px;">ORDER LIST / PACKING LIST</h2><div class="info-grid"><div class="info-box"><p><strong>Customer Name:</strong> ${order.name}</p><p><strong>Contact:</strong> ${order.phone || '-'}</p><p><strong>Car Details:</strong> ${order.car || '-'} ${order.chassis ? '('+order.chassis+')' : ''}</p></div><div class="info-box"><p><strong>Order No:</strong> ${order.refNo}</p><p><strong>Date:</strong> ${order.date}</p><p><strong>Served By:</strong> ${order.staff || '-'}</p><p><strong>Status:</strong> ${order.status === 'completed' ? 'Collected' : 'Pending'}</p></div></div><table><thead><tr><th style="width:5%;text-align:center;">No.</th><th style="width:5%;text-align:center;">Pack</th><th style="width:25%;">Part Description</th><th style="width:15%;">Item Code</th><th style="width:12%;">Brand</th><th style="width:13%;">Supplier</th><th style="width:5%;text-align:center;">QTY</th><th style="width:10%;text-align:right;">U.Price</th><th style="width:10%;text-align:right;">Total</th></tr></thead><tbody>${itemsHtml}</tbody></table><div class="totals"><p>Total Amount: <strong>RM ${parseFloat(order.total || 0).toFixed(2)}</strong></p><p>Deposit Paid: RM ${parseFloat(order.deposit || 0).toFixed(2)}</p><p style="font-size:18px;margin-top:10px;">Balance Due: <strong style="color:#ef4444;">RM ${parseFloat(order.balance || 0).toFixed(2)}</strong></p></div><div class="footer">Thank you for choosing Malaysia Motor Company. Please retain this list for your records.<br>${order.remarks ? 'Internal Remarks: ' + order.remarks : ''}</div></div>`;
     }
-
-    function printOrder(id) {
-        const order = orders.find(o => o.id === id);
-        if(!order) return;
-        const printWindow = window.open('', '_blank');
-        printWindow.document.write('<html><head><title>Order List - '+order.refNo+'</title></head><body>');
-        printWindow.document.write(getInvoiceHTML(order));
-        printWindow.document.write('</body><script>window.onload = function() { window.print(); window.close(); }<\/script></html>');
-        printWindow.document.close();
-    }
-
-    function savePdfOrder(id) {
-        const order = orders.find(o => o.id === id);
-        if(!order) return;
-        
-        const container = document.getElementById('pdfContainer');
-        container.innerHTML = getInvoiceHTML(order);
-        
-        const opt = {
-            margin:       10,
-            filename:     `${order.refNo}_MMC_PackingList.pdf`,
-            image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2, useCORS: true },
-            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        };
-        
-        html2pdf().set(opt).from(container.querySelector('#invoiceBody')).save().then(() => {
-            container.innerHTML = ''; 
-        });
-    }
+    function printOrder(id) { const o = orders.find(x=>x.id===id); if(o){ const p = window.open('','_blank'); p.document.write('<html><head><title>Order List</title></head><body>'+getInvoiceHTML(o)+'</body><script>window.onload=function(){window.print();window.close();}<\/script></html>'); p.document.close(); } }
+    function savePdfOrder(id) { const o = orders.find(x=>x.id===id); if(o){ document.getElementById('pdfContainer').innerHTML = getInvoiceHTML(o); html2pdf().set({margin:10,filename:`${o.refNo}_List.pdf`,jsPDF:{format:'a4'}}).from(document.getElementById('invoiceBody')).save().then(()=>document.getElementById('pdfContainer').innerHTML=''); } }
 
     function renderTable() {
-        const tbody = document.getElementById('orderTableBody');
-        tbody.innerHTML = '';
-        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-        const viewFilter = document.getElementById('viewFilter').value;
-
-        let filteredOrders = orders;
-        if (viewFilter === 'active') { filteredOrders = orders.filter(o => o.status !== 'completed'); } 
-        else if (viewFilter === 'history') { filteredOrders = orders.filter(o => o.status === 'completed'); }
-
-        filteredOrders = filteredOrders.filter(o => {
-            let partMatch = false;
-            if (o.items) {
-                partMatch = o.items.some(i => (i.part && i.part.toLowerCase().includes(searchTerm)) || (i.partNo && i.partNo.toLowerCase().includes(searchTerm)));
-            }
-            return o.name.toLowerCase().includes(searchTerm) || (o.car && o.car.toLowerCase().includes(searchTerm)) || 
-                   (o.chassis && o.chassis.toLowerCase().includes(searchTerm)) || (o.refNo && o.refNo.toLowerCase().includes(searchTerm)) ||
-                   (o.staff && o.staff.toLowerCase().includes(searchTerm)) || partMatch;
-        });
-
+        const tbody = document.getElementById('orderTableBody'); tbody.innerHTML = '';
+        const search = document.getElementById('searchInput').value.toLowerCase(); const viewFilter = document.getElementById('viewFilter').value;
+        let filteredOrders = orders.filter(o => { if (viewFilter === 'active' && o.status === 'completed') return false; if (viewFilter === 'history' && o.status !== 'completed') return false; const itemMatch = (o.items||[]).some(i => (i.part&&i.part.toLowerCase().includes(search)) || (i.partNo&&i.partNo.toLowerCase().includes(search))); return (o.name||'').toLowerCase().includes(search) || (o.car&&o.car.toLowerCase().includes(search)) || (o.refNo&&o.refNo.toLowerCase().includes(search)) || itemMatch; });
         filteredOrders.forEach(order => {
-            let itemsToDisplay = order.items || [];
-            let partsHtml = `<ul class="table-item-list">`;
-            let simplePartsListForWa = [];
+            let partsHtml = `<ul class="table-item-list">`; let waList = [];
+            (order.items||[]).forEach(item => {
+                const sub = parseFloat(item.subTotal) > 0 ? `<span style="float:right;font-size:12px;color:#64748b;">@ RM${item.unitPrice||0} = <b style="color:#0f172a;">RM${item.subTotal}</b></span>` : '';
+                let photoHtml = ''; if (item.photos && item.photos.length > 0) { photoHtml = `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;">`; item.photos.forEach(p => { photoHtml += `<img src="${p}" class="photo-thumbnail" onclick="showPhoto('${p}')" style="width:40px;height:40px;border:1px solid #cbd5e1;">`; }); photoHtml += `</div>`; }
+                partsHtml += `<li><div><span style="background:#e2e8f0;padding:2px 6px;border-radius:10px;font-size:11px;margin-right:4px;">${item.qty||1}x</span><strong>${item.part||'-'}</strong> <small>[${item.partNo||''}]</small>${sub}</div><small style="color:#64748b;">Brd: ${item.brand||'-'} • Sup: ${item.supplier||'-'}</small>${photoHtml}</li>`;
+                waList.push(`- ${item.qty||1}x ${item.part||'-'} [${item.partNo||''}]`);
+            }); partsHtml += `</ul>`;
             
-            itemsToDisplay.forEach(item => {
-                const qtyText = item.qty ? `<span style="background:#e2e8f0; padding:2px 6px; border-radius:10px; font-size:11px; font-weight:bold; margin-right:4px;">${item.qty}x</span>` : '';
-                const partDesc = item.part || 'No Desc';
-                const partNoText = item.partNo ? ` <small class="mono-text" style="color:#64748b;">[${item.partNo}]</small>` : '';
-                const brandText = item.brand ? ` • Brd: ${item.brand}` : '';
-                const supText = item.supplier ? ` • Sup: ${item.supplier}` : '';
-                
-                let priceDetails = "";
-                if (parseFloat(item.subTotal) > 0) {
-                    priceDetails = `<span style="float:right; font-size:12px; color:#64748b;">@ RM${item.unitPrice || 0} = <b style="color:#0f172a;">RM${item.subTotal}</b></span>`;
-                }
+            const msgR = `🧾 *MALAYSIA MOTOR COMPANY - RESIT / RECEIPT*\n\nPelanggan yang dihormati ${order.name},\nTerima kasih. Pesanan anda disahkan!\n\n*Order ID:* ${order.refNo}\n*Car:* ${order.car||''}\n*Items:*\n${waList.join('\n')}\n\n*Total:* RM${order.total}\n*Deposit:* RM${order.deposit}\n*Balance Due:* RM${order.balance}`;
+            const msgA = `*MALAYSIA MOTOR COMPANY*\n\nPelanggan yang dihormati ${order.name},\nBerita baik! Pesanan anda (${order.refNo}) telah tiba. Baki bayaran: RM${order.balance}. Dialu-alukan untuk mengambilnya.\n\nDear ${order.name},\nGood news! Your order (${order.refNo}) has arrived. Balance due: RM${order.balance}. You are welcome to collect it.`;
+            const msgN = `*MALAYSIA MOTOR COMPANY*\n\nPelanggan yang dihormati ${order.name},\nKami memohon maaf, pesanan anda (${order.refNo}) kehabisan stok. Sila hubungi kami untuk pemulangan deposit (RM${order.deposit}).\n\nDear ${order.name},\nApologies, your order (${order.refNo}) is out of stock. Contact us for a refund (RM${order.deposit}).`;
 
-                let photoHtml = '';
-                if (item.photos && item.photos.length > 0) {
-                    photoHtml = `<div style="display:flex; gap:4px; flex-wrap:wrap; margin-top:4px;">`;
-                    item.photos.forEach(p => { photoHtml += `<img src="${p}" class="photo-thumbnail" onclick="showPhoto('${p}')" style="width:40px; height:40px; border:1px solid #cbd5e1;">`; });
-                    photoHtml += `</div>`;
-                }
-                
-                partsHtml += `<li><div>${qtyText}<strong>${partDesc}</strong>${partNoText}${priceDetails}</div><small style="color:#64748b;">${brandText}${supText}</small>${photoHtml}</li>`;
-                
-                const waPrice = item.subTotal > 0 ? ` (RM${item.subTotal})` : '';
-                simplePartsListForWa.push(`- ${item.qty || 1}x ${partDesc} ${item.partNo ? '['+item.partNo+']' : ''}${waPrice}`);
-            });
-            partsHtml += `</ul>`;
-
-            const carText = order.car ? order.car + ' ' : '';
-            const chassisText = order.chassis ? '(' + order.chassis + ') ' : '';
-            const allItemsMsg = simplePartsListForWa.join('\n');
-            
-            const msgReceipt = `🧾 *MALAYSIA MOTOR COMPANY - RESIT / RECEIPT*\n\nPelanggan yang dihormati ${order.name},\nTerima kasih. Pesanan istimewa anda telah disahkan!\n\nDear ${order.name},\nThank you. Your special order has been confirmed!\n\n*No. Pesanan / Order ID:* ${order.refNo}\n*Kenderaan / Car:* ${carText}${chassisText}\n*Barang / Items:*\n${allItemsMsg}\n\n*Jumlah / Total:* RM${order.total}\n*Deposit:* RM${order.deposit}\n*Baki / Balance Due:* RM${order.balance}\n\n(Handled by: ${order.staff || '-'})`;
-            const msgArrived = `*MALAYSIA MOTOR COMPANY*\n\nPelanggan yang dihormati ${order.name},\nBerita baik! Pesanan anda (No. Pesanan: ${order.refNo}) telah selamat tiba di kedai kami. Baki bayaran adalah sebanyak RM${order.balance}. Anda dialu-alukan untuk datang mengambil pesanan anda pada bila-bila masa yang kelapangan. Terima kasih atas sokongan berterusan anda!\n\nDear ${order.name},\nGood news! Your order (${order.refNo}) has safely arrived at our shop. The balance due is RM${order.balance}. You are most welcome to drop by and collect it at your convenience. Thank you so much for your continued support!`;
-            const msgNotFound = `*MALAYSIA MOTOR COMPANY*\n\nPelanggan yang dihormati ${order.name},\nKami memohon maaf atas segala kesulitan, dukacita dimaklumkan bahawa barang pesanan anda (No. Pesanan: ${order.refNo}) pada masa ini kehabisan stok dan tidak dapat dibekalkan oleh pembekal kami. Sila hubungi kami untuk urusan pemulangan penuh deposit anda (RM${order.deposit}). Kami amat kesal atas kesulitan yang timbul dan amat menghargai kesabaran anda.\n\nDear ${order.name},\nWe sincerely apologize, but we regret to inform you that your ordered item(s) (${order.refNo}) are currently out of stock and cannot be sourced by our suppliers. Please kindly contact us to arrange for a full refund of your deposit (RM${order.deposit}). We are truly sorry for the inconvenience caused and deeply appreciate your understanding.`;
-            
-            const linkReceipt = order.phone ? `https://wa.me/${order.phone}?text=${encodeURIComponent(msgReceipt)}` : '#';
-            const linkArrived = order.phone ? `https://wa.me/${order.phone}?text=${encodeURIComponent(msgArrived)}` : '#';
-            const linkNotFound = order.phone ? `https://wa.me/${order.phone}?text=${encodeURIComponent(msgNotFound)}` : '#';
-
-            let statusHtml = order.status === 'completed' 
-                ? `<button class="status-btn status-completed">📦 Collected</button>`
-                : `<button class="status-btn ${order.status === 'waiting' ? 'status-waiting' : 'status-arrived'}" onclick="toggleStatus('${order.id}')">${order.status === 'waiting' ? '⏳ Waiting Supplier' : '✅ Stock Arrived'}</button>`;
-
-            const deleteBtnHtml = isAdmin ? `<button class="delete-btn" onclick="deleteOrder('${order.id}')">✖ Del</button>` : '';
-
-            const tr = document.createElement('tr');
-            tr.style.opacity = order.status === 'completed' ? '0.6' : '1';
-
-            tr.innerHTML = `
-                <td><span class="ref-badge">${order.refNo || 'N/A'}</span><br><small style="color:#64748b; margin-top:6px; display:inline-block; font-weight:700;">${order.date}</small><br>${order.staff ? `<span class="staff-badge">👤 ${order.staff}</span>` : ''}</td>
-                <td><strong style="color:#0f172a;">${order.name}</strong><br><small style="color:#3b82f6; font-weight:bold;">${order.phone}</small><br><div style="margin-top:8px; padding-top:8px; border-top:1px dashed #e2e8f0;"><strong style="color:#334155;">${order.car || '-'}</strong><br><span class="mono-text" style="color:#64748b; font-size:12px;">${order.chassis || ''}</span></div></td>
-                <td>${partsHtml}<div class="notes-text" style="margin-top:8px; color:#059669; font-weight:600;">${order.remarks ? '📝 Remarks: ' + order.remarks : ''}</div></td>
-                <td><small style="color:#64748b;">Total: RM${order.total}</small><br><small style="color:#64748b;">Paid: RM${order.deposit}</small><br><strong style="font-size:15px; margin-top:6px; display:inline-block; color:#0f172a;">Bal: RM${order.balance}</strong></td>
-                <td>${statusHtml}</td>
-                <td>
-                    <div class="action-btns" style="flex-direction:column; align-items:stretch;">
-                        ${order.phone && order.status !== 'completed' ? `
-                            <a href="${linkReceipt}" target="_blank" class="wa-btn wa-btn-receipt">📄 WA Receipt</a>
-                            <a href="${linkArrived}" target="_blank" class="wa-btn wa-btn-arrived">💬 Inform Arrived</a>
-                            <a href="${linkNotFound}" target="_blank" class="wa-btn wa-btn-cancel">❌ Item Not Found</a>
-                        ` : (order.status === 'completed' ? '<small style="color:#94a3b8; text-align:center; font-weight:bold;">Closed</small>' : '<small style="color:#94a3b8; text-align:center; font-weight:bold;">No Phone</small>')}
-                    </div>
-                </td>
-                <td>
-                    <div class="action-btns" style="margin-bottom:6px;">
-                        <button class="print-btn" onclick="printOrder('${order.id}')">🖨️ Print</button>
-                        <button class="pdf-btn" onclick="savePdfOrder('${order.id}')">📄 PDF</button>
-                    </div>
-                    <div class="action-btns">
-                        ${order.status !== 'completed' ? `<button class="complete-btn" onclick="markCompleted('${order.id}')">✔️ Done</button>` : `<button class="edit-btn" onclick="restoreOrder('${order.id}')">⏪ Return</button>`}
-                        <button class="edit-btn" onclick="editOrder('${order.id}')">✏️ Edit</button>
-                        ${deleteBtnHtml}
-                    </div>
-                </td>
-            `;
+            const tr = document.createElement('tr'); tr.style.opacity = order.status === 'completed' ? '0.6' : '1';
+            tr.innerHTML = `<td><span class="ref-badge">${order.refNo}</span><br><small style="color:#64748b;margin-top:6px;display:inline-block;font-weight:700;">${order.date}</small><br>${order.staff?`<span class="staff-badge">👤 ${order.staff}</span>`:''}</td><td><strong style="color:#0f172a;">${order.name}</strong><br><small style="color:#3b82f6;font-weight:bold;">${order.phone}</small><br><div style="margin-top:8px;padding-top:8px;border-top:1px dashed #e2e8f0;"><strong style="color:#334155;">${order.car||'-'}</strong><br><span class="mono-text" style="color:#64748b;font-size:12px;">${order.chassis||''}</span></div></td><td>${partsHtml}<div class="notes-text" style="margin-top:8px;color:#059669;font-weight:600;">${order.remarks?'📝 Remarks: '+order.remarks:''}</div></td><td><small style="color:#64748b;">Total: RM${order.total}</small><br><small style="color:#64748b;">Paid: RM${order.deposit}</small><br><strong style="font-size:15px;margin-top:6px;display:inline-block;color:#0f172a;">Bal: RM${order.balance}</strong></td><td><button class="status-btn ${order.status==='completed'?'status-completed':(order.status==='waiting'?'status-waiting':'status-arrived')}" onclick="toggleStatus('${order.id}')">${order.status==='waiting'?'⏳ Wait':(order.status==='arrived'?'✅ Arrived':'📦 Done')}</button></td><td><div class="action-btns" style="flex-direction:column;align-items:stretch;">${order.phone&&order.status!=='completed'?`<a href="https://wa.me/${order.phone}?text=${encodeURIComponent(msgR)}" target="_blank" class="wa-btn wa-btn-receipt">📄 WA Receipt</a><a href="https://wa.me/${order.phone}?text=${encodeURIComponent(msgA)}" target="_blank" class="wa-btn wa-btn-arrived">💬 Inform Arrived</a><a href="https://wa.me/${order.phone}?text=${encodeURIComponent(msgN)}" target="_blank" class="wa-btn wa-btn-cancel">❌ Item Not Found</a>`:''}</div></td><td><div class="action-btns" style="margin-bottom:6px;"><button class="print-btn" onclick="printOrder('${order.id}')">🖨️ Print</button><button class="pdf-btn" onclick="savePdfOrder('${order.id}')">📄 PDF</button></div><div class="action-btns">${order.status!=='completed'?`<button class="complete-btn" onclick="markCompleted('${order.id}')">✔️ Done</button>`:`<button class="edit-btn" onclick="restoreOrder('${order.id}')">⏪ Return</button>`}<button class="edit-btn" onclick="editOrder('${order.id}')">✏️ Edit</button>${isAdmin?`<button class="delete-btn" onclick="deleteOrder('${order.id}')">✖ Del</button>`:''}</div></td>`;
             tbody.appendChild(tr);
         });
     }
 
     function exportCSV() {
-        if(!isAdmin) return;
-        if(orders.length === 0) return alert("No data available to export.");
+        if(!isAdmin) return; if(orders.length === 0) return alert("No data available to export.");
         let csvContent = "data:text/csv;charset=utf-8,\uFEFFRef No,Order Date,Handled By,Customer Name,Phone,Car Model,Chassis No,All Parts,Total,Deposit,Balance,Status,Remarks\n";
-        orders.forEach(o => {
-            let allPartsText = o.items ? o.items.map(i => `${i.qty || 1}x ${i.part || i.partNo} (RM${i.subTotal})`).join(" + ") : "";
-            const row = `"${o.refNo}","${o.date}","${o.staff || ''}","${o.name}","${o.phone}","${o.car || ''}","${o.chassis || ''}","${allPartsText}","${o.total}","${o.deposit}","${o.balance}","${o.status}","${o.remarks}"`;
-            csvContent += row + "\n";
-        });
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", `MMC_Cloud_Database_${new Date().toISOString().split('T')[0]}.csv`);
+        orders.forEach(o => { let allPartsText = o.items ? o.items.map(i => `${i.qty||1}x ${i.part||i.partNo} (RM${i.subTotal})`).join(" + ") : ""; csvContent += `"${o.refNo}","${o.date}","${o.staff||''}","${o.name}","${o.phone}","${o.car||''}","${o.chassis||''}","${allPartsText}","${o.total}","${o.deposit}","${o.balance}","${o.status}","${o.remarks}"\n`; });
+        const link = document.createElement("a"); link.setAttribute("href", encodeURI(csvContent)); link.setAttribute("download", `MMC_Orders_${new Date().toISOString().split('T')[0]}.csv`);
         document.body.appendChild(link); link.click(); document.body.removeChild(link);
     }
 
     // ==========================================
-    // RESTOCK SYSTEM V36 (Strict V27 Baseline)
+    // RESTOCK SYSTEM V37 (With On Hand / Need Qty)
     // ==========================================
     function loadRestockData() {
         db.ref('restock').on('value', (snapshot) => {
             restockItems = [];
-            snapshot.forEach((childSnapshot) => {
-                restockItems.push({ id: childSnapshot.key, ...childSnapshot.val() });
-            });
+            snapshot.forEach((childSnapshot) => { restockItems.push({ id: childSnapshot.key, ...childSnapshot.val() }); });
             restockItems.sort((a,b) => b.timestamp - a.timestamp);
             renderRestockTable();
         });
@@ -1061,50 +606,38 @@
         const code = document.getElementById('r_code').value;
         const brand = document.getElementById('r_brand').value;
         const supp = document.getElementById('r_supp').value;
+        const onHandQty = document.getElementById('r_onHand').value || "0";
+        const needOrderQty = document.getElementById('r_needOrder').value || "1";
 
         if(!part && !code) return alert("Please enter at least a part description or item code.");
 
         const dateStr = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
         
         await db.ref('restock').push({
-            part, code, brand, supp, date: dateStr, timestamp: Date.now(), status: 'Not Yet Order'
+            part, code, brand, supp, onHandQty, needOrderQty, date: dateStr, timestamp: Date.now(), status: 'Not Yet Order'
         });
 
-        document.getElementById('r_part').value = '';
-        document.getElementById('r_code').value = '';
-        document.getElementById('r_brand').value = '';
-        document.getElementById('r_supp').value = '';
+        ['r_part','r_code','r_brand','r_supp','r_onHand','r_needOrder'].forEach(id => document.getElementById(id).value = '');
     }
 
-    async function markRestockOrdered(id) {
-        await db.ref('restock/' + id).update({ status: 'Ordered' });
-    }
+    async function markRestockOrdered(id) { await db.ref('restock/' + id).update({ status: 'Ordered' }); }
+    
+    // NEW: Return to "Not Yet Order"
+    async function returnToNotYet(id) { await db.ref('restock/' + id).update({ status: 'Not Yet Order' }); }
 
     async function deleteRestock(id) {
-        if(isAdmin && confirm("Delete this record permanently?")) {
-            await db.ref('restock/' + id).remove();
-        } else if (!isAdmin) {
-            alert("Only Boss/Admin can delete records.");
-        }
+        if(isAdmin && confirm("Delete this record permanently?")) { await db.ref('restock/' + id).remove(); } 
+        else if (!isAdmin) { alert("Only Boss/Admin can delete records."); }
     }
 
-    function clearRestockDate() {
-        document.getElementById('rDateFilter').value = '';
-        renderRestockTable();
-    }
+    function clearRestockDate() { document.getElementById('rDateFilter').value = ''; renderRestockTable(); }
 
     function renderRestockTable() {
-        const tbody = document.getElementById('restockTableBody');
-        tbody.innerHTML = '';
-        
+        const tbody = document.getElementById('restockTableBody'); tbody.innerHTML = '';
         const view = document.getElementById('rViewFilter').value;
         const dateVal = document.getElementById('rDateFilter').value;
-        
         let filterDateStr = "";
-        if (dateVal) {
-            const d = new Date(dateVal);
-            filterDateStr = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-        }
+        if (dateVal) { const d = new Date(dateVal); filterDateStr = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }); }
 
         currentRestockView = restockItems.filter(item => {
             const status = item.status || 'Not Yet Order';
@@ -1123,6 +656,8 @@
             let actionHtml = '';
             if (status !== 'Ordered') {
                 actionHtml += `<button class="complete-btn" onclick="markRestockOrdered('${item.id}')" style="width:100%; margin-bottom:4px;">✔️ Done</button>`;
+            } else {
+                actionHtml += `<button class="edit-btn" onclick="returnToNotYet('${item.id}')" style="width:100%; margin-bottom:4px;">⏪ Return</button>`;
             }
             if (isAdmin) {
                 actionHtml += `<button class="delete-btn" onclick="deleteRestock('${item.id}')" style="width:100%;">✖ Del</button>`;
@@ -1136,6 +671,8 @@
                 <td class="mono-text">${item.code || '-'}</td>
                 <td>${item.brand || '-'}</td>
                 <td>${item.supp || '-'}</td>
+                <td style="text-align:center; font-weight:bold;">${item.onHandQty || '0'}</td>
+                <td style="text-align:center; color:#ef4444; font-weight:bold;">${item.needOrderQty || '1'}</td>
                 <td style="text-align:center;">${statusHtml}</td>
                 <td><div class="action-btns" style="flex-direction:column;">${actionHtml}</div></td>
             `;
@@ -1143,39 +680,32 @@
         });
     }
 
-    // PDF and Print Generators
     function getRestockHTML() {
         let rows = '';
         currentRestockView.forEach((i, idx) => { 
             const status = i.status || 'Not Yet Order';
-            rows += `<tr><td style="text-align:center; padding:8px; border:1px solid #ccc;">${idx+1}</td><td style="padding:8px; border:1px solid #ccc;">${i.date}</td><td style="padding:8px; border:1px solid #ccc;"><strong>${i.part||'-'}</strong></td><td style="padding:8px; border:1px solid #ccc;">${i.code||'-'}</td><td style="padding:8px; border:1px solid #ccc;">${i.brand||'-'}</td><td style="padding:8px; border:1px solid #ccc;">${i.supp||'-'}</td><td style="text-align:center; padding:8px; border:1px solid #ccc;">${status}</td></tr>`; 
+            rows += `<tr><td style="text-align:center;">${idx+1}</td><td>${i.date}</td><td><strong>${i.part||'-'}</strong></td><td>${i.code||'-'}</td><td>${i.brand||'-'}</td><td>${i.supp||'-'}</td><td style="text-align:center;">${i.onHandQty||'0'}</td><td style="text-align:center; color:red; font-weight:bold;">${i.needOrderQty||'1'}</td><td style="text-align:center;">${status}</td></tr>`; 
         });
         let dateText = document.getElementById('rDateFilter').value ? document.getElementById('rDateFilter').value : "All Dates";
-        return `<style>body{font-family:sans-serif;padding:30px;color:#0f172a;} table{width:100%;border-collapse:collapse;margin-top:20px;font-size:12px;}</style><div id="rInvoiceBody"><h2 style="text-align:center; margin-bottom:5px;">RESTOCK SUMMARY REPORT</h2><p style="text-align:center; color:#555; margin-top:0;">Filtered Date: ${dateText}</p><table><thead><tr><th style="width:5%; padding:8px; border:1px solid #ccc; background:#f1f5f9;">No</th><th style="width:12%; padding:8px; border:1px solid #ccc; background:#f1f5f9;">Date</th><th style="padding:8px; border:1px solid #ccc; background:#f1f5f9; text-align:left;">Part</th><th style="padding:8px; border:1px solid #ccc; background:#f1f5f9; text-align:left;">Code</th><th style="padding:8px; border:1px solid #ccc; background:#f1f5f9; text-align:left;">Brand</th><th style="padding:8px; border:1px solid #ccc; background:#f1f5f9; text-align:left;">Supplier</th><th style="width:12%; padding:8px; border:1px solid #ccc; background:#f1f5f9;">Status</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+        return `<style>body{font-family:sans-serif;padding:30px;} table{width:100%;border-collapse:collapse;margin-top:20px;font-size:13px;} th,td{border:1px solid #ccc;padding:8px;} th{background:#f1f5f9;}</style><div id="rInvoiceBody"><h2 style="text-align:center; margin-bottom:5px;">RESTOCK SUMMARY REPORT</h2><p style="text-align:center; color:#555; margin-top:0;">Filtered Date: ${dateText}</p><table><thead><tr><th style="width:4%;">No</th><th style="width:10%;">Date</th><th style="text-align:left;">Part Description</th><th style="text-align:left;">Item Code</th><th style="text-align:left;">Brand</th><th style="text-align:left;">Supplier</th><th style="width:8%;">On Hand</th><th style="width:8%;">Order Qty</th><th style="width:10%;">Status</th></tr></thead><tbody>${rows}</tbody></table></div>`;
     }
     
     function printRestock() { const p = window.open('','_blank'); p.document.write(getRestockHTML()); p.document.close(); p.onload=()=>p.print(); }
     
-    function savePdfRestock() { document.getElementById('pdfContainer').innerHTML = getRestockHTML(); html2pdf().set({margin:10, filename:`Restock_Summary.pdf`, jsPDF:{format:'a4'}}).from(document.getElementById('rInvoiceBody')).save().then(()=>document.getElementById('pdfContainer').innerHTML=''); }
+    function savePdfRestock() { document.getElementById('pdfContainer').innerHTML = getRestockHTML(); html2pdf().set({margin:10, filename:`Restock_Summary.pdf`, jsPDF:{format:'a4', orientation:'landscape'}}).from(document.getElementById('rInvoiceBody')).save().then(()=>document.getElementById('pdfContainer').innerHTML=''); }
 
-    // WhatsApp Function
     function sendRestockWA(phone, bossName) {
-        if (currentRestockView.length === 0) {
-            alert("No items found for this view/date.");
-            return;
-        }
+        if (currentRestockView.length === 0) { alert("No items found for this view/date."); return; }
         let dateText = document.getElementById('rDateFilter').value ? document.getElementById('rDateFilter').value : "All Dates";
         let text = `📦 *MMC RESTOCK SUMMARY*\nTo: Boss ${bossName}\nDate Filter: ${dateText}\n\n`;
         let notYetCount = 0;
-        
         currentRestockView.forEach(i => {
             const status = i.status || 'Not Yet Order';
             if(status !== 'Ordered') {
-                text += `- ${i.part||''} [${i.code||''}] (Brd: ${i.brand||''}, Sup: ${i.supp||''})\n`;
+                text += `- ${i.part||''} [${i.code||''}] (Need: ${i.needOrderQty||'1'})\n`;
                 notYetCount++;
             }
         });
-        
         text += `\n*Total Pending Order:* ${notYetCount}`;
         window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank');
     }
