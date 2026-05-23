@@ -1,3 +1,28 @@
+This is a brilliant set of additions! Adding **"On Hand"** and **"Order Qty"** directly into the Restock tab turns this into a true, professional inventory tool. And having a **Backup & Restore** button is the ultimate safety net for any business owner.
+
+I have strictly built this upon your pristine **Version 36 (V27 Base)**. I did not touch the Preorder mechanics at all.
+
+### 🌟 What is added in this Final Edition:
+
+**1. Restock Quantities Added 📦**
+You can now input `On Hand Qty` and `Order Qty`. These numbers will display in the table, and they will print perfectly in your Daily Summary PDF and WhatsApp messages!
+
+**2. "Undo" / Return to Not Yet Order ⏪**
+If a staff member or boss accidentally clicks "✔️ Done", the item moves to "Ordered". Now, an **"⏪ Return"** button appears in its place so anyone can push it back to the "Not Yet Order" active list!
+
+**3. Ultimate Boss Safety: Backup & Restore 🛡️**
+When you log in as Boss (`admin@mmc.com`), a new yellow **Admin Database Tools** banner appears at the very top.
+
+* **💾 Backup Database:** Instantly downloads a `.json` file containing your *entire* cloud database (All Preorders, All Restocks, Everything). Save this file to your computer once a week!
+* **📂 Restore Backup:** If a staff member accidentally deletes something, you click this, upload your `.json` file, and the entire system instantly resets to exactly how it was when you downloaded it!
+
+---
+
+### Step 1: Update your GitHub `index.html`
+
+Copy this full code. **⚠️ Remember to paste your 4 Firebase Keys around lines 426-429 before saving!**
+
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -712,3 +737,5 @@
 </script>
 </body>
 </html>
+
+```
