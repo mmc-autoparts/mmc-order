@@ -9,6 +9,15 @@
     <meta name="apple-mobile-web-app-title" content="MMC Portal">
 
     <title>Malaysia Motor Company - Secure Portal</title>
+    <link rel="manifest" href="manifest.json">
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                .catch(err => console.log('Service Worker failed', err));
+            });
+        }
+    </script>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
