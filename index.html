@@ -13,7 +13,6 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <style>
         body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; background-color: #f1f5f9; margin: 0; padding: 20px; color: #334155; }
@@ -76,7 +75,7 @@
         button.cancel-btn { background-color: #64748b; color: white; border: none; padding: 14px; font-weight: bold; border-radius: 6px; cursor: pointer; width: 30%; font-size: 16px; display: none;}
         
         .top-controls { display: flex; gap: 12px; align-items: center; margin-top: 35px; margin-bottom: 18px; flex-wrap:wrap;}
-        .search-bar { padding: 12px 15px; width: 350px; border-radius: 20px; border: 1px solid #cbd5e1;}
+        .search-bar { padding: 12px 15px; width: 400px; border-radius: 20px; border: 1px solid #cbd5e1;}
         #exportBtn { background-color: #059669; color: white; border: none; padding: 12px 18px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-left: auto; display: none;}
         
         .table-responsive { width: 100%; overflow-x: auto; border-radius: 8px; border: 1px solid #e2e8f0; background: white;}
@@ -96,7 +95,6 @@
         .complete-btn { color: #059669; background: #d1fae5; }
         .convert-btn { color: #fff; background: #3b82f6; width: 100%; margin-bottom: 5px; box-shadow: 0 2px 4px rgba(59,130,246,0.3);}
         .print-btn { color: #334155; background: #f1f5f9; border: 1px solid #cbd5e1;}
-        .pdf-btn { color: #b91c1c; background: #fee2e2; border: 1px solid #fecaca;}
         
         .wa-btn { color: #fff; text-decoration: none; padding: 8px; border-radius: 4px; font-weight: 700; display: block; text-align: center; font-size: 12px; margin-bottom: 6px; cursor: pointer; border: none;}
         .wa-btn-receipt { background-color: #0ea5e9; }
@@ -156,7 +154,7 @@
 
 <div id="mainApp" class="container">
     <div class="header-flex">
-        <h2>Malaysia Motor Company <span class="version-badge">V48</span> <span id="adminBadge">👑 Boss View</span></h2>
+        <h2>Malaysia Motor Company <span class="version-badge">V49</span> <span id="adminBadge">👑 Boss View</span></h2>
         <div>
             <button class="sync-btn" onclick="forceDataSync()">🔄 Sync Cloud</button>
             <button class="logout-btn" onclick="logoutSystem()">🔒 Logout</button>
@@ -182,7 +180,7 @@
     
     <div id="ordersTab" class="tab-content active">
         <div class="form-grid">
-            <div><span class="label-text">Customer Name</span><input type="text" id="custName" placeholder="Name"></div>
+            <div><span class="label-text">Customer Name</span><input type="text" id="custName" placeholder="Name" list="customerList" oninput="checkCRM('name', 'custPhone', 'carPlate', 'custName', 'carModel', 'chassisNumber')"></div>
             <div><span class="label-text">WhatsApp Number</span><input type="text" id="custPhone" placeholder="60123456789" oninput="checkCRM('phone', 'custPhone', 'carPlate', 'custName', 'carModel', 'chassisNumber')"></div>
             <div><span class="label-text">Car Plate No.</span><input type="text" id="carPlate" placeholder="e.g. JDT1234" style="text-transform:uppercase;" oninput="checkCRM('plate', 'custPhone', 'carPlate', 'custName', 'carModel', 'chassisNumber')"></div>
             <div><span class="label-text">Car Model</span><input type="text" id="carModel" placeholder="e.g. Honda Civic"></div>
@@ -222,7 +220,7 @@
         </div>
 
         <div class="top-controls">
-            <input type="text" id="searchInput" class="search-bar" placeholder="🔍 Search Name, Plate, Item Code..." oninput="renderTable()">
+            <input type="text" id="searchInput" class="search-bar" placeholder="🔍 Search Name, Plate, Code, Remark, Staff..." oninput="renderTable()">
             <select id="viewFilter" onchange="renderTable()" style="font-weight: bold; color: #2563eb; padding: 12px; border-radius: 20px;">
                 <option value="active">Active Orders Only</option>
                 <option value="history">Completed History</option>
@@ -239,7 +237,7 @@
         <div class="table-responsive">
             <table>
                 <thead>
-                    <tr><th style="width:110px;">Doc No.</th><th style="width:180px;">Customer / Car</th><th>Ordered Parts Details</th><th style="width:130px;">Financials</th><th style="width:110px;">Status</th><th style="width:160px; text-align:center;">WhatsApp Notify</th><th style="width:150px; text-align:center;">Actions</th></tr>
+                    <tr><th style="width:110px;">Doc No.</th><th style="width:180px;">Customer / Car</th><th>Ordered Parts Details</th><th style="width:130px;">Financials</th><th style="width:110px;">Status</th><th style="width:160px; text-align:center;">WhatsApp Notify</th><th style="width:110px; text-align:center;">Actions</th></tr>
                 </thead>
                 <tbody id="orderTableBody"></tbody>
             </table>
@@ -248,7 +246,7 @@
 
     <div id="quoteTab" class="tab-content">
         <div class="form-grid" style="background: #faf5ff; padding: 20px; border-radius: 8px; border: 1px solid #e9d5ff;">
-            <div><span class="label-text">Customer Name</span><input type="text" id="qCustName" placeholder="Name"></div>
+            <div><span class="label-text">Customer Name</span><input type="text" id="qCustName" placeholder="Name" list="customerList" oninput="checkCRM('name', 'qCustPhone', 'qCarPlate', 'qCustName', 'qCarModel', 'qChassisNumber')"></div>
             <div><span class="label-text">WhatsApp Number</span><input type="text" id="qCustPhone" placeholder="60123456789" oninput="checkCRM('phone', 'qCustPhone', 'qCarPlate', 'qCustName', 'qCarModel', 'qChassisNumber')"></div>
             <div><span class="label-text">Car Plate No.</span><input type="text" id="qCarPlate" placeholder="e.g. JDT1234" style="text-transform:uppercase;" oninput="checkCRM('plate', 'qCustPhone', 'qCarPlate', 'qCustName', 'qCarModel', 'qChassisNumber')"></div>
             <div><span class="label-text">Car Model</span><input type="text" id="qCarModel" placeholder="e.g. Honda Civic"></div>
@@ -284,7 +282,7 @@
         </div>
 
         <div class="top-controls">
-            <input type="text" id="qSearchInput" class="search-bar" placeholder="🔍 Search Name, Plate, Quotations..." oninput="renderQTable()">
+            <input type="text" id="qSearchInput" class="search-bar" placeholder="🔍 Search Name, Plate, Code, Remark, Staff..." oninput="renderQTable()">
             <div style="display:flex; align-items:center; gap:8px;">
                 <span style="font-size:13px; font-weight:bold; color:#475569;">Date:</span>
                 <input type="date" id="quoteDateFilter" onchange="renderQTable()" style="padding:12px; border-radius:20px; width:160px; border:1px solid #cbd5e1;">
@@ -295,7 +293,7 @@
         <div class="table-responsive">
             <table>
                 <thead>
-                    <tr><th style="width:110px;">Quote No.</th><th style="width:180px;">Customer / Car</th><th>Quoted Parts Details</th><th style="width:130px;">Total Amount</th><th style="width:160px; text-align:center;">WhatsApp Send</th><th style="width:150px; text-align:center;">Actions</th></tr>
+                    <tr><th style="width:110px;">Quote No.</th><th style="width:180px;">Customer / Car</th><th>Quoted Parts Details</th><th style="width:130px;">Total Amount</th><th style="width:160px; text-align:center;">WhatsApp Send</th><th style="width:110px; text-align:center;">Actions</th></tr>
                 </thead>
                 <tbody id="quoteTableBody"></tbody>
             </table>
@@ -332,7 +330,6 @@
             
             <div style="margin-left:auto; display:flex; gap:10px; flex-wrap:wrap;">
                 <button class="print-btn" onclick="printRestock()" style="padding:10px 15px; border-radius:6px; font-weight:bold; cursor:pointer;">🖨️ Print</button>
-                <button class="pdf-btn" onclick="savePdfRestock()" style="padding:10px 15px; border-radius:6px; font-weight:bold; cursor:pointer;">📄 PDF</button>
                 <button class="wa-btn" style="background:#25D366; margin:0; padding:10px 15px; border-radius:6px; font-size:13px;" onclick="sendRestockWA('60194482580', 'Hock')">📲 WA Hock</button>
                 <button class="wa-btn" style="background:#25D366; margin:0; padding:10px 15px; border-radius:6px; font-size:13px;" onclick="sendRestockWA('60164401970', 'Kelvin')">📲 WA Kelvin</button>
             </div>
@@ -360,9 +357,9 @@
 </div>
 
 <div id="photoModal" onclick="closePhoto()"><img id="modalImg" src=""><div style="color:white; margin-top:15px; font-weight:bold; letter-spacing:1px;">Click anywhere to close</div></div>
-<div id="pdfContainer" style="position: absolute; left: -9999px; top: 0; width: 800px; background: white;"></div>
 
 <datalist id="partList"></datalist>
+<datalist id="customerList"></datalist>
 
 <script>
     // ------------------------------------------------------------------
@@ -385,41 +382,33 @@
 
     // Global variables
     let orders = []; let quotes = []; let restockItems = []; let currentRestockView = []; 
-    let productDictionary = []; 
+    let productDictionary = []; let customerDictionary = [];
     let editingId = null; let qEditingId = null; 
     let isDataLoaded = false; let isAdmin = false; 
     let itemMapIdCounter = 0; let itemPhotosMap = {}; 
     let qItemMapIdCounter = 0; let qItemPhotosMap = {}; 
 
-    // --- V48 CUSTOM DATE FORMATTER ---
     function getStandardDateStr(dateObj = new Date()) {
         const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
         let d = dateObj.getDate().toString().padStart(2, '0');
-        let m = months[dateObj.getMonth()];
-        let y = dateObj.getFullYear();
+        let m = months[dateObj.getMonth()]; let y = dateObj.getFullYear();
         return `${d} ${m} ${y}`;
     }
 
-    // --- SECURITY DEVICE LOCK ---
     const DEVICE_AUTH_KEY = "mmc_authorized_device_v1";
 
     function checkDeviceAuthorization() {
         if (localStorage.getItem(DEVICE_AUTH_KEY) === "true") {
-            document.getElementById('normalLoginBox').style.display = 'block';
-            document.getElementById('deviceLockBox').style.display = 'none';
+            document.getElementById('normalLoginBox').style.display = 'block'; document.getElementById('deviceLockBox').style.display = 'none';
         } else {
-            document.getElementById('normalLoginBox').style.display = 'none';
-            document.getElementById('deviceLockBox').style.display = 'block';
+            document.getElementById('normalLoginBox').style.display = 'none'; document.getElementById('deviceLockBox').style.display = 'block';
         }
     }
 
     function authorizeDevice() {
         let pin = prompt("Enter Master PIN to authorize this device:");
-        if (pin === "MMC888") {
-            localStorage.setItem(DEVICE_AUTH_KEY, "true");
-            alert("✅ Device Authorized Successfully!");
-            checkDeviceAuthorization();
-        } else if (pin !== null) { alert("❌ Incorrect PIN!"); }
+        if (pin === "MMC888") { localStorage.setItem(DEVICE_AUTH_KEY, "true"); alert("✅ Device Authorized Successfully!"); checkDeviceAuthorization(); } 
+        else if (pin !== null) { alert("❌ Incorrect PIN!"); }
     }
 
     window.onload = function() { checkDeviceAuthorization(); };
@@ -436,15 +425,13 @@
             document.getElementById('exportBtn').style.display = isAdmin ? 'block' : 'none';
             document.getElementById('adminBadge').style.display = isAdmin ? 'inline-block' : 'none';
             document.getElementById('adminTools').style.display = isAdmin ? 'flex' : 'none';
-            document.getElementById('loginScreen').style.display = 'none';
-            document.getElementById('mainApp').style.display = 'block';
-            document.getElementById('loginError').style.display = 'none';
-            document.getElementById('loginBtnTrigger').innerText = "Secure Login";
+            document.getElementById('loginScreen').style.display = 'none'; document.getElementById('mainApp').style.display = 'block';
+            document.getElementById('loginError').style.display = 'none'; document.getElementById('loginBtnTrigger').innerText = "Secure Login";
             forceDataSync();
             if (!isDataLoaded) { addNewItemBlock(); addQItemBlock(); isDataLoaded = true; }
         } else {
             document.getElementById('loginScreen').style.display = 'flex'; document.getElementById('mainApp').style.display = 'none';
-            isAdmin = false; orders = []; restockItems = []; quotes = []; productDictionary = [];
+            isAdmin = false; orders = []; restockItems = []; quotes = []; productDictionary = []; customerDictionary = [];
             db.ref('orders').off(); db.ref('restock').off(); db.ref('quotations').off(); checkDeviceAuthorization(); 
         }
     });
@@ -464,51 +451,51 @@
         loadDatabaseData(); loadRestockData(); loadQuoteData();
     }
 
+    // ==========================================
+    // V49: DUAL-DICTIONARY ENGINE (Product & Customer)
+    // ==========================================
     function checkCRM(type, phoneId, plateId, nameId, carId, chassisId) {
         let phoneEl = document.getElementById(phoneId); let plateEl = document.getElementById(plateId);
         let nameEl = document.getElementById(nameId); let carEl = document.getElementById(carId); let chasEl = document.getElementById(chassisId);
         
         let found = null;
         if (type === 'phone') {
-            let phoneVal = phoneEl.value.replace(/[^0-9]/g, '');
-            if (phoneVal.length < 8) return;
+            let phoneVal = phoneEl.value.replace(/[^0-9]/g, ''); if (phoneVal.length < 8) return;
             found = orders.find(o => o.phone === phoneVal) || quotes.find(q => q.phone === phoneVal);
         } else if (type === 'plate') {
-            let plateVal = plateEl.value.trim().toUpperCase().replace(/\s/g, '');
-            if (plateVal.length < 3) return; 
-            found = orders.find(o => o.plate && o.plate.replace(/\s/g, '').toUpperCase() === plateVal) || 
-                    quotes.find(q => q.plate && q.plate.replace(/\s/g, '').toUpperCase() === plateVal);
+            let plateVal = plateEl.value.trim().toUpperCase().replace(/\s/g, ''); if (plateVal.length < 3) return; 
+            found = orders.find(o => o.plate && o.plate.replace(/\s/g, '').toUpperCase() === plateVal) || quotes.find(q => q.plate && q.plate.replace(/\s/g, '').toUpperCase() === plateVal);
+        } else if (type === 'name') {
+            let nameVal = nameEl.value.trim().toUpperCase(); if (nameVal.length < 3) return;
+            found = orders.find(o => o.name && o.name.toUpperCase() === nameVal) || quotes.find(q => q.name && q.name.toUpperCase() === nameVal);
         }
         
         if (found) {
-            if (!nameEl.value && found.name) nameEl.value = found.name;
+            if (type !== 'name' && !nameEl.value && found.name) nameEl.value = found.name;
             if (!carEl.value && found.car) carEl.value = found.car;
             if (!chasEl.value && found.chassis) chasEl.value = found.chassis;
-            if (type === 'phone' && !plateEl.value && found.plate) plateEl.value = found.plate;
-            if (type === 'plate' && !phoneEl.value && found.phone) phoneEl.value = found.phone;
+            if (type !== 'phone' && !phoneEl.value && found.phone) phoneEl.value = found.phone;
+            if (type !== 'plate' && !plateEl.value && found.plate) plateEl.value = found.plate;
         }
     }
 
-    function buildProductDictionary() {
-        let dict = {};
-        const scanItems = (itemsArray) => {
-            (itemsArray || []).forEach(i => {
-                if(i.part && i.part.trim() !== '') {
-                    let key = i.part.trim().toUpperCase();
-                    if(!dict[key]) dict[key] = { part: i.part, partNo: i.partNo, brand: i.brand, supplier: i.supplier, price: i.unitPrice };
-                }
-            });
-        };
+    function buildDictionaries() {
+        // Product Logic
+        let pDict = {};
+        const scanItems = (itemsArray) => { (itemsArray || []).forEach(i => { if(i.part && i.part.trim() !== '') { let key = i.part.trim().toUpperCase(); if(!pDict[key]) pDict[key] = { part: i.part, partNo: i.partNo, brand: i.brand, supplier: i.supplier, price: i.unitPrice }; } }); };
         orders.forEach(o => scanItems(o.items)); quotes.forEach(q => scanItems(q.items));
-        restockItems.forEach(r => {
-            if(r.part && r.part.trim() !== '') {
-                let key = r.part.trim().toUpperCase();
-                if(!dict[key]) dict[key] = { part: r.part, partNo: r.code, brand: r.brand, supplier: r.supp, price: '' };
-            }
-        });
-        productDictionary = Object.values(dict);
-        let dl = document.getElementById('partList'); dl.innerHTML = '';
-        productDictionary.forEach(p => { let opt = document.createElement('option'); opt.value = p.part; dl.appendChild(opt); });
+        restockItems.forEach(r => { if(r.part && r.part.trim() !== '') { let key = r.part.trim().toUpperCase(); if(!pDict[key]) pDict[key] = { part: r.part, partNo: r.code, brand: r.brand, supplier: r.supp, price: '' }; } });
+        productDictionary = Object.values(pDict);
+        let pList = document.getElementById('partList'); pList.innerHTML = '';
+        productDictionary.forEach(p => { let opt = document.createElement('option'); opt.value = p.part; pList.appendChild(opt); });
+
+        // V49 Customer Logic
+        let cDict = {};
+        orders.forEach(o => { if(o.name && o.name.trim() !== '') cDict[o.name.trim().toUpperCase()] = o; });
+        quotes.forEach(q => { if(q.name && q.name.trim() !== '') cDict[q.name.trim().toUpperCase()] = q; });
+        customerDictionary = Object.values(cDict);
+        let cList = document.getElementById('customerList'); cList.innerHTML = '';
+        customerDictionary.forEach(c => { let opt = document.createElement('option'); opt.value = c.name; cList.appendChild(opt); });
     }
 
     function autoFillPartDetails(inputEl, rowId) {
@@ -532,24 +519,27 @@
         }
     }
 
+    // ==========================================
+    // DATA LOADERS
+    // ==========================================
     function loadDatabaseData() {
         db.ref('orders').on('value', (snapshot) => {
             orders = []; snapshot.forEach((child) => { orders.push({ id: child.key, ...child.val() }); });
-            orders.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0)); buildProductDictionary(); renderTable();
+            orders.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0)); buildDictionaries(); renderTable();
         });
     }
 
     function loadQuoteData() {
         db.ref('quotations').on('value', (snapshot) => {
             quotes = []; snapshot.forEach((child) => { quotes.push({ id: child.key, ...child.val() }); });
-            quotes.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0)); buildProductDictionary(); renderQTable();
+            quotes.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0)); buildDictionaries(); renderQTable();
         });
     }
 
     function loadRestockData() {
         db.ref('restock').on('value', (snapshot) => {
             restockItems = []; snapshot.forEach((child) => { restockItems.push({ id: child.key, ...child.val() }); });
-            restockItems.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0)); buildProductDictionary(); renderRestockTable();
+            restockItems.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0)); buildDictionaries(); renderRestockTable();
         });
     }
 
@@ -601,6 +591,7 @@
         itemMapIdCounter++; const currentId = 'item_row_' + itemMapIdCounter;
         itemPhotosMap[currentId] = data && data.photos ? [...data.photos] : [];
         const container = document.getElementById('dynamicItemsContainer'); const isFirst = container.children.length === 0;
+
         const html = `<div class="pos-table-row" id="${currentId}"><div class="row-num">0</div><div><span class="mobile-label">Part Needed</span><input type="text" class="i-part pos-input" placeholder="Part Desc" value="${data ? data.part : ''}" list="partList" onchange="autoFillPartDetails(this, '${currentId}')"></div><div><span class="mobile-label">Item Code / OEM No</span><input type="text" class="i-partNo pos-input" placeholder="OEM Code" value="${data && data.partNo ? data.partNo : ''}"></div><div><span class="mobile-label">Brand</span><input type="text" class="i-brand pos-input" placeholder="Brand" value="${data && data.brand ? data.brand : ''}"></div><div><span class="mobile-label">Supplier</span><input type="text" class="i-supplier pos-input" placeholder="Supplier" value="${data && data.supplier ? data.supplier : ''}"></div><div class="mobile-grid-3"><div><span class="mobile-label">Qty</span><input type="number" class="i-qty pos-input" placeholder="1" value="${data && data.qty ? data.qty : '1'}" oninput="calcRowTotal('${currentId}')" style="text-align:center;"></div><div><span class="mobile-label">U.Price (RM)</span><input type="number" class="i-unitPrice pos-input" placeholder="0.00" value="${data && data.unitPrice ? data.unitPrice : ''}" oninput="calcRowTotal('${currentId}')"></div><div><span class="mobile-label">Total (RM)</span><input type="number" class="i-subTotal pos-input readonly-input" placeholder="0.00" value="${data && data.subTotal ? data.subTotal : ''}" readonly></div></div><div><span class="mobile-label">ETA Date</span><input type="date" class="i-eta pos-input" value="${data && data.eta ? data.eta : ''}"></div><div style="display:flex; justify-content:center; align-items:center;"><label class="photo-upload-btn">📷 <span id="count_${currentId}">${itemPhotosMap[currentId].length}</span>/5<input type="file" accept="image/*" multiple onchange="processItemPhotos(event, '${currentId}')" style="display:none;"></label></div><div>${!isFirst || data !== null ? `<button type="button" class="remove-row-btn" onclick="removeItemBlock('${currentId}')">✖</button>` : `<div style="height:35px;"></div>`}</div><div id="gallery_${currentId}" class="row-gallery"></div></div>`;
         container.insertAdjacentHTML('beforeend', html); renderGalleryUI(currentId); updateRowNumbers(); if(data) calcRowTotal(currentId); 
     }
@@ -701,14 +692,6 @@
             p.document.close(); p.focus(); setTimeout(() => { p.print(); p.close(); }, 350); 
         } 
     }
-    
-    function savePdfOrder(id) { 
-        const o = orders.find(x=>x.id===id); 
-        if(o){ 
-            const element = document.createElement('div'); element.innerHTML = getInvoiceHTML(o);
-            html2pdf().set({margin:10,filename:`${o.refNo}_List.pdf`,jsPDF:{format:'a4'}}).from(element).save(); 
-        } 
-    }
 
     function clearDateFilter(type) {
         if(type === 'order') { document.getElementById('orderDateFilter').value = ''; renderTable(); }
@@ -735,8 +718,9 @@
             if (viewFilter === 'history' && o.status !== 'completed') return false; 
             if (filterDateStr && o.date !== filterDateStr) return false;
 
+            // V49 Search Upgrade: Added remark and staff
             const itemMatch = (o.items||[]).some(i => (i.part&&i.part.toLowerCase().includes(search)) || (i.partNo&&i.partNo.toLowerCase().includes(search))); 
-            return (o.name||'').toLowerCase().includes(search) || (o.car&&o.car.toLowerCase().includes(search)) || (o.refNo&&o.refNo.toLowerCase().includes(search)) || (o.plate&&o.plate.toLowerCase().includes(search)) || itemMatch; 
+            return (o.name||'').toLowerCase().includes(search) || (o.car&&o.car.toLowerCase().includes(search)) || (o.refNo&&o.refNo.toLowerCase().includes(search)) || (o.plate&&o.plate.toLowerCase().includes(search)) || (o.remarks&&o.remarks.toLowerCase().includes(search)) || (o.staff&&o.staff.toLowerCase().includes(search)) || itemMatch; 
         });
 
         filteredOrders.forEach(order => {
@@ -759,7 +743,7 @@
             const tr = document.createElement('tr'); tr.style.opacity = order.status === 'completed' ? '0.6' : '1';
             const plateHtml = order.plate ? `<span style="background:#fef08a; color:#b45309; padding:2px 6px; border-radius:4px; font-weight:bold; font-size:12px; letter-spacing:1px;">${order.plate}</span><br>` : '';
 
-            tr.innerHTML = `<td><span class="ref-badge">${order.refNo}</span><br><small style="color:#64748b;margin-top:6px;display:inline-block;font-weight:700;">${order.date}</small><br>${order.staff?`<span class="staff-badge">👤 ${order.staff}</span>`:''}</td><td><strong style="color:#0f172a;">${order.name}</strong><br><small style="color:#3b82f6;font-weight:bold;">${order.phone}</small><br><div style="margin-top:8px;padding-top:8px;border-top:1px dashed #e2e8f0;">${plateHtml}<strong style="color:#334155; font-size:13px; display:inline-block; margin-top:4px;">${order.car||'-'}</strong> <span class="mono-text" style="color:#64748b;font-size:11px;">${order.chassis?'('+order.chassis+')':''}</span></div></td><td>${partsHtml}<div class="notes-text" style="margin-top:8px;color:#059669;font-weight:600;">${order.remarks?'📝 Remarks: '+order.remarks:''}</div></td><td><small style="color:#64748b;">Total: RM${order.total}</small><br><small style="color:#64748b;">Paid: RM${order.deposit}</small><br><strong style="font-size:15px;margin-top:6px;display:inline-block;color:#0f172a;">Bal: RM${order.balance}</strong></td><td><button class="status-btn ${order.status==='completed'?'status-completed':(order.status==='waiting'?'status-waiting':'status-arrived')}" onclick="toggleStatus('${order.id}')">${order.status==='waiting'?'⏳ Wait':(order.status==='arrived'?'✅ Arrived':'📦 Done')}</button></td><td><div class="action-btns" style="flex-direction:column;align-items:stretch;">${order.phone&&order.status!=='completed'?`<a href="https://wa.me/${order.phone}?text=${encodeURIComponent(msgR)}" target="_blank" class="wa-btn wa-btn-receipt">📄 WA Receipt</a><a href="https://wa.me/${order.phone}?text=${encodeURIComponent(msgA)}" target="_blank" class="wa-btn wa-btn-arrived">💬 Inform Arrived</a><a href="https://wa.me/${order.phone}?text=${encodeURIComponent(msgN)}" target="_blank" class="wa-btn wa-btn-cancel">❌ Item Not Found</a>`:''}</div></td><td><div class="action-btns" style="margin-bottom:6px;"><button class="print-btn" onclick="printOrder('${order.id}')">🖨️ Print</button><button class="pdf-btn" onclick="savePdfOrder('${order.id}')">📄 PDF</button></div><div class="action-btns">${order.status!=='completed'?`<button class="complete-btn" onclick="markCompleted('${order.id}')">✔️ Done</button>`:`<button class="edit-btn" onclick="restoreOrder('${order.id}')">⏪ Return</button>`}<button class="edit-btn" onclick="editOrder('${order.id}')">✏️ Edit</button>${isAdmin?`<button class="delete-btn" onclick="deleteOrder('${order.id}')">✖ Del</button>`:''}</div></td>`;
+            tr.innerHTML = `<td><span class="ref-badge">${order.refNo}</span><br><small style="color:#64748b;margin-top:6px;display:inline-block;font-weight:700;">${order.date}</small><br>${order.staff?`<span class="staff-badge">👤 ${order.staff}</span>`:''}</td><td><strong style="color:#0f172a;">${order.name}</strong><br><small style="color:#3b82f6;font-weight:bold;">${order.phone}</small><br><div style="margin-top:8px;padding-top:8px;border-top:1px dashed #e2e8f0;">${plateHtml}<strong style="color:#334155; font-size:13px; display:inline-block; margin-top:4px;">${order.car||'-'}</strong> <span class="mono-text" style="color:#64748b;font-size:11px;">${order.chassis?'('+order.chassis+')':''}</span></div></td><td>${partsHtml}<div class="notes-text" style="margin-top:8px;color:#059669;font-weight:600;">${order.remarks?'📝 Remarks: '+order.remarks:''}</div></td><td><small style="color:#64748b;">Total: RM${order.total}</small><br><small style="color:#64748b;">Paid: RM${order.deposit}</small><br><strong style="font-size:15px;margin-top:6px;display:inline-block;color:#0f172a;">Bal: RM${order.balance}</strong></td><td><button class="status-btn ${order.status==='completed'?'status-completed':(order.status==='waiting'?'status-waiting':'status-arrived')}" onclick="toggleStatus('${order.id}')">${order.status==='waiting'?'⏳ Wait':(order.status==='arrived'?'✅ Arrived':'📦 Done')}</button></td><td><div class="action-btns" style="flex-direction:column;align-items:stretch;">${order.phone&&order.status!=='completed'?`<a href="https://wa.me/${order.phone}?text=${encodeURIComponent(msgR)}" target="_blank" class="wa-btn wa-btn-receipt">📄 WA Receipt</a><a href="https://wa.me/${order.phone}?text=${encodeURIComponent(msgA)}" target="_blank" class="wa-btn wa-btn-arrived">💬 Inform Arrived</a><a href="https://wa.me/${order.phone}?text=${encodeURIComponent(msgN)}" target="_blank" class="wa-btn wa-btn-cancel">❌ Item Not Found</a>`:''}</div></td><td><div class="action-btns" style="margin-bottom:6px;"><button class="print-btn" onclick="printOrder('${order.id}')">🖨️ Print</button></div><div class="action-btns">${order.status!=='completed'?`<button class="complete-btn" onclick="markCompleted('${order.id}')">✔️ Done</button>`:`<button class="edit-btn" onclick="restoreOrder('${order.id}')">⏪ Return</button>`}<button class="edit-btn" onclick="editOrder('${order.id}')">✏️ Edit</button>${isAdmin?`<button class="delete-btn" onclick="deleteOrder('${order.id}')">✖ Del</button>`:''}</div></td>`;
             tbody.appendChild(tr);
         });
     }
@@ -779,7 +763,7 @@
     }
 
     // ==========================================
-    // QUOTATION SYSTEM (V47)
+    // QUOTATION SYSTEM (V49)
     // ==========================================
     function calcQRowTotal(rowId) {
         const row = document.getElementById(rowId); if(!row) return;
@@ -897,8 +881,10 @@
 
         let filteredQuotes = quotes.filter(q => { 
             if (filterDateStr && q.date !== filterDateStr) return false;
+            
+            // V49 Search Upgrade: Added remark and staff
             const itemMatch = (q.items||[]).some(i => (i.part&&i.part.toLowerCase().includes(search)) || (i.partNo&&i.partNo.toLowerCase().includes(search))); 
-            return (q.name||'').toLowerCase().includes(search) || (q.car&&q.car.toLowerCase().includes(search)) || (q.refNo&&q.refNo.toLowerCase().includes(search)) || (q.plate&&q.plate.toLowerCase().includes(search)) || itemMatch; 
+            return (q.name||'').toLowerCase().includes(search) || (q.car&&q.car.toLowerCase().includes(search)) || (q.refNo&&q.refNo.toLowerCase().includes(search)) || (q.plate&&q.plate.toLowerCase().includes(search)) || (q.remarks&&q.remarks.toLowerCase().includes(search)) || (q.staff&&q.staff.toLowerCase().includes(search)) || itemMatch; 
         });
         
         filteredQuotes.forEach(quote => {
@@ -919,7 +905,7 @@
             const tr = document.createElement('tr');
             const plateHtml = quote.plate ? `<span style="background:#fef08a; color:#b45309; padding:2px 6px; border-radius:4px; font-weight:bold; font-size:12px; letter-spacing:1px;">${quote.plate}</span><br>` : '';
 
-            tr.innerHTML = `<td><span class="ref-badge" style="background:#f3e8ff; color:#6d28d9; border:1px solid #d8b4fe;">${quote.refNo}</span><br><small style="color:#64748b;margin-top:6px;display:inline-block;font-weight:700;">${quote.date}</small><br>${quote.staff?`<span class="staff-badge">👤 ${quote.staff}</span>`:''}</td><td><strong style="color:#0f172a;">${quote.name}</strong><br><small style="color:#3b82f6;font-weight:bold;">${quote.phone}</small><br><div style="margin-top:8px;padding-top:8px;border-top:1px dashed #e2e8f0;">${plateHtml}<strong style="color:#334155; font-size:13px; display:inline-block; margin-top:4px;">${quote.car||'-'}</strong> <span class="mono-text" style="color:#64748b;font-size:12px;">${quote.chassis||''}</span></div></td><td>${partsHtml}<div class="notes-text" style="margin-top:8px;color:#059669;font-weight:600;">${quote.remarks?'📝 Remarks: '+quote.remarks:''}</div></td><td><strong style="font-size:18px;color:#0f172a;">RM${quote.total}</strong></td><td><div class="action-btns"><a href="https://wa.me/${quote.phone}?text=${encodeURIComponent(msgQ)}" target="_blank" class="wa-btn wa-btn-quote" style="width:100%;">💬 Send Quotation</a></div></td><td><div class="action-btns"><button class="convert-btn" onclick="convertToPreorder('${quote.id}')">➡️ Convert to Order</button></div><div class="action-btns" style="margin-bottom:6px;"><button class="print-btn" onclick="printQuote('${quote.id}')">🖨️</button><button class="pdf-btn" onclick="savePdfQuote('${quote.id}')">📄</button></div><div class="action-btns"><button class="edit-btn" onclick="editQuote('${quote.id}')">✏️</button>${isAdmin?`<button class="delete-btn" onclick="deleteQuote('${quote.id}')">✖</button>`:''}</div></td>`;
+            tr.innerHTML = `<td><span class="ref-badge" style="background:#f3e8ff; color:#6d28d9; border:1px solid #d8b4fe;">${quote.refNo}</span><br><small style="color:#64748b;margin-top:6px;display:inline-block;font-weight:700;">${quote.date}</small><br>${quote.staff?`<span class="staff-badge">👤 ${quote.staff}</span>`:''}</td><td><strong style="color:#0f172a;">${quote.name}</strong><br><small style="color:#3b82f6;font-weight:bold;">${quote.phone}</small><br><div style="margin-top:8px;padding-top:8px;border-top:1px dashed #e2e8f0;">${plateHtml}<strong style="color:#334155; font-size:13px; display:inline-block; margin-top:4px;">${quote.car||'-'}</strong> <span class="mono-text" style="color:#64748b;font-size:12px;">${quote.chassis||''}</span></div></td><td>${partsHtml}<div class="notes-text" style="margin-top:8px;color:#059669;font-weight:600;">${quote.remarks?'📝 Remarks: '+quote.remarks:''}</div></td><td><strong style="font-size:18px;color:#0f172a;">RM${quote.total}</strong></td><td><div class="action-btns"><a href="https://wa.me/${quote.phone}?text=${encodeURIComponent(msgQ)}" target="_blank" class="wa-btn wa-btn-quote" style="width:100%;">💬 Send Quotation</a></div></td><td><div class="action-btns"><button class="convert-btn" onclick="convertToPreorder('${quote.id}')">➡️ Convert to Order</button></div><div class="action-btns" style="margin-bottom:6px;"><button class="print-btn" onclick="printQuote('${quote.id}')">🖨️ Print</button></div><div class="action-btns"><button class="edit-btn" onclick="editQuote('${quote.id}')">✏️ Edit</button>${isAdmin?`<button class="delete-btn" onclick="deleteQuote('${quote.id}')">✖ Del</button>`:''}</div></td>`;
             tbody.appendChild(tr);
         });
     }
@@ -942,26 +928,10 @@
             p.document.close(); p.focus(); setTimeout(() => { p.print(); p.close(); }, 350);
         } 
     }
-    
-    function savePdfQuote(id) { 
-        const q = quotes.find(x=>x.id===id); 
-        if(q){ 
-            const element = document.createElement('div'); element.innerHTML = getQuoteHTML(q);
-            html2pdf().set({margin:10,filename:`${q.refNo}_Quote.pdf`,jsPDF:{format:'a4'}}).from(element).save(); 
-        } 
-    }
 
     // ==========================================
     // RESTOCK SYSTEM
     // ==========================================
-    function loadRestockData() {
-        db.ref('restock').on('value', (snapshot) => {
-            restockItems = []; snapshot.forEach((child) => { restockItems.push({ id: child.key, ...child.val() }); });
-            restockItems.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
-            buildProductDictionary(); renderRestockTable();
-        });
-    }
-
     async function addRestockItem() {
         const part = document.getElementById('r_part').value; const code = document.getElementById('r_code').value;
         const brand = document.getElementById('r_brand').value; const supp = document.getElementById('r_supp').value;
@@ -975,12 +945,13 @@
     async function markRestockOrdered(id) { await db.ref('restock/' + id).update({ status: 'Ordered' }); }
     async function returnToNotYet(id) { await db.ref('restock/' + id).update({ status: 'Not Yet Order' }); }
     async function deleteRestock(id) { if(isAdmin && confirm("Delete this record permanently?")) { await db.ref('restock/' + id).remove(); } else if (!isAdmin) { alert("Only Boss/Admin can delete records."); } }
-    
+    function clearRestockDate() { document.getElementById('rDateFilter').value = ''; renderRestockTable(); }
+
     function renderRestockTable() {
         const tbody = document.getElementById('restockTableBody'); tbody.innerHTML = '';
-        const view = document.getElementById('rViewFilter').value; 
-        const dateVal = document.getElementById('rDateFilter').value;
-        const filterDateStr = getFormattedDateForFilter(dateVal);
+        const view = document.getElementById('rViewFilter').value; const dateVal = document.getElementById('rDateFilter').value;
+        let filterDateStr = "";
+        if (dateVal) { const d = new Date(dateVal); filterDateStr = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }); }
 
         currentRestockView = restockItems.filter(item => {
             const status = item.status || 'Not Yet Order';
@@ -1014,11 +985,6 @@
         const p = window.open('', '_blank'); 
         p.document.write('<html><head><title>Restock</title></head><body>'+getRestockHTML()+'</body></html>'); 
         p.document.close(); p.focus(); setTimeout(() => { p.print(); p.close(); }, 350);
-    }
-    
-    function savePdfRestock() { 
-        const element = document.createElement('div'); element.innerHTML = getRestockHTML();
-        html2pdf().set({margin:10, filename:`Restock_Summary.pdf`, jsPDF:{format:'a4', orientation:'landscape'}}).from(element).save(); 
     }
 
     function sendRestockWA(phone, bossName) {
