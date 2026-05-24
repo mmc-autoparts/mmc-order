@@ -112,7 +112,6 @@
         .table-item-list { margin: 0; padding-left: 15px; }
         .table-item-list li { margin-bottom: 8px; border-bottom: 1px dashed #e2e8f0; padding-bottom: 8px;}
 
-        /* Restock Upgraded Layout */
         .restock-row { display: grid; grid-template-columns: 2fr 1.5fr 1fr 1fr 80px 80px 100px; gap: 10px; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 15px; align-items: end;}
 
         #photoModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.9); z-index: 1000; text-align: center; cursor: pointer; }
@@ -158,7 +157,7 @@
 
 <div id="mainApp" class="container">
     <div class="header-flex">
-        <h2>Malaysia Motor Company <span class="version-badge">V43</span> <span id="adminBadge">👑 Boss View</span></h2>
+        <h2>Malaysia Motor Company <span class="version-badge">V44</span> <span id="adminBadge">👑 Boss View</span></h2>
         <div>
             <button class="sync-btn" onclick="forceDataSync()">🔄 Sync Cloud</button>
             <button class="logout-btn" onclick="logoutSystem()">🔒 Logout</button>
@@ -477,9 +476,6 @@
         });
     }
 
-    // ==========================================
-    // BACKUP & RESTORE DATABASE (BOSS ONLY)
-    // ==========================================
     async function backupDatabase() {
         if(!isAdmin) return;
         const snap = await db.ref('/').once('value');
@@ -514,9 +510,6 @@
         reader.readAsText(file);
     }
 
-    // ==========================================
-    // PREORDER LOGIC
-    // ==========================================
     function calcRowTotal(rowId) {
         const row = document.getElementById(rowId); if(!row) return;
         const qty = parseFloat(row.querySelector('.i-qty').value) || 0; const price = parseFloat(row.querySelector('.i-unitPrice').value) || 0;
@@ -621,14 +614,14 @@
     async function restoreOrder(id) { await db.ref('orders/' + id).update({ status: 'arrived' }); }
     async function deleteOrder(id) { if(isAdmin && confirm("Delete order?")) await db.ref('orders/' + id).remove(); else if(!isAdmin) alert("Admin only."); }
 
-    // ====== FIXED PDF LAYOUT & COLUMNS (V42) ======
+    // ====== FIXED PDF LAYOUT & COLUMNS ======
     function getInvoiceHTML(order) {
         let itemsHtml = ''; 
         (order.items || []).forEach((item, index) => { 
-            // V41 Fix: Hide dash if empty
-            const pNo = item.partNo && item.partNo.trim() !== '' ? item.partNo : '-';
-            const brand = item.brand && item.brand.trim() !== '' ? item.brand : '-';
-            const supp = item.supplier && item.supplier.trim() !== '' ? item.supplier : '-';
+            // V44 Fix: Permanent empty dash handler
+            const pNo = item.partNo && item.partNo.trim() !== '' ? item.partNo.trim() : '-';
+            const brand = item.brand && item.brand.trim() !== '' ? item.brand.trim() : '-';
+            const supp = item.supplier && item.supplier.trim() !== '' ? item.supplier.trim() : '-';
             
             itemsHtml += `<tr><td style="text-align:center; padding:8px; border:1px solid #cbd5e1;">${index + 1}</td><td style="text-align:center; padding:8px; border:1px solid #cbd5e1;"><div class="check-box"></div></td><td style="padding:8px; border:1px solid #cbd5e1;"><strong>${item.part || '-'}</strong></td><td style="padding:8px; border:1px solid #cbd5e1;">${pNo}</td><td style="padding:8px; border:1px solid #cbd5e1;">${brand}</td><td style="padding:8px; border:1px solid #cbd5e1;">${supp}</td><td style="text-align:center; padding:8px; border:1px solid #cbd5e1;">${item.qty || '1'}</td><td style="text-align:right; padding:8px; border:1px solid #cbd5e1;">RM ${parseFloat(item.unitPrice || 0).toFixed(2)}</td><td style="text-align:right; padding:8px; border:1px solid #cbd5e1;"><strong>RM ${parseFloat(item.subTotal || 0).toFixed(2)}</strong></td></tr>`; 
         });
@@ -639,10 +632,10 @@
         const o = orders.find(x=>x.id===id); 
         if(o){ 
             const p = window.open('', '_blank'); 
-            p.document.write('<html><head><title>Order List</title></head><body>'+getInvoiceHTML(o)+'</body></html>'); 
+            p.document.write('<html><head><title>Order List</title></head><body>'+getInvoiceHTML(o)+'</body><script>window.onload=function(){window.print();window.close();}<\/script></html>'); 
             p.document.close(); 
             p.focus();
-            setTimeout(() => { p.print(); p.close(); }, 350); // V43 Delay Fix
+            setTimeout(() => { p.print(); p.close(); }, 350);
         } 
     }
     
@@ -663,19 +656,20 @@
             let partsHtml = `<ul class="table-item-list">`; let waList = [];
             (order.items||[]).forEach(item => {
                 
-                // V43 UI Formatting Fix
                 const priceDetails = parseFloat(item.subTotal) > 0 
                     ? `<span style="float:right;font-size:13px;color:#64748b;">${item.qty||1} x RM${parseFloat(item.unitPrice||0).toFixed(2)} = <b style="color:#0f172a;">RM${parseFloat(item.subTotal||0).toFixed(2)}</b></span>`
                     : `<span style="float:right;font-size:13px;color:#64748b;font-weight:bold;">Qty: ${item.qty||1}</span>`;
 
                 let photoHtml = ''; if (item.photos && item.photos.length > 0) { photoHtml = `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;">`; item.photos.forEach(p => { photoHtml += `<img src="${p}" class="photo-thumbnail" onclick="showPhoto('${p}')" style="width:40px;height:40px;border:1px solid #cbd5e1;">`; }); photoHtml += `</div>`; }
                 
-                const partNoHTML = item.partNo && item.partNo.trim() !== '' ? ` <small class="mono-text" style="color:#64748b; font-weight:bold;">[${item.partNo.trim()}]</small>` : '';
+                // V44 Fix: 100% hide empty brackets
+                const pNo = item.partNo && item.partNo.trim() !== '' ? item.partNo.trim() : null;
+                const partNoHTML = pNo ? ` <small class="mono-text" style="color:#64748b; font-weight:bold;">[${pNo}]</small>` : '';
                 
                 partsHtml += `<li><div style="margin-bottom:4px;"><strong style="font-size:14px;color:#0f172a;">${item.part||'-'}</strong>${partNoHTML}${priceDetails}</div><small style="color:#64748b;">Brd: ${item.brand||'-'} • Sup: ${item.supplier||'-'}</small>${photoHtml}</li>`;
                 
-                // V43 WhatsApp Formatting Fix
-                const partNoWA = item.partNo && item.partNo.trim() !== '' ? `[${item.partNo.trim()}] ` : '';
+                // V44 WhatsApp Fix
+                const partNoWA = pNo ? `[${pNo}] ` : '';
                 const brandWA = item.brand && item.brand.trim() !== '' ? `(Brand: ${item.brand.trim()}) ` : '';
                 const priceWA = parseFloat(item.subTotal) > 0 ? ` -> ${item.qty||1} x RM${parseFloat(item.unitPrice||0).toFixed(2)} = RM${parseFloat(item.subTotal||0).toFixed(2)}` : ` -> Qty: ${item.qty||1}`;
                 waList.push(`• ${item.part||'-'} ${partNoWA}${brandWA}${priceWA}`);
@@ -696,8 +690,8 @@
         let csvContent = "data:text/csv;charset=utf-8,\uFEFFRef No,Order Date,Handled By,Customer Name,Phone,Car Model,Chassis No,All Parts,Total,Deposit,Balance,Status,Remarks\n";
         orders.forEach(o => { 
             let allPartsText = o.items ? o.items.map(i => {
-                const pNo = i.partNo && i.partNo.trim() !== '' ? ` [${i.partNo.trim()}]` : '';
-                return `${i.qty||1}x ${i.part||''}${pNo} (RM${i.subTotal})`;
+                const pNoText = (i.partNo && i.partNo.trim() !== '') ? ` [${i.partNo.trim()}]` : '';
+                return `${i.qty||1}x ${i.part||''}${pNoText} (RM${i.subTotal})`;
             }).join(" + ") : ""; 
             csvContent += `"${o.refNo}","${o.date}","${o.staff||''}","${o.name}","${o.phone}","${o.car||''}","${o.chassis||''}","${allPartsText}","${o.total}","${o.deposit}","${o.balance}","${o.status}","${o.remarks}"\n`; 
         });
@@ -834,19 +828,20 @@
         filteredQuotes.forEach(quote => {
             let partsHtml = `<ul class="table-item-list">`; let waList = [];
             (quote.items||[]).forEach(item => {
-                
-                // V43 UI Formatting Fix
                 const priceDetails = parseFloat(item.subTotal) > 0 
                     ? `<span style="float:right;font-size:13px;color:#64748b;">${item.qty||1} x RM${parseFloat(item.unitPrice||0).toFixed(2)} = <b style="color:#0f172a;">RM${parseFloat(item.subTotal||0).toFixed(2)}</b></span>`
                     : `<span style="float:right;font-size:13px;color:#64748b;font-weight:bold;">Qty: ${item.qty||1}</span>`;
 
                 let photoHtml = ''; if (item.photos && item.photos.length > 0) { photoHtml = `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;">`; item.photos.forEach(p => { photoHtml += `<img src="${p}" class="photo-thumbnail" onclick="showPhoto('${p}')" style="width:40px;height:40px;border:1px solid #cbd5e1;">`; }); photoHtml += `</div>`; }
                 
-                const partNoHTML = item.partNo && item.partNo.trim() !== '' ? ` <small class="mono-text" style="color:#64748b; font-weight:bold;">[${item.partNo.trim()}]</small>` : '';
+                // V44 Fix: 100% hide empty brackets
+                const pNo = item.partNo && item.partNo.trim() !== '' ? item.partNo.trim() : null;
+                const partNoHTML = pNo ? ` <small class="mono-text" style="color:#64748b; font-weight:bold;">[${pNo}]</small>` : '';
+                
                 partsHtml += `<li><div style="margin-bottom:4px;"><strong style="font-size:14px;color:#0f172a;">${item.part||'-'}</strong>${partNoHTML}${priceDetails}</div><small style="color:#64748b;">Brd: ${item.brand||'-'} • Sup: ${item.supplier||'-'}</small>${photoHtml}</li>`;
                 
-                // V43 WhatsApp Formatting Fix
-                const partNoWA = item.partNo && item.partNo.trim() !== '' ? `[${item.partNo.trim()}] ` : '';
+                // V44 WhatsApp Fix
+                const partNoWA = pNo ? `[${pNo}] ` : '';
                 const brandWA = item.brand && item.brand.trim() !== '' ? `(Brand: ${item.brand.trim()}) ` : '';
                 const priceWA = parseFloat(item.subTotal) > 0 ? ` -> ${item.qty||1} x RM${parseFloat(item.unitPrice||0).toFixed(2)} = RM${parseFloat(item.subTotal||0).toFixed(2)}` : ` -> Qty: ${item.qty||1}`;
                 waList.push(`• ${item.part||'-'} ${partNoWA}${brandWA}${priceWA}`);
@@ -863,12 +858,13 @@
     function getQuoteHTML(quote) {
         let itemsHtml = ''; 
         (quote.items || []).forEach((item, index) => { 
-            const pNo = item.partNo && item.partNo.trim() !== '' ? item.partNo : '-';
-            const brand = item.brand && item.brand.trim() !== '' ? item.brand : '-';
+            // V44 Fix: Permanent empty dash handler
+            const pNo = item.partNo && item.partNo.trim() !== '' ? item.partNo.trim() : '-';
+            const brand = item.brand && item.brand.trim() !== '' ? item.brand.trim() : '-';
             
             itemsHtml += `<tr><td style="text-align:center; padding:8px; border:1px solid #cbd5e1;">${index + 1}</td><td style="padding:8px; border:1px solid #cbd5e1;"><strong>${item.part || '-'}</strong></td><td style="padding:8px; border:1px solid #cbd5e1;">${pNo}</td><td style="padding:8px; border:1px solid #cbd5e1;">${brand}</td><td style="text-align:center; padding:8px; border:1px solid #cbd5e1;">${item.qty || '1'}</td><td style="text-align:right; padding:8px; border:1px solid #cbd5e1;">RM ${parseFloat(item.unitPrice || 0).toFixed(2)}</td><td style="text-align:right; padding:8px; border:1px solid #cbd5e1;"><strong>RM ${parseFloat(item.subTotal || 0).toFixed(2)}</strong></td></tr>`; 
         });
-        return `<style>*, *::before, *::after { box-sizing: border-box; } body{font-family:'Segoe UI',Arial,sans-serif;padding:30px;color:#1e293b;margin:auto;} .header{text-align:center;border-bottom:2px solid #1e293b;padding-bottom:15px;margin-bottom:20px;} .logo{font-size:28px;font-weight:800;letter-spacing:1px; color:#6d28d9;} .info-grid{display:flex;justify-content:space-between;margin-bottom:20px;} .info-box{background:#f8fafc;padding:12px;border-radius:6px;width:48%;border:1px solid #e2e8f0;} .info-box p{margin:4px 0;font-size:13px;} table{width:100%;border-collapse:collapse;margin-bottom:20px;table-layout:fixed;} th,td{border:1px solid #cbd5e1;padding:8px;text-align:left;font-size:12px;word-wrap:break-word;} th{background:#f3e8ff; color:#6d28d9; text-transform:uppercase;font-size:10px;} .totals{text-align:right;font-size:14px;} .totals p{margin:5px 0;} .footer{margin-top:40px;font-size:11px;text-align:center;color:#64748b;border-top:1px solid #e2e8f0;padding-top:15px;}</style><div id="invoiceBody"><div class="header"><div class="logo">MALAYSIA MOTOR COMPANY</div></div><h2 style="text-align:center;margin-bottom:20px;letter-spacing:1px;font-size:18px;">SEBUTHARGA / QUOTATION</h2><div class="info-grid"><div class="info-box"><p><strong>Customer Name:</strong> ${quote.name}</p><p><strong>Contact:</strong> ${quote.phone || '-'}</p><p><strong>Car Details:</strong> ${quote.car || '-'} ${quote.chassis ? '('+quote.chassis+')' : ''}</p></div><div class="info-box"><p><strong>Quote No:</strong> ${quote.refNo}</p><p><strong>Date:</strong> ${quote.date}</p><p><strong>Served By:</strong> ${quote.staff || '-'}</p></div></div><table><thead><tr><th style="width:4%;text-align:center;">No.</th><th style="width:36%;">Part Description</th><th style="width:15%;">Item Code</th><th style="width:15%;">Brand</th><th style="width:5%;text-align:center;">QTY</th><th style="width:12%;text-align:right;">U.Price</th><th style="width:13%;text-align:right;">Total</th></tr></thead><tbody>${itemsHtml}</tbody></table><div class="totals"><p style="font-size:16px;margin-top:10px;">Grand Total: <strong style="color:#0f172a;">RM ${parseFloat(quote.total || 0).toFixed(2)}</strong></p></div><div class="footer">This is a quotation only. Prices and availability are subject to change.<br>${quote.remarks ? 'Remarks: ' + quote.remarks : ''}</div></div>`;
+        return `<style>*, *::before, *::after { box-sizing: border-box; } body{font-family:'Segoe UI',Arial,sans-serif;padding:30px;color:#1e293b;margin:auto;} .header{text-align:center;border-bottom:2px solid #1e293b;padding-bottom:15px;margin-bottom:20px;} .logo{font-size:28px;font-weight:800;letter-spacing:1px; color:#6d28d9;} .info-grid{display:flex;justify-content:space-between;margin-bottom:20px;} .info-box{background:#f8fafc;padding:12px;border-radius:6px;width:48%;border:1px solid #e2e8f0;} .info-box p{margin:4px 0;font-size:13px;} table{width:100%;border-collapse:collapse;margin-bottom:20px;table-layout:fixed;} th,td{border:1px solid #cbd5e1;padding:8px;text-align:left;font-size:12px;word-wrap:break-word;} th{background:#f3e8ff; color:#6d28d9; text-transform:uppercase;font-size:10px;} .totals{text-align:right;font-size:14px;} .totals p{margin:5px 0;} .footer{margin-top:40px;font-size:11px;text-align:center;color:#64748b;border-top:1px solid #e2e8f0;padding-top:15px;}</style><div id="invoiceBody"><div class="header"><div class="logo">MALAYSIA MOTOR COMPANY</div></div><h2 style="text-align:center;margin-bottom:20px;letter-spacing:1px;font-size:18px;">SEBUTHARGA / QUOTATION</h2><div class="info-grid"><div class="info-box"><p><strong>Customer Name:</strong> ${quote.name}</p><p><strong>Contact:</strong> ${quote.phone || '-'}</p><p><strong>Car Details:</strong> ${quote.car || '-'} ${quote.chassis ? '('+quote.chassis+')' : ''}</p></div><div class="info-box"><p><strong>Quote No:</strong> ${quote.refNo}</p><p><strong>Date:</strong> ${quote.date}</p><p><strong>Served By:</strong> ${quote.staff || '-'}</p></div></div><table><thead><tr><th style="width:5%;text-align:center;">No.</th><th style="width:35%;">Part Description</th><th style="width:20%;">Item Code</th><th style="width:15%;">Brand</th><th style="width:5%;text-align:center;">QTY</th><th style="width:12%;text-align:right;">U.Price</th><th style="width:13%;text-align:right;">Total</th></tr></thead><tbody>${itemsHtml}</tbody></table><div class="totals"><p style="font-size:16px;margin-top:10px;">Grand Total: <strong style="color:#0f172a;">RM ${parseFloat(quote.total || 0).toFixed(2)}</strong></p></div><div class="footer">This is a quotation only. Prices and availability are subject to change.<br>${quote.remarks ? 'Remarks: ' + quote.remarks : ''}</div></div>`;
     }
     
     function printQuote(id) { 
@@ -892,7 +888,7 @@
     }
 
     // ==========================================
-    // RESTOCK SYSTEM V38 
+    // RESTOCK SYSTEM V38
     // ==========================================
     function loadRestockData() {
         db.ref('restock').on('value', (snapshot) => {
@@ -976,9 +972,11 @@
         currentRestockView.forEach(i => { 
             const status = i.status || 'Not Yet Order'; 
             if(status !== 'Ordered') { 
+                // V44 WhatsApp Fix
                 const codeWA = i.code && i.code.trim() !== '' ? `[${i.code.trim()}] ` : '';
                 const brandWA = i.brand && i.brand.trim() !== '' ? `(Brd: ${i.brand.trim()}) ` : '';
-                text += `• ${i.part||''} ${codeWA}${brandWA}(Need: ${i.needOrderQty||'1'})\n`; 
+                const suppWA = i.supp && i.supp.trim() !== '' ? `(Sup: ${i.supp.trim()}) ` : '';
+                text += `• ${i.part||''} ${codeWA}${brandWA}${suppWA}(Need: ${i.needOrderQty||'1'})\n`; 
                 notYetCount++; 
             } 
         });
