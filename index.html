@@ -13,27 +13,18 @@
     
     <link rel="manifest" href="manifest.json">
     <script>
-        // V53 UPDATE: Advanced Service Worker Registration with Skip Waiting
         if ('serviceWorker' in navigator) {
             let refreshing = false;
-
-            // This triggers ONLY after the new Service Worker takes over
             navigator.serviceWorker.addEventListener('controllerchange', () => {
-                if (!refreshing) {
-                    window.location.reload();
-                    refreshing = true;
-                }
+                if (!refreshing) { window.location.reload(); refreshing = true; }
             });
-
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js').then(reg => {
                     reg.onupdatefound = () => {
                         const installingWorker = reg.installing;
                         installingWorker.onstatechange = () => {
                             if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                // Ask the user if they want to update
-                                if (confirm("🔄 New system version (V53) available! Click OK to apply.")) {
-                                    // Send the kill command to the new Service Worker
+                                if (confirm("🔄 New system version (V54) available! Click OK to apply.")) {
                                     installingWorker.postMessage('SKIP_WAITING');
                                 }
                             }
@@ -51,7 +42,6 @@
     <style>
         body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; background-color: #f1f5f9; margin: 0; padding: 20px; color: #334155; padding-bottom: 200px;}
         
-        /* V53 Enterprise Login Redesign */
         #loginScreen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); z-index: 9999; display: flex; justify-content: center; align-items: center; padding: 20px;}
         .login-box { background: white; padding: 50px 40px; border-radius: 16px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); text-align: center; max-width: 420px; width: 100%;}
         .login-logo { width: 80px; height: 80px; margin-bottom: 20px; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);}
@@ -73,7 +63,6 @@
         .logout-btn { background-color: #ef4444; color: white; border: none; padding: 10px 18px; border-radius: 6px; cursor: pointer; font-weight: bold;}
         .sync-btn { background-color: #f8fafc; color: #334155; border: 1px solid #cbd5e1; padding: 10px 18px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-right: 10px;}
         
-        /* Network Badge */
         #networkBadge { font-size: 12px; padding: 4px 10px; border-radius: 12px; vertical-align: middle; margin-left: 10px; font-weight: bold; transition: all 0.3s; }
         .net-online { background-color: #10b981; color: white; box-shadow: 0 0 10px rgba(16,185,129,0.4); }
         .net-offline { background-color: #ef4444; color: white; box-shadow: 0 0 10px rgba(239,68,68,0.4); animation: pulse 2s infinite; }
@@ -137,6 +126,8 @@
         .status-waiting { background-color: #fef3c7; color: #b45309; border: 1px solid #fde68a;}
         .status-arrived { background-color: #d1fae5; color: #047857; border: 1px solid #a7f3d0;}
         .status-completed { background-color: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0;}
+        /* V54 UPDATE: New Offline Pending Status Style */
+        .status-offline { background-color: #fee2e2; color: #ef4444; border: 1px dashed #ef4444; animation: pulse 2s infinite; cursor: not-allowed; }
         
         .action-btns { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap;}
         .action-btns button { border: none; cursor: pointer; font-size: 12px; padding: 8px 10px; border-radius: 4px; font-weight: 700; flex: 1; min-width: 60px;}
@@ -155,6 +146,8 @@
         .wa-btn-remind { background-color: #eab308; } 
         
         .ref-badge { background-color: #e2e8f0; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-weight: 700; color: #334155;}
+        /* V54 UPDATE: Badge for Offline Data */
+        .ref-offline { background-color: #fee2e2; color: #ef4444; border: 1px dashed #f87171; }
         .staff-badge { background-color: #dbeafe; color: #1d4ed8; border: 1px solid #bfdbfe; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; display: inline-block; margin-top: 6px; }
         .table-item-list { margin: 0; padding-left: 15px; }
         .table-item-list li { margin-bottom: 8px; border-bottom: 1px dashed #e2e8f0; padding-bottom: 8px;}
@@ -210,7 +203,7 @@
 <div id="mainApp" class="container">
     <div class="header-flex">
         <div>
-            <h2>Malaysia Motor Company <span class="version-badge">V53 Enterprise</span> <span id="adminBadge">👑 Boss View</span></h2>
+            <h2>Malaysia Motor Company <span class="version-badge">V54 Enterprise</span> <span id="adminBadge">👑 Boss View</span></h2>
             <div style="margin-top:8px;">
                 <span id="networkBadge" class="net-online">🟢 Online (Live Cloud Sync)</span>
             </div>
@@ -253,12 +246,12 @@
             <div>
                 <span class="label-text">Car Plate No.</span>
                 <div style="display:flex; gap:5px;">
-                    <input type="text" id="carPlate" placeholder="e.g. JDT1234" style="text-transform:uppercase;" oninput="checkCRM('plate', 'custPhone', 'carPlate', 'custName', 'carModel', 'chassisNumber')">
-                    <button type="button" onclick="showPlateHistory('carPlate')" style="background:#4338ca; color:white; border:none; border-radius:6px; padding:0 12px; cursor:pointer; font-weight:bold;" title="Digital Service Book">🔍</button>
+                    <input type="text" id="carPlate" placeholder="e.g. JDT1234" oninput="this.value = this.value.toUpperCase().replace(/\s/g, ''); checkCRM('plate', 'custPhone', 'carPlate', 'custName', 'carModel', 'chassisNumber')">
+                    <button type="button" onclick="showPlateHistory('carPlate')" style="background:#4338ca; color:white; border:none; border-radius:6px; padding:0 12px; cursor:pointer; font-weight:bold;" title="Deep Cloud Search">🔍</button>
                 </div>
             </div>
             <div><span class="label-text">Car Model</span><input type="text" id="carModel" placeholder="e.g. Honda Civic"></div>
-            <div><span class="label-text">Chassis No.</span><input type="text" id="chassisNumber" placeholder="e.g. FC1"></div>
+            <div><span class="label-text">Chassis No.</span><input type="text" id="chassisNumber" placeholder="e.g. FC1" oninput="this.value = this.value.toUpperCase().replace(/\s/g, '')"></div>
             
             <div class="items-wrapper full-width" style="margin-bottom:0; border-bottom-left-radius:0; border-bottom-right-radius:0; border-bottom:none;">
                 <div class="items-header-bar">
@@ -319,12 +312,12 @@
             <div>
                 <span class="label-text">Car Plate No.</span>
                 <div style="display:flex; gap:5px;">
-                    <input type="text" id="qCarPlate" placeholder="e.g. JDT1234" style="text-transform:uppercase;" oninput="checkCRM('plate', 'qCustPhone', 'qCarPlate', 'qCustName', 'qCarModel', 'qChassisNumber')">
-                    <button type="button" onclick="showPlateHistory('qCarPlate')" style="background:#4338ca; color:white; border:none; border-radius:6px; padding:0 12px; cursor:pointer; font-weight:bold;" title="Digital Service Book">🔍</button>
+                    <input type="text" id="qCarPlate" placeholder="e.g. JDT1234" oninput="this.value = this.value.toUpperCase().replace(/\s/g, ''); checkCRM('plate', 'qCustPhone', 'qCarPlate', 'qCustName', 'qCarModel', 'qChassisNumber')">
+                    <button type="button" onclick="showPlateHistory('qCarPlate')" style="background:#4338ca; color:white; border:none; border-radius:6px; padding:0 12px; cursor:pointer; font-weight:bold;" title="Deep Cloud Search">🔍</button>
                 </div>
             </div>
             <div><span class="label-text">Car Model</span><input type="text" id="qCarModel" placeholder="e.g. Honda Civic"></div>
-            <div><span class="label-text">Chassis No.</span><input type="text" id="qChassisNumber" placeholder="e.g. FC1"></div>
+            <div><span class="label-text">Chassis No.</span><input type="text" id="qChassisNumber" placeholder="e.g. FC1" oninput="this.value = this.value.toUpperCase().replace(/\s/g, '')"></div>
             
             <div class="items-wrapper full-width" style="margin-bottom:0; border-color: #d8b4fe; border-bottom-left-radius:0; border-bottom-right-radius:0; border-bottom:none;">
                 <div class="items-header-bar" style="background-color: #f3e8ff; border-color: #d8b4fe;">
@@ -375,7 +368,7 @@
             <p style="font-size:13px; color:#4f46e5; margin-top:-5px; margin-bottom:15px;">Leave supplier blank if unsure. Boss can fill it later.</p>
             <div class="restock-row">
                 <div><span class="label-text">Part Description</span><input type="text" id="r_part" placeholder="e.g. Brake Pad" list="partList" onchange="autoFillRestockDetails(this)"></div>
-                <div><span class="label-text">Item Code / OEM No</span><input type="text" id="r_code" placeholder="OEM Code" onkeypress="if(event.key==='Enter') addRestockItem()"></div>
+                <div><span class="label-text">Item Code / OEM No</span><input type="text" id="r_code" placeholder="OEM Code" oninput="this.value = this.value.toUpperCase().replace(/\s/g, '')" onkeypress="if(event.key==='Enter') addRestockItem()"></div>
                 <div><span class="label-text">Brand</span><input type="text" id="r_brand" placeholder="e.g. TRW"></div>
                 <div><span class="label-text">Supplier</span><input type="text" id="r_supp" placeholder="e.g. Emerald" list="supplierList"></div>
                 <div><span class="label-text">On Hand Qty</span><input type="number" id="r_onHand" placeholder="0"></div>
@@ -390,17 +383,14 @@
                 <option value="history">History (Ordered)</option>
                 <option value="all">All Items</option>
             </select>
-            
             <select id="rSuppFilter" onchange="renderRestockTable()" style="padding:10px; border-radius:6px; font-weight:bold; border:1px solid #cbd5e1; background: #fffbeb; color: #b45309;">
                 <option value="all">🔍 All Suppliers</option>
             </select>
-            
             <div style="display:flex; align-items:center; gap:8px;">
                 <span style="font-size:13px; font-weight:bold; color:#475569;">Search Date:</span>
                 <input type="date" id="rDateFilter" onchange="renderRestockTable()" style="padding:10px; border-radius:6px; width:160px; border:1px solid #cbd5e1;">
                 <button onclick="clearDateFilter('restock')" style="padding:10px; border-radius:6px; cursor:pointer; border:1px solid #cbd5e1; background:white; font-weight:bold;">Clear</button>
             </div>
-            
             <div style="margin-left:auto; display:flex; gap:10px; flex-wrap:wrap;">
                 <button class="print-btn" onclick="printRestock()" style="padding:10px 15px; border-radius:6px; font-weight:bold; cursor:pointer;">🖨️ Print PO List</button>
                 <button class="wa-btn" style="background:#25D366; margin:0; padding:10px 15px; border-radius:6px; font-size:13px;" onclick="sendRestockWA('60194482580', 'Hock')">📲 WA Hock</button>
@@ -462,14 +452,14 @@
     let qItemMapIdCounter = 0; let qItemPhotosMap = {}; 
 
     // ==========================================
-    // V53: NETWORK STATUS & INDEXED_DB OFFLINE QUEUE
+    // OFFLINE QUEUE & SYNC VISUALIZATION (V54 UPDATE)
     // ==========================================
     const netBadge = document.getElementById('networkBadge');
     function updateNetworkStatus() {
         if(navigator.onLine) {
             netBadge.innerText = '🟢 Online (Live Cloud Sync)';
             netBadge.className = 'net-online';
-            checkOfflineQueue(); // Auto-upload when internet returns
+            checkOfflineQueue(); 
         } else {
             netBadge.innerText = '🔴 Offline (Saving to Local Storage)';
             netBadge.className = 'net-offline';
@@ -482,9 +472,7 @@
     const dbReq = indexedDB.open("MMC_OfflineDB", 1);
     dbReq.onupgradeneeded = (e) => {
         offlineDB = e.target.result;
-        if(!offlineDB.objectStoreNames.contains('offlineData')) {
-            offlineDB.createObjectStore('offlineData', { keyPath: 'tempId' });
-        }
+        if(!offlineDB.objectStoreNames.contains('offlineData')) offlineDB.createObjectStore('offlineData', { keyPath: 'tempId' });
     };
     dbReq.onsuccess = (e) => { offlineDB = e.target.result; updateNetworkStatus(); };
 
@@ -494,7 +482,25 @@
         const tx = offlineDB.transaction('offlineData', 'readwrite');
         tx.objectStore('offlineData').put(payload);
         tx.oncomplete = () => {
-            alert("⚠️ No Internet Connection!\n\nDon't worry, your data has been saved safely to this iPad/PC's Offline Memory.\nIt will upload to the cloud automatically the second WiFi connects again.");
+            alert("⚠️ Saved Offline!\n\nThis record is saved to this device and will appear in your list as 'Pending Sync'. It will upload to the cloud automatically the second WiFi connects again.");
+            
+            // V54 UPDATE: Immediately push the offline payload to the local table so the user sees it!
+            if(type === 'order') {
+                payload.id = 'off_' + payload.tempId; // Fake ID
+                payload.status = 'offline'; // Special status
+                payload.refNo = '📡 PENDING SYNC'; 
+                orders.unshift(payload); // Add to very top
+                renderTable();
+            } else if(type === 'quote') {
+                payload.id = 'off_' + payload.tempId;
+                payload.refNo = '📡 PENDING SYNC';
+                quotes.unshift(payload);
+                renderQTable();
+            } else if(type === 'restock') {
+                payload.id = 'off_' + payload.tempId;
+                restockItems.unshift(payload);
+                renderRestockTable();
+            }
         };
     }
 
@@ -508,16 +514,17 @@
                 alert(`🔄 Internet Restored!\nUploading ${items.length} offline items to Cloud...`);
                 for(let item of items) {
                     const type = item.dataType;
-                    delete item.dataType; delete item.tempId;
+                    delete item.dataType; delete item.tempId; delete item.id;
                     
-                    if(item.editId) { // It was an update, not new
+                    if(item.editId) { 
                         let targetId = item.editId; delete item.editId;
                         if(type === 'order') await db.ref('orders/' + targetId).update(item);
                         else if(type === 'quote') await db.ref('quotations/' + targetId).update(item);
-                    } else { // It was a new item
+                    } else { 
                         if(type === 'order') {
                             const snap = await db.ref('orderCounter').transaction(cv => (cv || 1000) + 1);
                             item.refNo = 'MMC-' + snap.snapshot.val();
+                            item.status = 'waiting'; // Switch back to normal status
                             await db.ref('orders').push(item);
                         } else if(type === 'quote') {
                              const snap = await db.ref('quoteCounter').transaction(cv => (cv || 1000) + 1);
@@ -529,8 +536,9 @@
                     }
                 }
                 const txDel = offlineDB.transaction('offlineData', 'readwrite');
-                txDel.objectStore('offlineData').clear(); // clear all after sync
+                txDel.objectStore('offlineData').clear(); 
                 alert("✅ All offline data successfully synced to Cloud!");
+                // The on('value') listener will auto-refresh the table and wipe away the fake offline IDs
             }
         };
     }
@@ -551,19 +559,11 @@
         }
     }
     
-    // V53 UPDATE: Obfuscated Master PIN Check using Base64 (Stops simple "Inspect Element" snooping)
     function authorizeDevice() {
         let pin = prompt("Enter Master PIN to authorize this device:");
-        // "TU1DODg4" is the Base64 encoded string for "MMC888". 
-        // This stops non-coders from reading the password in plain text.
         if (pin && btoa(pin) === "TU1DODg4") { 
-            localStorage.setItem(DEVICE_AUTH_KEY, "true"); 
-            alert("✅ Device Authorized Successfully!"); 
-            checkDeviceAuthorization(); 
-        } 
-        else if (pin !== null) { 
-            alert("❌ Incorrect PIN!"); 
-        }
+            localStorage.setItem(DEVICE_AUTH_KEY, "true"); alert("✅ Device Authorized Successfully!"); checkDeviceAuthorization(); 
+        } else if (pin !== null) { alert("❌ Incorrect PIN!"); }
     }
     window.onload = function() { checkDeviceAuthorization(); };
 
@@ -618,31 +618,46 @@
         document.getElementById('todayTotalCash').innerText = 'RM ' + (todayDeposit + todayBalance).toFixed(2);
     }
 
-    function showPlateHistory(inputId) {
+    // V54 UPDATE: Deep Cloud Search Function
+    async function showPlateHistory(inputId) {
         let plate = document.getElementById(inputId).value.trim().toUpperCase().replace(/\s/g, '');
         if(!plate) return alert("Please enter a Car Plate Number first.");
         
+        // Show Loading State
+        document.getElementById('historyContent').innerHTML = `<h3 style="color:#b45309; text-align:center;">🔍 Deep Searching Cloud for ${plate}...</h3><p style="text-align:center;">Please wait while we check all historical records.</p>`;
+        document.getElementById('historyModal').style.display = 'flex';
+
         let historyHtml = `<h3>📖 Digital Service Book: <span style="color:#b45309">${plate}</span></h3><ul style="text-align:left; padding-left:15px; margin-bottom:20px;">`;
         let foundAny = false;
         
-        orders.forEach(o => {
-            if(o.plate && o.plate.replace(/\s/g, '').toUpperCase() === plate) {
+        try {
+            // Bypass the 200 limit by asking Firebase specifically for this plate
+            const snapshot = await db.ref('orders').orderByChild('plate').equalTo(plate).once('value');
+            const historyOrders = [];
+            snapshot.forEach(child => { historyOrders.push({ id: child.key, ...child.val() }); });
+            
+            // Sort newest first
+            historyOrders.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+            historyOrders.forEach(o => {
                 foundAny = true;
                 (o.items||[]).forEach(i => {
                     historyHtml += `<li style="margin-bottom:10px; border-bottom:1px dashed #e2e8f0; padding-bottom:10px;">
                         <b style="color:#475569; display:inline-block; width:110px;">${o.date}</b> 
                         <strong style="color:#0f172a;">${i.part}</strong> ${i.partNo?`[${i.partNo}]`:''} 
                         <span style="color:#10b981; font-weight:bold;">(RM${parseFloat(i.unitPrice||0).toFixed(2)})</span> 
-                        <br><span style="color:#64748b; font-size:11px; margin-left:110px;">Ref: ${o.refNo} | Qty: ${i.qty||1} | ${o.status==='completed'?'✅ Done':'⏳ Pending'}</span>
+                        <br><span style="color:#64748b; font-size:11px; margin-left:110px;">Ref: ${o.refNo||'Offline'} | Qty: ${i.qty||1} | ${o.status==='completed'?'✅ Done':'⏳ Pending'}</span>
                     </li>`;
                 });
-            }
-        });
+            });
+        } catch (error) {
+            console.error("Deep search failed: ", error);
+        }
+
         if(!foundAny) historyHtml += '<li style="color:#ef4444; font-weight:bold;">No purchase history found for this car plate.</li>';
         historyHtml += `</ul><button onclick="document.getElementById('historyModal').style.display='none'" style="padding:12px; width:100%; background:#ef4444; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer; font-size:15px;">Close History</button>`;
         
         document.getElementById('historyContent').innerHTML = historyHtml;
-        document.getElementById('historyModal').style.display = 'flex';
     }
 
     function checkCRM(type, phoneId, plateId, nameId, carId, chassisId) {
@@ -717,7 +732,6 @@
         }
     }
 
-    // V53 UPDATE: Firebase read limits added. We now only fetch the last 200 items to prevent crashing.
     function loadDatabaseData() {
         db.ref('orders').orderByChild('timestamp').limitToLast(200).on('value', (snapshot) => {
             orders = []; snapshot.forEach((child) => { orders.push({ id: child.key, ...child.val() }); });
@@ -726,7 +740,6 @@
         });
     }
 
-    // V53 UPDATE: Limit to Last 200 Quotations
     function loadQuoteData() {
         db.ref('quotations').orderByChild('timestamp').limitToLast(200).on('value', (snapshot) => {
             quotes = []; snapshot.forEach((child) => { quotes.push({ id: child.key, ...child.val() }); });
@@ -735,7 +748,6 @@
         });
     }
 
-    // V53 UPDATE: Limit to Last 200 Restock Items
     function loadRestockData() {
         db.ref('restock').orderByChild('timestamp').limitToLast(200).on('value', (snapshot) => {
             restockItems = []; snapshot.forEach((child) => { restockItems.push({ id: child.key, ...child.val() }); });
@@ -791,7 +803,8 @@
         itemMapIdCounter++; const currentId = 'item_row_' + itemMapIdCounter;
         itemPhotosMap[currentId] = data && data.photos ? [...data.photos] : [];
         const container = document.getElementById('dynamicItemsContainer'); const isFirst = container.children.length === 0;
-        const html = `<div class="pos-table-row" id="${currentId}"><div class="row-num">0</div><div><span class="mobile-label">Part Needed</span><input type="text" class="i-part pos-input" placeholder="Part Desc" value="${data ? data.part : ''}" list="partList" onchange="autoFillPartDetails(this, '${currentId}')"></div><div><span class="mobile-label">Item Code / OEM No</span><input type="text" class="i-partNo pos-input" placeholder="OEM Code" value="${data && data.partNo ? data.partNo : ''}"></div><div><span class="mobile-label">Brand</span><input type="text" class="i-brand pos-input" placeholder="Brand" value="${data && data.brand ? data.brand : ''}"></div><div><span class="mobile-label">Supplier</span><input type="text" class="i-supplier pos-input" placeholder="Supplier" value="${data && data.supplier ? data.supplier : ''}"></div><div class="mobile-grid-3"><div><span class="mobile-label">Qty</span><input type="number" class="i-qty pos-input" placeholder="1" value="${data && data.qty ? data.qty : '1'}" oninput="calcRowTotal('${currentId}')" style="text-align:center;"></div><div><span class="mobile-label">U.Price (RM)</span><input type="number" class="i-unitPrice pos-input" placeholder="0.00" value="${data && data.unitPrice ? data.unitPrice : ''}" oninput="calcRowTotal('${currentId}')"></div><div><span class="mobile-label">Total (RM)</span><input type="number" class="i-subTotal pos-input readonly-input" placeholder="0.00" value="${data && data.subTotal ? data.subTotal : ''}" readonly></div></div><div><span class="mobile-label">ETA Date</span><input type="date" class="i-eta pos-input" value="${data && data.eta ? data.eta : ''}"></div><div style="display:flex; justify-content:center; align-items:center;"><label class="photo-upload-btn">📷 <span id="count_${currentId}">${itemPhotosMap[currentId].length}</span>/5<input type="file" accept="image/*" multiple onchange="processItemPhotos(event, '${currentId}')" style="display:none;"></label></div><div>${!isFirst || data !== null ? `<button type="button" class="remove-row-btn" onclick="removeItemBlock('${currentId}')">✖</button>` : `<div style="height:35px;"></div>`}</div><div id="gallery_${currentId}" class="row-gallery"></div></div>`;
+        // V54 UPDATE: Auto-uppercase Item Code
+        const html = `<div class="pos-table-row" id="${currentId}"><div class="row-num">0</div><div><span class="mobile-label">Part Needed</span><input type="text" class="i-part pos-input" placeholder="Part Desc" value="${data ? data.part : ''}" list="partList" onchange="autoFillPartDetails(this, '${currentId}')"></div><div><span class="mobile-label">Item Code / OEM No</span><input type="text" class="i-partNo pos-input" placeholder="OEM Code" value="${data && data.partNo ? data.partNo : ''}" oninput="this.value = this.value.toUpperCase().replace(/\\s/g, '')"></div><div><span class="mobile-label">Brand</span><input type="text" class="i-brand pos-input" placeholder="Brand" value="${data && data.brand ? data.brand : ''}"></div><div><span class="mobile-label">Supplier</span><input type="text" class="i-supplier pos-input" placeholder="Supplier" value="${data && data.supplier ? data.supplier : ''}"></div><div class="mobile-grid-3"><div><span class="mobile-label">Qty</span><input type="number" class="i-qty pos-input" placeholder="1" value="${data && data.qty ? data.qty : '1'}" oninput="calcRowTotal('${currentId}')" style="text-align:center;"></div><div><span class="mobile-label">U.Price (RM)</span><input type="number" class="i-unitPrice pos-input" placeholder="0.00" value="${data && data.unitPrice ? data.unitPrice : ''}" oninput="calcRowTotal('${currentId}')"></div><div><span class="mobile-label">Total (RM)</span><input type="number" class="i-subTotal pos-input readonly-input" placeholder="0.00" value="${data && data.subTotal ? data.subTotal : ''}" readonly></div></div><div><span class="mobile-label">ETA Date</span><input type="date" class="i-eta pos-input" value="${data && data.eta ? data.eta : ''}"></div><div style="display:flex; justify-content:center; align-items:center;"><label class="photo-upload-btn">📷 <span id="count_${currentId}">${itemPhotosMap[currentId].length}</span>/5<input type="file" accept="image/*" multiple onchange="processItemPhotos(event, '${currentId}')" style="display:none;"></label></div><div>${!isFirst || data !== null ? `<button type="button" class="remove-row-btn" onclick="removeItemBlock('${currentId}')">✖</button>` : `<div style="height:35px;"></div>`}</div><div id="gallery_${currentId}" class="row-gallery"></div></div>`;
         container.insertAdjacentHTML('beforeend', html); renderGalleryUI(currentId); updateRowNumbers(); if(data) calcRowTotal(currentId); 
     }
 
@@ -852,11 +865,17 @@
     }
 
     async function saveOrUpdateOrder() {
+        // V54 UPDATE: WhatsApp Auto-correct rule
+        let finalPhone = document.getElementById('custPhone').value.replace(/[^0-9]/g, '');
+        if (finalPhone.startsWith('0')) { finalPhone = '60' + finalPhone.substring(1); }
+        document.getElementById('custPhone').value = finalPhone; // Update UI to show the fix
+
         const payload = { 
-            name: document.getElementById('custName').value, phone: document.getElementById('custPhone').value.replace(/[^0-9]/g, ''), plate: document.getElementById('carPlate').value.trim().toUpperCase(), car: document.getElementById('carModel').value, chassis: document.getElementById('chassisNumber').value, total: document.getElementById('totalPrice').value || "0", deposit: document.getElementById('deposit').value || "0", balance: document.getElementById('balance').value || "0", staff: document.getElementById('orderByStaff').value, remarks: document.getElementById('remarks').value, items: [] 
+            name: document.getElementById('custName').value, phone: finalPhone, plate: document.getElementById('carPlate').value.trim().toUpperCase(), car: document.getElementById('carModel').value, chassis: document.getElementById('chassisNumber').value.trim().toUpperCase(), total: document.getElementById('totalPrice').value || "0", deposit: document.getElementById('deposit').value || "0", balance: document.getElementById('balance').value || "0", staff: document.getElementById('orderByStaff').value, remarks: document.getElementById('remarks').value, items: [] 
         };
+        
         document.querySelectorAll('#ordersTab .pos-table-row').forEach(card => {
-            const id = card.id; const p = { part: card.querySelector('.i-part').value, partNo: card.querySelector('.i-partNo').value, brand: card.querySelector('.i-brand').value, supplier: card.querySelector('.i-supplier').value, qty: card.querySelector('.i-qty').value || "1", unitPrice: card.querySelector('.i-unitPrice').value || "0", subTotal: card.querySelector('.i-subTotal').value || "0", eta: card.querySelector('.i-eta').value, photos: itemPhotosMap[id] || [] };
+            const id = card.id; const p = { part: card.querySelector('.i-part').value, partNo: card.querySelector('.i-partNo').value.trim().toUpperCase(), brand: card.querySelector('.i-brand').value, supplier: card.querySelector('.i-supplier').value, qty: card.querySelector('.i-qty').value || "1", unitPrice: card.querySelector('.i-unitPrice').value || "0", subTotal: card.querySelector('.i-subTotal').value || "0", eta: card.querySelector('.i-eta').value, photos: itemPhotosMap[id] || [] };
             if (p.part || p.partNo) payload.items.push(p);
         });
         if(!payload.name) return alert("Please fill Customer Name."); if(payload.items.length === 0) return alert("Enter at least 1 Part.");
@@ -877,7 +896,7 @@
 
     async function toggleStatus(id) { 
         if(!navigator.onLine) return alert("Requires internet connection.");
-        const order = orders.find(o => o.id === id); if(order.status === 'completed') return; 
+        const order = orders.find(o => o.id === id); if(order.status === 'completed' || order.status === 'offline') return; 
         let newStatus = order.status === 'waiting' ? 'arrived' : 'waiting';
         await db.ref('orders/' + id).update({ status: newStatus }); 
     }
@@ -944,10 +963,19 @@
             const tr = document.createElement('tr'); tr.style.opacity = order.status === 'completed' ? '0.6' : '1';
             const plateHtml = order.plate ? `<span style="background:#fef08a; color:#b45309; padding:2px 6px; border-radius:4px; font-weight:bold; font-size:12px; letter-spacing:1px;">${order.plate}</span><br>` : '';
 
+            // Disable functions if offline pending
+            const isOffline = order.status === 'offline';
             let waActionButtons = `${order.phone&&order.status!=='completed'?`<a href="https://wa.me/${order.phone}?text=${encodeURIComponent(msgR)}" target="_blank" class="wa-btn wa-btn-receipt">📄 WA Receipt</a><a href="https://wa.me/${order.phone}?text=${encodeURIComponent(msgA)}" target="_blank" class="wa-btn wa-btn-arrived">💬 Inform Arrived</a><a href="https://wa.me/${order.phone}?text=${encodeURIComponent(msgN)}" target="_blank" class="wa-btn wa-btn-cancel">❌ Item Not Found</a>`:''}`;
             if(order.status === 'arrived' && order.phone) { waActionButtons = `<a href="https://wa.me/${order.phone}?text=${encodeURIComponent(msgRemind)}" target="_blank" class="wa-btn wa-btn-remind">🔔 Remind Collection</a>` + waActionButtons; }
 
-            tr.innerHTML = `<td><input type="checkbox" class="order-check" value="${order.id}"></td><td><span class="ref-badge">${order.refNo}</span><br><small style="color:#64748b;margin-top:6px;display:inline-block;font-weight:700;">${order.date}</small><br>${order.staff?`<span class="staff-badge">👤 ${order.staff}</span>`:''}</td><td><strong style="color:#0f172a;">${order.name}</strong><br><small style="color:#3b82f6;font-weight:bold;">${order.phone}</small><br><div style="margin-top:8px;padding-top:8px;border-top:1px dashed #e2e8f0;">${plateHtml}<strong style="color:#334155; font-size:13px; display:inline-block; margin-top:4px;">${order.car||'-'}</strong> <span class="mono-text" style="color:#64748b;font-size:11px;">${order.chassis?'('+order.chassis+')':''}</span></div></td><td>${partsHtml}<div class="notes-text" style="margin-top:8px;color:#059669;font-weight:600;">${order.remarks?'📝 Remarks: '+order.remarks:''}</div></td><td><small style="color:#64748b;">Total: RM${order.total}</small><br><small style="color:#64748b;">Paid: RM${order.deposit}</small><br><strong style="font-size:15px;margin-top:6px;display:inline-block;color:#0f172a;">Bal: RM${order.balance}</strong></td><td><button class="status-btn ${order.status==='completed'?'status-completed':(order.status==='waiting'?'status-waiting':'status-arrived')}" onclick="toggleStatus('${order.id}')">${order.status==='waiting'?'⏳ Wait':(order.status==='arrived'?'✅ Arrived':'📦 Done')}</button></td><td><div class="action-btns" style="flex-direction:column;align-items:stretch;">${waActionButtons}</div></td><td><div class="action-btns" style="margin-bottom:6px;"><button class="copy-btn" onclick="duplicateOrder('${order.id}')">📋 Copy</button></div><div class="action-btns">${order.status!=='completed'?`<button class="complete-btn" onclick="markCompleted('${order.id}')">✔️ Done</button>`:`<button class="edit-btn" onclick="restoreOrder('${order.id}')">⏪ Return</button>`}<button class="edit-btn" onclick="editOrder('${order.id}')">✏️ Edit</button>${isAdmin?`<button class="delete-btn" onclick="deleteOrder('${order.id}')">✖ Del</button>`:''}</div></td>`;
+            let mainActions = isOffline ? `<span style="font-size:12px; color:#ef4444; font-weight:bold;">⏳ Waiting for Internet...</span>` : `<div class="action-btns" style="margin-bottom:6px;"><button class="copy-btn" onclick="duplicateOrder('${order.id}')">📋 Copy</button></div><div class="action-btns">${order.status!=='completed'?`<button class="complete-btn" onclick="markCompleted('${order.id}')">✔️ Done</button>`:`<button class="edit-btn" onclick="restoreOrder('${order.id}')">⏪ Return</button>`}<button class="edit-btn" onclick="editOrder('${order.id}')">✏️ Edit</button>${isAdmin?`<button class="delete-btn" onclick="deleteOrder('${order.id}')">✖ Del</button>`:''}</div>`;
+
+            // V54 UPDATE: Badge visually shows Offline status
+            const badgeClass = isOffline ? 'ref-offline' : 'ref-badge';
+            const statusVisual = isOffline ? '📡 Offline' : (order.status==='waiting'?'⏳ Wait':(order.status==='arrived'?'✅ Arrived':'📦 Done'));
+            const statusClass = isOffline ? 'status-offline' : (order.status==='completed'?'status-completed':(order.status==='waiting'?'status-waiting':'status-arrived'));
+
+            tr.innerHTML = `<td><input type="checkbox" class="order-check" value="${order.id}" ${isOffline?'disabled':''}></td><td><span class="${badgeClass}" style="padding:4px 8px; border-radius:4px; font-family:monospace; font-weight:700;">${order.refNo}</span><br><small style="color:#64748b;margin-top:6px;display:inline-block;font-weight:700;">${order.date}</small><br>${order.staff?`<span class="staff-badge">👤 ${order.staff}</span>`:''}</td><td><strong style="color:#0f172a;">${order.name}</strong><br><small style="color:#3b82f6;font-weight:bold;">${order.phone}</small><br><div style="margin-top:8px;padding-top:8px;border-top:1px dashed #e2e8f0;">${plateHtml}<strong style="color:#334155; font-size:13px; display:inline-block; margin-top:4px;">${order.car||'-'}</strong> <span class="mono-text" style="color:#64748b;font-size:11px;">${order.chassis?'('+order.chassis+')':''}</span></div></td><td>${partsHtml}<div class="notes-text" style="margin-top:8px;color:#059669;font-weight:600;">${order.remarks?'📝 Remarks: '+order.remarks:''}</div></td><td><small style="color:#64748b;">Total: RM${order.total}</small><br><small style="color:#64748b;">Paid: RM${order.deposit}</small><br><strong style="font-size:15px;margin-top:6px;display:inline-block;color:#0f172a;">Bal: RM${order.balance}</strong></td><td><button class="status-btn ${statusClass}" onclick="${isOffline?'':'toggleStatus(\''+order.id+'\')'}">${statusVisual}</button></td><td><div class="action-btns" style="flex-direction:column;align-items:stretch;">${waActionButtons}</div></td><td>${mainActions}</td>`;
             tbody.appendChild(tr);
         });
     }
@@ -981,7 +1009,7 @@
         qItemMapIdCounter++; const currentId = 'q_item_row_' + qItemMapIdCounter;
         qItemPhotosMap[currentId] = data && data.photos ? [...data.photos] : [];
         const container = document.getElementById('qDynamicItemsContainer'); const isFirst = container.children.length === 0;
-        const html = `<div class="pos-table-row" id="${currentId}"><div class="row-num">0</div><div><span class="mobile-label">Part Needed</span><input type="text" class="i-part pos-input" placeholder="Part Desc" value="${data ? data.part : ''}" list="partList" onchange="autoFillPartDetails(this, '${currentId}')"></div><div><span class="mobile-label">Item Code / OEM No</span><input type="text" class="i-partNo pos-input" placeholder="OEM Code" value="${data && data.partNo ? data.partNo : ''}"></div><div><span class="mobile-label">Brand</span><input type="text" class="i-brand pos-input" placeholder="Brand" value="${data && data.brand ? data.brand : ''}"></div><div><span class="mobile-label">Supplier</span><input type="text" class="i-supplier pos-input" placeholder="Supplier" value="${data && data.supplier ? data.supplier : ''}"></div><div class="mobile-grid-3"><div><span class="mobile-label">Qty</span><input type="number" class="i-qty pos-input" placeholder="1" value="${data && data.qty ? data.qty : '1'}" oninput="calcQRowTotal('${currentId}')" style="text-align:center;"></div><div><span class="mobile-label">U.Price (RM)</span><input type="number" class="i-unitPrice pos-input" placeholder="0.00" value="${data && data.unitPrice ? data.unitPrice : ''}" oninput="calcQRowTotal('${currentId}')"></div><div><span class="mobile-label">Total (RM)</span><input type="number" class="i-subTotal pos-input readonly-input" placeholder="0.00" value="${data && data.subTotal ? data.subTotal : ''}" readonly></div></div><div><span class="mobile-label">ETA Date</span><input type="date" class="i-eta pos-input" value="${data && data.eta ? data.eta : ''}"></div><div style="display:flex; justify-content:center; align-items:center;"><label class="photo-upload-btn">📷 <span id="q_count_${currentId}">${qItemPhotosMap[currentId].length}</span>/5<input type="file" accept="image/*" multiple onchange="processQItemPhotos(event, '${currentId}')" style="display:none;"></label></div><div>${!isFirst || data !== null ? `<button type="button" class="remove-row-btn" onclick="removeQItemBlock('${currentId}')">✖</button>` : `<div style="height:35px;"></div>`}</div><div id="q_gallery_${currentId}" class="row-gallery"></div></div>`;
+        const html = `<div class="pos-table-row" id="${currentId}"><div class="row-num">0</div><div><span class="mobile-label">Part Needed</span><input type="text" class="i-part pos-input" placeholder="Part Desc" value="${data ? data.part : ''}" list="partList" onchange="autoFillPartDetails(this, '${currentId}')"></div><div><span class="mobile-label">Item Code / OEM No</span><input type="text" class="i-partNo pos-input" placeholder="OEM Code" value="${data && data.partNo ? data.partNo : ''}" oninput="this.value = this.value.toUpperCase().replace(/\\s/g, '')"></div><div><span class="mobile-label">Brand</span><input type="text" class="i-brand pos-input" placeholder="Brand" value="${data && data.brand ? data.brand : ''}"></div><div><span class="mobile-label">Supplier</span><input type="text" class="i-supplier pos-input" placeholder="Supplier" value="${data && data.supplier ? data.supplier : ''}"></div><div class="mobile-grid-3"><div><span class="mobile-label">Qty</span><input type="number" class="i-qty pos-input" placeholder="1" value="${data && data.qty ? data.qty : '1'}" oninput="calcQRowTotal('${currentId}')" style="text-align:center;"></div><div><span class="mobile-label">U.Price (RM)</span><input type="number" class="i-unitPrice pos-input" placeholder="0.00" value="${data && data.unitPrice ? data.unitPrice : ''}" oninput="calcQRowTotal('${currentId}')"></div><div><span class="mobile-label">Total (RM)</span><input type="number" class="i-subTotal pos-input readonly-input" placeholder="0.00" value="${data && data.subTotal ? data.subTotal : ''}" readonly></div></div><div><span class="mobile-label">ETA Date</span><input type="date" class="i-eta pos-input" value="${data && data.eta ? data.eta : ''}"></div><div style="display:flex; justify-content:center; align-items:center;"><label class="photo-upload-btn">📷 <span id="q_count_${currentId}">${qItemPhotosMap[currentId].length}</span>/5<input type="file" accept="image/*" multiple onchange="processQItemPhotos(event, '${currentId}')" style="display:none;"></label></div><div>${!isFirst || data !== null ? `<button type="button" class="remove-row-btn" onclick="removeQItemBlock('${currentId}')">✖</button>` : `<div style="height:35px;"></div>`}</div><div id="q_gallery_${currentId}" class="row-gallery"></div></div>`;
         container.insertAdjacentHTML('beforeend', html); renderQGalleryUI(currentId); updateQRowNumbers(); if(data) calcQRowTotal(currentId); 
     }
 
@@ -1026,10 +1054,16 @@
     }
 
     async function saveOrUpdateQuote() {
+        // V54 UPDATE: WhatsApp Auto-correct rule
+        let finalPhone = document.getElementById('qCustPhone').value.replace(/[^0-9]/g, '');
+        if (finalPhone.startsWith('0')) { finalPhone = '60' + finalPhone.substring(1); }
+        document.getElementById('qCustPhone').value = finalPhone; // Update UI
+
         const name = document.getElementById('qCustName').value; if(!name) return alert("Please fill Customer Name.");
-        const payload = { name: name, phone: document.getElementById('qCustPhone').value.replace(/[^0-9]/g, ''), plate: document.getElementById('qCarPlate').value.trim().toUpperCase(), car: document.getElementById('qCarModel').value, chassis: document.getElementById('qChassisNumber').value, total: document.getElementById('qTotalPrice').value || "0", staff: document.getElementById('qOrderByStaff').value, remarks: document.getElementById('qRemarks').value, items: [] };
+        const payload = { name: name, phone: finalPhone, plate: document.getElementById('qCarPlate').value.trim().toUpperCase(), car: document.getElementById('qCarModel').value, chassis: document.getElementById('qChassisNumber').value.trim().toUpperCase(), total: document.getElementById('qTotalPrice').value || "0", staff: document.getElementById('qOrderByStaff').value, remarks: document.getElementById('qRemarks').value, items: [] };
+        
         document.querySelectorAll('#quoteTab .pos-table-row').forEach(card => {
-            const id = card.id; const p = { part: card.querySelector('.i-part').value, partNo: card.querySelector('.i-partNo').value, brand: card.querySelector('.i-brand').value, supplier: card.querySelector('.i-supplier').value, qty: card.querySelector('.i-qty').value || "1", unitPrice: card.querySelector('.i-unitPrice').value || "0", subTotal: card.querySelector('.i-subTotal').value || "0", eta: card.querySelector('.i-eta').value, photos: qItemPhotosMap[id] || [] };
+            const id = card.id; const p = { part: card.querySelector('.i-part').value, partNo: card.querySelector('.i-partNo').value.trim().toUpperCase(), brand: card.querySelector('.i-brand').value, supplier: card.querySelector('.i-supplier').value, qty: card.querySelector('.i-qty').value || "1", unitPrice: card.querySelector('.i-unitPrice').value || "0", subTotal: card.querySelector('.i-subTotal').value || "0", eta: card.querySelector('.i-eta').value, photos: qItemPhotosMap[id] || [] };
             if (p.part || p.partNo) payload.items.push(p);
         });
         if(payload.items.length === 0) return alert("Enter at least 1 Part.");
@@ -1090,7 +1124,12 @@
             const tr = document.createElement('tr');
             const plateHtml = quote.plate ? `<span style="background:#fef08a; color:#b45309; padding:2px 6px; border-radius:4px; font-weight:bold; font-size:12px; letter-spacing:1px;">${quote.plate}</span><br>` : '';
 
-            tr.innerHTML = `<td><span class="ref-badge" style="background:#f3e8ff; color:#6d28d9; border:1px solid #d8b4fe;">${quote.refNo}</span><br><small style="color:#64748b;margin-top:6px;display:inline-block;font-weight:700;">${quote.date}</small><br>${quote.staff?`<span class="staff-badge">👤 ${quote.staff}</span>`:''}</td><td><strong style="color:#0f172a;">${quote.name}</strong><br><small style="color:#3b82f6;font-weight:bold;">${quote.phone}</small><br><div style="margin-top:8px;padding-top:8px;border-top:1px dashed #e2e8f0;">${plateHtml}<strong style="color:#334155; font-size:13px; display:inline-block; margin-top:4px;">${quote.car||'-'}</strong> <span class="mono-text" style="color:#64748b;font-size:12px;">${quote.chassis||''}</span></div></td><td>${partsHtml}<div class="notes-text" style="margin-top:8px;color:#059669;font-weight:600;">${quote.remarks?'📝 Remarks: '+quote.remarks:''}</div></td><td><strong style="font-size:18px;color:#0f172a;">RM${quote.total}</strong></td><td><div class="action-btns"><a href="https://wa.me/${quote.phone}?text=${encodeURIComponent(msgQ)}" target="_blank" class="wa-btn wa-btn-quote" style="width:100%;">💬 Send Quotation</a></div></td><td><div class="action-btns"><button class="convert-btn" onclick="convertToPreorder('${quote.id}')">➡️ Convert to Order</button></div><div class="action-btns"><button class="edit-btn" onclick="editQuote('${quote.id}')">✏️ Edit</button>${isAdmin?`<button class="delete-btn" onclick="deleteQuote('${quote.id}')">✖ Del</button>`:''}</div></td>`;
+            // Disable buttons if offline
+            const isOffline = quote.id.startsWith('off_');
+            const badgeStyle = isOffline ? `background:#fee2e2; color:#ef4444; border:1px dashed #ef4444;` : `background:#f3e8ff; color:#6d28d9; border:1px solid #d8b4fe;`;
+            let mainActions = isOffline ? `<span style="font-size:12px; color:#ef4444; font-weight:bold;">⏳ Waiting for Internet...</span>` : `<div class="action-btns"><button class="convert-btn" onclick="convertToPreorder('${quote.id}')">➡️ Convert to Order</button></div><div class="action-btns"><button class="edit-btn" onclick="editQuote('${quote.id}')">✏️ Edit</button>${isAdmin?`<button class="delete-btn" onclick="deleteQuote('${quote.id}')">✖ Del</button>`:''}</div>`;
+
+            tr.innerHTML = `<td><span class="ref-badge" style="${badgeStyle}">${quote.refNo}</span><br><small style="color:#64748b;margin-top:6px;display:inline-block;font-weight:700;">${quote.date}</small><br>${quote.staff?`<span class="staff-badge">👤 ${quote.staff}</span>`:''}</td><td><strong style="color:#0f172a;">${quote.name}</strong><br><small style="color:#3b82f6;font-weight:bold;">${quote.phone}</small><br><div style="margin-top:8px;padding-top:8px;border-top:1px dashed #e2e8f0;">${plateHtml}<strong style="color:#334155; font-size:13px; display:inline-block; margin-top:4px;">${quote.car||'-'}</strong> <span class="mono-text" style="color:#64748b;font-size:12px;">${quote.chassis||''}</span></div></td><td>${partsHtml}<div class="notes-text" style="margin-top:8px;color:#059669;font-weight:600;">${quote.remarks?'📝 Remarks: '+quote.remarks:''}</div></td><td><strong style="font-size:18px;color:#0f172a;">RM${quote.total}</strong></td><td><div class="action-btns"><a href="https://wa.me/${quote.phone}?text=${encodeURIComponent(msgQ)}" target="_blank" class="wa-btn wa-btn-quote" style="width:100%;">💬 Send Quotation</a></div></td><td>${mainActions}</td>`;
             tbody.appendChild(tr);
         });
     }
@@ -1099,7 +1138,7 @@
     // RESTOCK SYSTEM
     // ==========================================
     async function addRestockItem() {
-        const part = document.getElementById('r_part').value; const code = document.getElementById('r_code').value; const brand = document.getElementById('r_brand').value; const supp = document.getElementById('r_supp').value; const onHandQty = document.getElementById('r_onHand').value || "0"; const needOrderQty = document.getElementById('r_needOrder').value || "1";
+        const part = document.getElementById('r_part').value; const code = document.getElementById('r_code').value.trim().toUpperCase(); const brand = document.getElementById('r_brand').value; const supp = document.getElementById('r_supp').value; const onHandQty = document.getElementById('r_onHand').value || "0"; const needOrderQty = document.getElementById('r_needOrder').value || "1";
         if(!part && !code) return alert("Please enter at least a part description or item code.");
         const payload = { part, code, brand, supp, onHandQty, needOrderQty, date: getStandardDateStr(), timestamp: Date.now(), status: 'Not Yet Order' };
         
@@ -1111,14 +1150,14 @@
         ['r_part','r_code','r_brand','r_supp','r_onHand','r_needOrder'].forEach(id => document.getElementById(id).value = '');
     }
 
-    function updateRestockSupplier(id, newValue) { if(!isAdmin) return; if(navigator.onLine) db.ref('restock/' + id).update({ supp: newValue }); }
+    function updateRestockSupplier(id, newValue) { if(!isAdmin) return; if(navigator.onLine && !id.startsWith('off_')) db.ref('restock/' + id).update({ supp: newValue }); }
     async function markRestockOrdered(id) { if(!navigator.onLine) return; await db.ref('restock/' + id).update({ status: 'Ordered' }); }
     async function returnToNotYet(id) { if(!navigator.onLine) return; await db.ref('restock/' + id).update({ status: 'Not Yet Order' }); }
     async function deleteRestock(id) { if(!navigator.onLine) return; if(isAdmin && confirm("Delete this record permanently?")) { await db.ref('restock/' + id).remove(); } }
     
     async function markFilteredOrdered() {
         if(!isAdmin) return alert("Admin only."); if(!navigator.onLine) return alert("Requires internet.");
-        let toUpdate = currentRestockView.filter(i => i.status !== 'Ordered');
+        let toUpdate = currentRestockView.filter(i => i.status !== 'Ordered' && !i.id.startsWith('off_'));
         if(toUpdate.length === 0) return alert('No pending items found in your current view.');
         if(!confirm(`Mark all ${toUpdate.length} items on this screen as ORDERED?`)) return;
         let updates = {}; toUpdate.forEach(i => { updates[i.id + '/status'] = 'Ordered'; });
@@ -1138,14 +1177,20 @@
         });
 
         currentRestockView.forEach(item => {
+            const isOffline = item.id.startsWith('off_');
             const status = item.status || 'Not Yet Order';
-            const statusHtml = status === 'Ordered' ? `<span style="padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; background:#d1fae5; color:#047857;">Ordered</span>` : `<span style="padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; background:#fef3c7; color:#b45309;">Not Yet Order</span>`;
+            const statusHtml = isOffline ? `<span style="padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; background:#fee2e2; color:#ef4444; border: 1px dashed #ef4444;">Offline</span>` : (status === 'Ordered' ? `<span style="padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; background:#d1fae5; color:#047857;">Ordered</span>` : `<span style="padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; background:#fef3c7; color:#b45309;">Not Yet Order</span>`);
+            
             let actionHtml = '';
-            if (status !== 'Ordered') { actionHtml += `<button class="complete-btn" onclick="markRestockOrdered('${item.id}')" style="width:100%; margin-bottom:4px;">✔️ Done</button>`; } 
-            else { actionHtml += `<button class="edit-btn" onclick="returnToNotYet('${item.id}')" style="width:100%; margin-bottom:4px;">⏪ Return</button>`; }
-            if (isAdmin) { actionHtml += `<button class="delete-btn" onclick="deleteRestock('${item.id}')" style="width:100%;">✖ Del</button>`; }
+            if(isOffline) {
+                 actionHtml = `<span style="font-size:11px; color:#ef4444; font-weight:bold;">⏳ Wait...</span>`;
+            } else {
+                if (status !== 'Ordered') { actionHtml += `<button class="complete-btn" onclick="markRestockOrdered('${item.id}')" style="width:100%; margin-bottom:4px;">✔️ Done</button>`; } 
+                else { actionHtml += `<button class="edit-btn" onclick="returnToNotYet('${item.id}')" style="width:100%; margin-bottom:4px;">⏪ Return</button>`; }
+                if (isAdmin) { actionHtml += `<button class="delete-btn" onclick="deleteRestock('${item.id}')" style="width:100%;">✖ Del</button>`; }
+            }
 
-            let suppHtml = isAdmin ? `<input type="text" class="pos-input" value="${item.supp||''}" placeholder="Type..." style="width:100px; font-size:12px; background:#fffbeb; color:#b45309; font-weight:bold;" list="supplierList" onchange="updateRestockSupplier('${item.id}', this.value)">` : (item.supp || '-');
+            let suppHtml = (isAdmin && !isOffline) ? `<input type="text" class="pos-input" value="${item.supp||''}" placeholder="Type..." style="width:100px; font-size:12px; background:#fffbeb; color:#b45309; font-weight:bold;" list="supplierList" onchange="updateRestockSupplier('${item.id}', this.value)">` : (item.supp || '-');
 
             const tr = document.createElement('tr'); tr.style.opacity = status === 'Ordered' ? '0.6' : '1';
             tr.innerHTML = `<td><small style="color:#64748b; font-weight:bold;">${item.date}</small></td><td><strong>${item.part || '-'}</strong></td><td class="mono-text">${item.code || '-'}</td><td>${item.brand || '-'}</td><td>${suppHtml}</td><td style="text-align:center; font-weight:bold;">${item.onHandQty || '0'}</td><td style="text-align:center; color:#ef4444; font-weight:bold;">${item.needOrderQty || '1'}</td><td style="text-align:center;">${statusHtml}</td><td><div class="action-btns" style="flex-direction:column;">${actionHtml}</div></td>`;
