@@ -1,4 +1,4 @@
-const CACHE_NAME = "mmc-portal-v50";
+const CACHE_NAME = "mmc-portal-v53";
 
 self.addEventListener("install", (e) => {
     e.waitUntil(
@@ -14,4 +14,10 @@ self.addEventListener("fetch", (e) => {
             return response || fetch(e.request);
         })
     );
+});
+
+self.addEventListener('message', (event) => {
+    if (event.data === 'SKIP_WAITING') {
+        self.skipWaiting();
+    }
 });
