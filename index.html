@@ -40,7 +40,6 @@
         .tab-content { display: none; }
         .tab-content.active { display: block; }
 
-        /* V47 Layout: 5 Columns */
         .form-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 18px; margin-bottom: 25px; }
         input:not(.login-input), select { padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; width: 100%; box-sizing: border-box; color:#0f172a; }
         .col-span-3 { grid-column: span 3; }
@@ -157,7 +156,7 @@
 
 <div id="mainApp" class="container">
     <div class="header-flex">
-        <h2>Malaysia Motor Company <span class="version-badge">V47</span> <span id="adminBadge">👑 Boss View</span></h2>
+        <h2>Malaysia Motor Company <span class="version-badge">V48</span> <span id="adminBadge">👑 Boss View</span></h2>
         <div>
             <button class="sync-btn" onclick="forceDataSync()">🔄 Sync Cloud</button>
             <button class="logout-btn" onclick="logoutSystem()">🔒 Logout</button>
@@ -223,13 +222,18 @@
         </div>
 
         <div class="top-controls">
-            <input type="text" id="searchInput" class="search-bar" placeholder="🔍 Search Name, Plate, Item Code...">
+            <input type="text" id="searchInput" class="search-bar" placeholder="🔍 Search Name, Plate, Item Code..." oninput="renderTable()">
             <select id="viewFilter" onchange="renderTable()" style="font-weight: bold; color: #2563eb; padding: 12px; border-radius: 20px;">
                 <option value="active">Active Orders Only</option>
                 <option value="history">Completed History</option>
                 <option value="all">All Records</option>
             </select>
-            <button id="exportBtn" class="export-btn" onclick="exportCSV()">📥 Export Excel Data</button>
+            <div style="display:flex; align-items:center; gap:8px;">
+                <span style="font-size:13px; font-weight:bold; color:#475569;">Date:</span>
+                <input type="date" id="orderDateFilter" onchange="renderTable()" style="padding:12px; border-radius:20px; width:160px; border:1px solid #cbd5e1;">
+                <button onclick="clearDateFilter('order')" style="padding:12px 18px; border-radius:20px; cursor:pointer; border:1px solid #cbd5e1; background:white; font-weight:bold;">Clear</button>
+            </div>
+            <button id="exportBtn" class="export-btn" onclick="exportCSV()">📥 Export Excel</button>
         </div>
 
         <div class="table-responsive">
@@ -281,6 +285,11 @@
 
         <div class="top-controls">
             <input type="text" id="qSearchInput" class="search-bar" placeholder="🔍 Search Name, Plate, Quotations..." oninput="renderQTable()">
+            <div style="display:flex; align-items:center; gap:8px;">
+                <span style="font-size:13px; font-weight:bold; color:#475569;">Date:</span>
+                <input type="date" id="quoteDateFilter" onchange="renderQTable()" style="padding:12px; border-radius:20px; width:160px; border:1px solid #cbd5e1;">
+                <button onclick="clearDateFilter('quote')" style="padding:12px 18px; border-radius:20px; cursor:pointer; border:1px solid #cbd5e1; background:white; font-weight:bold;">Clear</button>
+            </div>
         </div>
 
         <div class="table-responsive">
@@ -318,7 +327,7 @@
             <div style="display:flex; align-items:center; gap:8px;">
                 <span style="font-size:13px; font-weight:bold; color:#475569;">Search Date:</span>
                 <input type="date" id="rDateFilter" onchange="renderRestockTable()" style="padding:10px; border-radius:6px; width:160px; border:1px solid #cbd5e1;">
-                <button onclick="clearRestockDate()" style="padding:10px; border-radius:6px; cursor:pointer; border:1px solid #cbd5e1; background:white; font-weight:bold;">Clear</button>
+                <button onclick="clearDateFilter('restock')" style="padding:10px; border-radius:6px; cursor:pointer; border:1px solid #cbd5e1; background:white; font-weight:bold;">Clear</button>
             </div>
             
             <div style="margin-left:auto; display:flex; gap:10px; flex-wrap:wrap;">
@@ -382,6 +391,15 @@
     let itemMapIdCounter = 0; let itemPhotosMap = {}; 
     let qItemMapIdCounter = 0; let qItemPhotosMap = {}; 
 
+    // --- V48 CUSTOM DATE FORMATTER ---
+    function getStandardDateStr(dateObj = new Date()) {
+        const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        let d = dateObj.getDate().toString().padStart(2, '0');
+        let m = months[dateObj.getMonth()];
+        let y = dateObj.getFullYear();
+        return `${d} ${m} ${y}`;
+    }
+
     // --- SECURITY DEVICE LOCK ---
     const DEVICE_AUTH_KEY = "mmc_authorized_device_v1";
 
@@ -398,7 +416,9 @@
     function authorizeDevice() {
         let pin = prompt("Enter Master PIN to authorize this device:");
         if (pin === "MMC888") {
-            localStorage.setItem(DEVICE_AUTH_KEY, "true"); alert("✅ Device Authorized Successfully!"); checkDeviceAuthorization();
+            localStorage.setItem(DEVICE_AUTH_KEY, "true");
+            alert("✅ Device Authorized Successfully!");
+            checkDeviceAuthorization();
         } else if (pin !== null) { alert("❌ Incorrect PIN!"); }
     }
 
@@ -444,9 +464,6 @@
         loadDatabaseData(); loadRestockData(); loadQuoteData();
     }
 
-    // ==========================================
-    // V47: NEW DUAL-TRIGGER CRM ENGINE (Phone or Plate)
-    // ==========================================
     function checkCRM(type, phoneId, plateId, nameId, carId, chassisId) {
         let phoneEl = document.getElementById(phoneId); let plateEl = document.getElementById(plateId);
         let nameEl = document.getElementById(nameId); let carEl = document.getElementById(carId); let chasEl = document.getElementById(chassisId);
@@ -515,9 +532,6 @@
         }
     }
 
-    // ==========================================
-    // DATA LOADERS
-    // ==========================================
     function loadDatabaseData() {
         db.ref('orders').on('value', (snapshot) => {
             orders = []; snapshot.forEach((child) => { orders.push({ id: child.key, ...child.val() }); });
@@ -631,7 +645,7 @@
 
     function cancelEdit() {
         editingId = null; document.getElementById('mainBtn').innerText = "💾 Save Document & Sync"; document.getElementById('mainBtn').style.backgroundColor = "#2563eb"; document.getElementById('cancelBtn').style.display = "none";
-        document.querySelectorAll('#ordersTab input:not(.login-input)').forEach(i => { if(i.id !== 'searchInput') i.value = ''; });
+        document.querySelectorAll('#ordersTab input:not(.login-input)').forEach(i => { if(i.id !== 'searchInput' && i.id !== 'orderDateFilter') i.value = ''; });
         document.getElementById('orderByStaff').value = ''; document.getElementById('dynamicItemsContainer').innerHTML = ''; itemPhotosMap = {}; addNewItemBlock();
     }
 
@@ -658,7 +672,7 @@
         if (editingId) { await db.ref('orders/' + editingId).update(payload); cancelEdit(); } 
         else {
             const snapshot = await db.ref('orderCounter').transaction(cv => (cv || 1000) + 1);
-            payload.refNo = 'MMC-' + snapshot.snapshot.val(); payload.date = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }); payload.status = 'waiting'; payload.timestamp = Date.now();
+            payload.refNo = 'MMC-' + snapshot.snapshot.val(); payload.date = getStandardDateStr(); payload.status = 'waiting'; payload.timestamp = Date.now();
             await db.ref('orders').push(payload); cancelEdit(); 
         }
     }
@@ -668,7 +682,6 @@
     async function restoreOrder(id) { await db.ref('orders/' + id).update({ status: 'arrived' }); }
     async function deleteOrder(id) { if(isAdmin && confirm("Delete order?")) await db.ref('orders/' + id).remove(); else if(!isAdmin) alert("Admin only."); }
 
-    // ====== FIXED PDF LAYOUT & COLUMNS ======
     function getInvoiceHTML(order) {
         let itemsHtml = ''; 
         (order.items || []).forEach((item, index) => { 
@@ -697,10 +710,35 @@
         } 
     }
 
+    function clearDateFilter(type) {
+        if(type === 'order') { document.getElementById('orderDateFilter').value = ''; renderTable(); }
+        else if(type === 'quote') { document.getElementById('quoteDateFilter').value = ''; renderQTable(); }
+        else if(type === 'restock') { document.getElementById('rDateFilter').value = ''; renderRestockTable(); }
+    }
+
+    function getFormattedDateForFilter(dateVal) {
+        if(!dateVal) return "";
+        let [y, m, d] = dateVal.split('-');
+        const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        return `${d} ${months[parseInt(m)-1]} ${y}`;
+    }
+
     function renderTable() {
         const tbody = document.getElementById('orderTableBody'); tbody.innerHTML = '';
-        const search = document.getElementById('searchInput').value.toLowerCase(); const viewFilter = document.getElementById('viewFilter').value;
-        let filteredOrders = orders.filter(o => { if (viewFilter === 'active' && o.status === 'completed') return false; if (viewFilter === 'history' && o.status !== 'completed') return false; const itemMatch = (o.items||[]).some(i => (i.part&&i.part.toLowerCase().includes(search)) || (i.partNo&&i.partNo.toLowerCase().includes(search))); return (o.name||'').toLowerCase().includes(search) || (o.car&&o.car.toLowerCase().includes(search)) || (o.refNo&&o.refNo.toLowerCase().includes(search)) || (o.plate&&o.plate.toLowerCase().includes(search)) || itemMatch; });
+        const search = document.getElementById('searchInput').value.toLowerCase(); 
+        const viewFilter = document.getElementById('viewFilter').value;
+        const dateVal = document.getElementById('orderDateFilter').value;
+        const filterDateStr = getFormattedDateForFilter(dateVal);
+
+        let filteredOrders = orders.filter(o => { 
+            if (viewFilter === 'active' && o.status === 'completed') return false; 
+            if (viewFilter === 'history' && o.status !== 'completed') return false; 
+            if (filterDateStr && o.date !== filterDateStr) return false;
+
+            const itemMatch = (o.items||[]).some(i => (i.part&&i.part.toLowerCase().includes(search)) || (i.partNo&&i.partNo.toLowerCase().includes(search))); 
+            return (o.name||'').toLowerCase().includes(search) || (o.car&&o.car.toLowerCase().includes(search)) || (o.refNo&&o.refNo.toLowerCase().includes(search)) || (o.plate&&o.plate.toLowerCase().includes(search)) || itemMatch; 
+        });
+
         filteredOrders.forEach(order => {
             let partsHtml = `<ul class="table-item-list">`; let waList = [];
             (order.items||[]).forEach(item => {
@@ -719,8 +757,6 @@
             const msgN = `*MALAYSIA MOTOR COMPANY*\n\nPelanggan yang dihormati ${order.name},\nKami memohon maaf, pesanan anda (${order.refNo}) kehabisan stok. Sila hubungi kami untuk pemulangan deposit (RM${order.deposit}).\n\nDear ${order.name},\nApologies, your order (${order.refNo}) is out of stock. Contact us for a refund (RM${order.deposit}).`;
 
             const tr = document.createElement('tr'); tr.style.opacity = order.status === 'completed' ? '0.6' : '1';
-            
-            // V47 HTML FIX: Adding Plate visually
             const plateHtml = order.plate ? `<span style="background:#fef08a; color:#b45309; padding:2px 6px; border-radius:4px; font-weight:bold; font-size:12px; letter-spacing:1px;">${order.plate}</span><br>` : '';
 
             tr.innerHTML = `<td><span class="ref-badge">${order.refNo}</span><br><small style="color:#64748b;margin-top:6px;display:inline-block;font-weight:700;">${order.date}</small><br>${order.staff?`<span class="staff-badge">👤 ${order.staff}</span>`:''}</td><td><strong style="color:#0f172a;">${order.name}</strong><br><small style="color:#3b82f6;font-weight:bold;">${order.phone}</small><br><div style="margin-top:8px;padding-top:8px;border-top:1px dashed #e2e8f0;">${plateHtml}<strong style="color:#334155; font-size:13px; display:inline-block; margin-top:4px;">${order.car||'-'}</strong> <span class="mono-text" style="color:#64748b;font-size:11px;">${order.chassis?'('+order.chassis+')':''}</span></div></td><td>${partsHtml}<div class="notes-text" style="margin-top:8px;color:#059669;font-weight:600;">${order.remarks?'📝 Remarks: '+order.remarks:''}</div></td><td><small style="color:#64748b;">Total: RM${order.total}</small><br><small style="color:#64748b;">Paid: RM${order.deposit}</small><br><strong style="font-size:15px;margin-top:6px;display:inline-block;color:#0f172a;">Bal: RM${order.balance}</strong></td><td><button class="status-btn ${order.status==='completed'?'status-completed':(order.status==='waiting'?'status-waiting':'status-arrived')}" onclick="toggleStatus('${order.id}')">${order.status==='waiting'?'⏳ Wait':(order.status==='arrived'?'✅ Arrived':'📦 Done')}</button></td><td><div class="action-btns" style="flex-direction:column;align-items:stretch;">${order.phone&&order.status!=='completed'?`<a href="https://wa.me/${order.phone}?text=${encodeURIComponent(msgR)}" target="_blank" class="wa-btn wa-btn-receipt">📄 WA Receipt</a><a href="https://wa.me/${order.phone}?text=${encodeURIComponent(msgA)}" target="_blank" class="wa-btn wa-btn-arrived">💬 Inform Arrived</a><a href="https://wa.me/${order.phone}?text=${encodeURIComponent(msgN)}" target="_blank" class="wa-btn wa-btn-cancel">❌ Item Not Found</a>`:''}</div></td><td><div class="action-btns" style="margin-bottom:6px;"><button class="print-btn" onclick="printOrder('${order.id}')">🖨️ Print</button><button class="pdf-btn" onclick="savePdfOrder('${order.id}')">📄 PDF</button></div><div class="action-btns">${order.status!=='completed'?`<button class="complete-btn" onclick="markCompleted('${order.id}')">✔️ Done</button>`:`<button class="edit-btn" onclick="restoreOrder('${order.id}')">⏪ Return</button>`}<button class="edit-btn" onclick="editOrder('${order.id}')">✏️ Edit</button>${isAdmin?`<button class="delete-btn" onclick="deleteOrder('${order.id}')">✖ Del</button>`:''}</div></td>`;
@@ -805,7 +841,7 @@
 
     function cancelQEdit() {
         qEditingId = null; document.getElementById('qMainBtn').innerText = "💾 Save Quotation"; document.getElementById('qMainBtn').style.backgroundColor = "#8b5cf6"; document.getElementById('qCancelBtn').style.display = "none";
-        document.querySelectorAll('#quoteTab input:not(.login-input)').forEach(i => { if(i.id !== 'qSearchInput') i.value = ''; });
+        document.querySelectorAll('#quoteTab input:not(.login-input)').forEach(i => { if(i.id !== 'qSearchInput' && i.id !== 'quoteDateFilter') i.value = ''; });
         document.getElementById('qOrderByStaff').value = ''; document.getElementById('qDynamicItemsContainer').innerHTML = ''; qItemPhotosMap = {}; addQItemBlock();
     }
 
@@ -827,7 +863,7 @@
         if (qEditingId) { await db.ref('quotations/' + qEditingId).update(payload); cancelQEdit(); } 
         else {
             const snapshot = await db.ref('quoteCounter').transaction(cv => (cv || 1000) + 1);
-            payload.refNo = 'QT-' + snapshot.snapshot.val(); payload.date = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }); payload.timestamp = Date.now();
+            payload.refNo = 'QT-' + snapshot.snapshot.val(); payload.date = getStandardDateStr(); payload.timestamp = Date.now();
             await db.ref('quotations').push(payload); cancelQEdit(); 
         }
     }
@@ -856,7 +892,14 @@
     function renderQTable() {
         const tbody = document.getElementById('quoteTableBody'); tbody.innerHTML = '';
         const search = document.getElementById('qSearchInput').value.toLowerCase(); 
-        let filteredQuotes = quotes.filter(q => { const itemMatch = (q.items||[]).some(i => (i.part&&i.part.toLowerCase().includes(search)) || (i.partNo&&i.partNo.toLowerCase().includes(search))); return (q.name||'').toLowerCase().includes(search) || (q.car&&q.car.toLowerCase().includes(search)) || (q.refNo&&q.refNo.toLowerCase().includes(search)) || (q.plate&&q.plate.toLowerCase().includes(search)) || itemMatch; });
+        const dateVal = document.getElementById('quoteDateFilter').value;
+        const filterDateStr = getFormattedDateForFilter(dateVal);
+
+        let filteredQuotes = quotes.filter(q => { 
+            if (filterDateStr && q.date !== filterDateStr) return false;
+            const itemMatch = (q.items||[]).some(i => (i.part&&i.part.toLowerCase().includes(search)) || (i.partNo&&i.partNo.toLowerCase().includes(search))); 
+            return (q.name||'').toLowerCase().includes(search) || (q.car&&q.car.toLowerCase().includes(search)) || (q.refNo&&q.refNo.toLowerCase().includes(search)) || (q.plate&&q.plate.toLowerCase().includes(search)) || itemMatch; 
+        });
         
         filteredQuotes.forEach(quote => {
             let partsHtml = `<ul class="table-item-list">`; let waList = [];
@@ -874,7 +917,6 @@
             const msgQ = `📄 *MALAYSIA MOTOR COMPANY - SEBUTHARGA / QUOTATION*\n\nPelanggan yang dihormati ${quote.name},\nBerikut adalah sebutharga untuk rujukan anda:\n\nDear ${quote.name},\nHere is the quotation for your reference:\n\n*No. Sebutharga / Quote ID:* ${quote.refNo}\n*Car Plate:* ${quote.plate||'-'}\n*Kenderaan / Car:* ${quote.car||''}\n*Senarai Barang / Items:*\n${waList.join('\n')}\n\n*Jumlah / Grand Total:* RM${quote.total}\n\nSila beritahu kami jika anda ingin meneruskan pesanan. / Please let us know if you wish to proceed with the order.\nTerima kasih! / Thank you!`;
 
             const tr = document.createElement('tr');
-            
             const plateHtml = quote.plate ? `<span style="background:#fef08a; color:#b45309; padding:2px 6px; border-radius:4px; font-weight:bold; font-size:12px; letter-spacing:1px;">${quote.plate}</span><br>` : '';
 
             tr.innerHTML = `<td><span class="ref-badge" style="background:#f3e8ff; color:#6d28d9; border:1px solid #d8b4fe;">${quote.refNo}</span><br><small style="color:#64748b;margin-top:6px;display:inline-block;font-weight:700;">${quote.date}</small><br>${quote.staff?`<span class="staff-badge">👤 ${quote.staff}</span>`:''}</td><td><strong style="color:#0f172a;">${quote.name}</strong><br><small style="color:#3b82f6;font-weight:bold;">${quote.phone}</small><br><div style="margin-top:8px;padding-top:8px;border-top:1px dashed #e2e8f0;">${plateHtml}<strong style="color:#334155; font-size:13px; display:inline-block; margin-top:4px;">${quote.car||'-'}</strong> <span class="mono-text" style="color:#64748b;font-size:12px;">${quote.chassis||''}</span></div></td><td>${partsHtml}<div class="notes-text" style="margin-top:8px;color:#059669;font-weight:600;">${quote.remarks?'📝 Remarks: '+quote.remarks:''}</div></td><td><strong style="font-size:18px;color:#0f172a;">RM${quote.total}</strong></td><td><div class="action-btns"><a href="https://wa.me/${quote.phone}?text=${encodeURIComponent(msgQ)}" target="_blank" class="wa-btn wa-btn-quote" style="width:100%;">💬 Send Quotation</a></div></td><td><div class="action-btns"><button class="convert-btn" onclick="convertToPreorder('${quote.id}')">➡️ Convert to Order</button></div><div class="action-btns" style="margin-bottom:6px;"><button class="print-btn" onclick="printQuote('${quote.id}')">🖨️</button><button class="pdf-btn" onclick="savePdfQuote('${quote.id}')">📄</button></div><div class="action-btns"><button class="edit-btn" onclick="editQuote('${quote.id}')">✏️</button>${isAdmin?`<button class="delete-btn" onclick="deleteQuote('${quote.id}')">✖</button>`:''}</div></td>`;
@@ -925,7 +967,7 @@
         const brand = document.getElementById('r_brand').value; const supp = document.getElementById('r_supp').value;
         const onHandQty = document.getElementById('r_onHand').value || "0"; const needOrderQty = document.getElementById('r_needOrder').value || "1";
         if(!part && !code) return alert("Please enter at least a part description or item code.");
-        const dateStr = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+        const dateStr = getStandardDateStr();
         await db.ref('restock').push({ part, code, brand, supp, onHandQty, needOrderQty, date: dateStr, timestamp: Date.now(), status: 'Not Yet Order' });
         ['r_part','r_code','r_brand','r_supp','r_onHand','r_needOrder'].forEach(id => document.getElementById(id).value = '');
     }
@@ -933,13 +975,12 @@
     async function markRestockOrdered(id) { await db.ref('restock/' + id).update({ status: 'Ordered' }); }
     async function returnToNotYet(id) { await db.ref('restock/' + id).update({ status: 'Not Yet Order' }); }
     async function deleteRestock(id) { if(isAdmin && confirm("Delete this record permanently?")) { await db.ref('restock/' + id).remove(); } else if (!isAdmin) { alert("Only Boss/Admin can delete records."); } }
-    function clearRestockDate() { document.getElementById('rDateFilter').value = ''; renderRestockTable(); }
-
+    
     function renderRestockTable() {
         const tbody = document.getElementById('restockTableBody'); tbody.innerHTML = '';
-        const view = document.getElementById('rViewFilter').value; const dateVal = document.getElementById('rDateFilter').value;
-        let filterDateStr = "";
-        if (dateVal) { const d = new Date(dateVal); filterDateStr = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }); }
+        const view = document.getElementById('rViewFilter').value; 
+        const dateVal = document.getElementById('rDateFilter').value;
+        const filterDateStr = getFormattedDateForFilter(dateVal);
 
         currentRestockView = restockItems.filter(item => {
             const status = item.status || 'Not Yet Order';
@@ -965,7 +1006,7 @@
 
     function getRestockHTML() {
         let rows = ''; currentRestockView.forEach((i, idx) => { const status = i.status || 'Not Yet Order'; rows += `<tr><td style="text-align:center; padding:8px; border:1px solid #ccc;">${idx+1}</td><td style="padding:8px; border:1px solid #ccc;">${i.date}</td><td style="padding:8px; border:1px solid #ccc;"><strong>${i.part||'-'}</strong></td><td style="padding:8px; border:1px solid #ccc;">${i.code||'-'}</td><td style="padding:8px; border:1px solid #ccc;">${i.brand||'-'}</td><td style="padding:8px; border:1px solid #ccc;">${i.supp||'-'}</td><td style="text-align:center; padding:8px; border:1px solid #ccc;">${i.onHandQty||'0'}</td><td style="text-align:center; color:red; font-weight:bold; padding:8px; border:1px solid #ccc;">${i.needOrderQty||'1'}</td><td style="text-align:center; padding:8px; border:1px solid #ccc;">${status}</td></tr>`; });
-        let dateText = document.getElementById('rDateFilter').value ? document.getElementById('rDateFilter').value : "All Dates";
+        let dateText = document.getElementById('rDateFilter').value ? getFormattedDateForFilter(document.getElementById('rDateFilter').value) : "All Dates";
         return `<style>*, *::before, *::after { box-sizing: border-box; } body{font-family:sans-serif;padding:30px;} table{width:100%;border-collapse:collapse;margin-top:20px;font-size:12px;table-layout:fixed;} th,td{border:1px solid #ccc;padding:8px;word-wrap:break-word;} th{background:#f1f5f9;}</style><div id="rInvoiceBody"><h2 style="text-align:center; margin-bottom:5px;">RESTOCK SUMMARY REPORT</h2><p style="text-align:center; color:#555; margin-top:0;">Filtered Date: ${dateText}</p><table><thead><tr><th style="width:4%; text-align:center;">No</th><th style="width:10%;">Date</th><th style="width:26%; text-align:left;">Part Description</th><th style="width:15%; text-align:left;">Item Code</th><th style="width:12%; text-align:left;">Brand</th><th style="width:11%; text-align:left;">Supplier</th><th style="width:6%; text-align:center;">On Hand</th><th style="width:6%; text-align:center;">Need</th><th style="width:10%; text-align:center;">Status</th></tr></thead><tbody>${rows}</tbody></table></div>`;
     }
     
@@ -982,7 +1023,7 @@
 
     function sendRestockWA(phone, bossName) {
         if (currentRestockView.length === 0) { alert("No items found for this view/date."); return; }
-        let dateText = document.getElementById('rDateFilter').value ? document.getElementById('rDateFilter').value : "All Dates";
+        let dateText = document.getElementById('rDateFilter').value ? getFormattedDateForFilter(document.getElementById('rDateFilter').value) : "All Dates";
         let text = `📦 *MMC RESTOCK SUMMARY*\nTo: Boss ${bossName}\nDate Filter: ${dateText}\n\n`; let notYetCount = 0;
         currentRestockView.forEach(i => { 
             const status = i.status || 'Not Yet Order'; 
