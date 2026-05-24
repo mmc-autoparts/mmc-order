@@ -13,16 +13,28 @@
     
     <link rel="manifest" href="manifest.json">
     <script>
-        // V52 UPDATE: Advanced Service Worker Registration with Update Notification
+        // V53 UPDATE: Advanced Service Worker Registration with Skip Waiting
         if ('serviceWorker' in navigator) {
+            let refreshing = false;
+
+            // This triggers ONLY after the new Service Worker takes over
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                if (!refreshing) {
+                    window.location.reload();
+                    refreshing = true;
+                }
+            });
+
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js').then(reg => {
                     reg.onupdatefound = () => {
                         const installingWorker = reg.installing;
                         installingWorker.onstatechange = () => {
                             if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                if (confirm("🔄 New system version available! Click OK to refresh and apply updates.")) {
-                                    window.location.reload();
+                                // Ask the user if they want to update
+                                if (confirm("🔄 New system version (V53) available! Click OK to apply.")) {
+                                    // Send the kill command to the new Service Worker
+                                    installingWorker.postMessage('SKIP_WAITING');
                                 }
                             }
                         };
@@ -39,7 +51,7 @@
     <style>
         body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; background-color: #f1f5f9; margin: 0; padding: 20px; color: #334155; padding-bottom: 200px;}
         
-        /* V52 Enterprise Login Redesign */
+        /* V53 Enterprise Login Redesign */
         #loginScreen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); z-index: 9999; display: flex; justify-content: center; align-items: center; padding: 20px;}
         .login-box { background: white; padding: 50px 40px; border-radius: 16px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); text-align: center; max-width: 420px; width: 100%;}
         .login-logo { width: 80px; height: 80px; margin-bottom: 20px; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);}
@@ -198,7 +210,7 @@
 <div id="mainApp" class="container">
     <div class="header-flex">
         <div>
-            <h2>Malaysia Motor Company <span class="version-badge">V52 Enterprise</span> <span id="adminBadge">👑 Boss View</span></h2>
+            <h2>Malaysia Motor Company <span class="version-badge">V53 Enterprise</span> <span id="adminBadge">👑 Boss View</span></h2>
             <div style="margin-top:8px;">
                 <span id="networkBadge" class="net-online">🟢 Online (Live Cloud Sync)</span>
             </div>
@@ -450,7 +462,7 @@
     let qItemMapIdCounter = 0; let qItemPhotosMap = {}; 
 
     // ==========================================
-    // V51/52: NETWORK STATUS & INDEXED_DB OFFLINE QUEUE
+    // V53: NETWORK STATUS & INDEXED_DB OFFLINE QUEUE
     // ==========================================
     const netBadge = document.getElementById('networkBadge');
     function updateNetworkStatus() {
@@ -539,7 +551,7 @@
         }
     }
     
-    // V52 UPDATE: Obfuscated Master PIN Check using Base64 (Stops simple "Inspect Element" snooping)
+    // V53 UPDATE: Obfuscated Master PIN Check using Base64 (Stops simple "Inspect Element" snooping)
     function authorizeDevice() {
         let pin = prompt("Enter Master PIN to authorize this device:");
         // "TU1DODg4" is the Base64 encoded string for "MMC888". 
@@ -705,7 +717,7 @@
         }
     }
 
-    // V52 UPDATE: Firebase read limits added. We now only fetch the last 200 items to prevent crashing.
+    // V53 UPDATE: Firebase read limits added. We now only fetch the last 200 items to prevent crashing.
     function loadDatabaseData() {
         db.ref('orders').orderByChild('timestamp').limitToLast(200).on('value', (snapshot) => {
             orders = []; snapshot.forEach((child) => { orders.push({ id: child.key, ...child.val() }); });
@@ -714,7 +726,7 @@
         });
     }
 
-    // V52 UPDATE: Limit to Last 200 Quotations
+    // V53 UPDATE: Limit to Last 200 Quotations
     function loadQuoteData() {
         db.ref('quotations').orderByChild('timestamp').limitToLast(200).on('value', (snapshot) => {
             quotes = []; snapshot.forEach((child) => { quotes.push({ id: child.key, ...child.val() }); });
@@ -723,7 +735,7 @@
         });
     }
 
-    // V52 UPDATE: Limit to Last 200 Restock Items
+    // V53 UPDATE: Limit to Last 200 Restock Items
     function loadRestockData() {
         db.ref('restock').orderByChild('timestamp').limitToLast(200).on('value', (snapshot) => {
             restockItems = []; snapshot.forEach((child) => { restockItems.push({ id: child.key, ...child.val() }); });
