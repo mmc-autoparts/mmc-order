@@ -1,4 +1,4 @@
-const CACHE_NAME = "mmc-portal-v53";
+const CACHE_NAME = "mmc-portal-v54";
 
 self.addEventListener("install", (e) => {
     e.waitUntil(
