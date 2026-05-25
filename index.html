@@ -10,7 +10,7 @@
     <meta name="apple-mobile-web-app-title" content="MMC Portal">
     <link rel="apple-touch-icon" href="logo.png">
 
-    <title>Malaysia Motor Company - Secure Portal V59</title>
+    <title>Malaysia Motor Company - Secure Portal V60</title>
     
     <link rel="manifest" href="manifest.json">
 
@@ -22,9 +22,8 @@
             });
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js').then(reg => {
-                    // V59 UPDATE: Changed to 5 Minutes (300,000 ms)
                     setInterval(() => {
-                        console.log("Checking server for V59 updates...");
+                        console.log("Checking server for V60 updates...");
                         reg.update();
                     }, 5 * 60 * 1000);
 
@@ -32,7 +31,7 @@
                         const installingWorker = reg.installing;
                         installingWorker.onstatechange = () => {
                             if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                if (confirm("🔄 New system version (V59) available! Click OK to apply.")) {
+                                if (confirm("🔄 New system version (V60) available! Click OK to apply.")) {
                                     installingWorker.postMessage('SKIP_WAITING');
                                 }
                             }
@@ -93,19 +92,18 @@
         .tab-content.active { display: block; animation: fadeIn 0.3s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-        .form-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 18px; margin-bottom: 25px; }
+        .form-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 18px; margin-bottom: 15px; }
         input:not(.login-input), select { padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; width: 100%; box-sizing: border-box; color:#0f172a; transition: border-color 0.2s, box-shadow 0.2s;}
         input:focus, select:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
         .full-width { grid-column: 1 / -1; }
         .label-text { color: #64748b; font-size: 12px; font-weight: 700; display: block; margin-bottom: 6px; text-transform: uppercase;}
 
-        /* V59 Custom Autocomplete CSS */
         .input-wrapper { position: relative; width: 100%; }
         .autocomplete-list { position: absolute; top: 100%; left: 0; z-index: 1000; background: white; border: 1px solid #cbd5e1; border-radius: 6px; max-height: 250px; overflow-y: auto; width: 100%; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
         .autocomplete-item { padding: 10px 12px; cursor: pointer; border-bottom: 1px solid #f1f5f9; font-size: 13px; line-height: 1.4; transition: background 0.1s;}
         .autocomplete-item:hover { background: #e2e8f0; }
 
-        .items-wrapper { border: 1px solid #cbd5e1; border-radius: 8px; margin-bottom: 20px; overflow: hidden; background: #fff;}
+        .items-wrapper { border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden; background: #fff;}
         .items-header-bar { display: flex; justify-content: space-between; align-items: center; padding: 12px 18px; background-color: #f8fafc; border-bottom: 1px solid #cbd5e1;}
         .items-header-bar h3 { margin: 0; font-size: 16px; color: #0f172a;}
         .add-item-btn { background-color: #10b981; color: white; border: none; padding: 8px 16px; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 13px; box-shadow: 0 2px 4px rgba(16,185,129,0.2);}
@@ -129,7 +127,8 @@
         .mobile-grid-3 { display: contents; } 
         .mobile-label { display: none; font-size: 11px; color: #64748b; font-weight: 700; margin-bottom: 4px; text-transform: uppercase;}
 
-        .sticky-footer { position: sticky; bottom: 0; background: rgba(248, 250, 252, 0.95); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding: 15px 20px; border-top: 1px solid #cbd5e1; border-radius: 0 0 12px 12px; box-shadow: 0 -10px 25px -5px rgba(0,0,0,0.08); z-index: 50; display: flex; align-items: flex-end; gap: 15px; flex-wrap: wrap; margin-left: -30px; margin-right: -30px; margin-bottom:-25px; margin-top:20px;}
+        /* V60 UPDATE: Adjusted sticky-footer to perfectly align inside the box container */
+        .sticky-footer { position: sticky; bottom: 0; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding: 15px 20px; z-index: 50; display: flex; align-items: flex-end; gap: 15px; flex-wrap: wrap; }
         .finance-group { display: flex; gap: 12px; flex: 2; }
         .finance-group > div { flex: 1; }
         .button-group { display: flex; gap: 12px; flex: 1; min-width: 250px;}
@@ -199,7 +198,6 @@
             body { padding: 5px; } .container { padding: 15px; }
             .header-flex { flex-direction: column; gap: 12px; align-items:flex-start;}
             .form-grid { display: flex; flex-direction: column; gap: 15px; }
-            .sticky-footer { flex-direction: column; align-items: stretch; margin-left:-15px; margin-right:-15px;}
             .finance-group { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
             .pos-table-header { display: none; }
             .pos-table-row { display: flex; flex-direction: column; gap: 10px; border: 2px solid #bfdbfe; border-radius: 8px; padding: 15px; margin: 10px 0;}
@@ -234,7 +232,7 @@
 <div id="mainApp" class="container">
     <div class="header-flex">
         <div>
-            <h2>Malaysia Motor Company <span class="version-badge">V59 Enterprise</span> <span id="adminBadge">👑 Boss View</span></h2>
+            <h2>Malaysia Motor Company <span class="version-badge">V60 Enterprise</span> <span id="adminBadge">👑 Boss View</span></h2>
             <div style="margin-top:8px;">
                 <span id="networkBadge" class="net-online">🟢 Online (Live Cloud Sync)</span>
             </div>
@@ -272,20 +270,22 @@
             <div class="cash-stat"><h4>Total Cash In</h4><div id="todayTotalCash">RM 0.00</div></div>
         </div>
 
-        <div class="form-grid">
-            <div><span class="label-text">Customer Name</span><input type="text" id="custName" placeholder="Name" list="customerList" oninput="checkCRM('name', 'custPhone', 'carPlate', 'custName', 'carModel', 'chassisNumber')"></div>
-            <div><span class="label-text">WhatsApp Number</span><input type="text" id="custPhone" placeholder="60123456789" oninput="checkCRM('phone', 'custPhone', 'carPlate', 'custName', 'carModel', 'chassisNumber')"></div>
-            <div>
-                <span class="label-text">Car Plate No.</span>
-                <div style="display:flex; gap:5px;">
-                    <input type="text" id="carPlate" placeholder="e.g. JDT1234" oninput="this.value = this.value.toUpperCase().replace(/\s/g, ''); checkCRM('plate', 'custPhone', 'carPlate', 'custName', 'carModel', 'chassisNumber')">
-                    <button type="button" onclick="showPlateHistory('carPlate')" style="background:#4338ca; color:white; border:none; border-radius:6px; padding:0 12px; cursor:pointer; font-weight:bold;" title="Deep Cloud Search">🔍</button>
+        <div style="background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 25px;">
+            <div class="form-grid">
+                <div><span class="label-text">Customer Name</span><input type="text" id="custName" placeholder="Name" list="customerList" oninput="checkCRM('name', 'custPhone', 'carPlate', 'custName', 'carModel', 'chassisNumber')"></div>
+                <div><span class="label-text">WhatsApp Number</span><input type="text" id="custPhone" placeholder="60123456789" oninput="checkCRM('phone', 'custPhone', 'carPlate', 'custName', 'carModel', 'chassisNumber')"></div>
+                <div>
+                    <span class="label-text">Car Plate No.</span>
+                    <div style="display:flex; gap:5px;">
+                        <input type="text" id="carPlate" placeholder="e.g. JDT1234" oninput="this.value = this.value.toUpperCase().replace(/\s/g, ''); checkCRM('plate', 'custPhone', 'carPlate', 'custName', 'carModel', 'chassisNumber')">
+                        <button type="button" onclick="showPlateHistory('carPlate')" style="background:#4338ca; color:white; border:none; border-radius:6px; padding:0 12px; cursor:pointer; font-weight:bold;" title="Deep Cloud Search">🔍</button>
+                    </div>
                 </div>
+                <div><span class="label-text">Car Model</span><input type="text" id="carModel" placeholder="e.g. Honda Civic"></div>
+                <div><span class="label-text">Chassis No.</span><input type="text" id="chassisNumber" placeholder="e.g. FC1" oninput="this.value = this.value.toUpperCase().replace(/\s/g, '')"></div>
             </div>
-            <div><span class="label-text">Car Model</span><input type="text" id="carModel" placeholder="e.g. Honda Civic"></div>
-            <div><span class="label-text">Chassis No.</span><input type="text" id="chassisNumber" placeholder="e.g. FC1" oninput="this.value = this.value.toUpperCase().replace(/\s/g, '')"></div>
             
-            <div class="items-wrapper full-width" style="margin-bottom:0; border-bottom-left-radius:0; border-bottom-right-radius:0; border-bottom:none;">
+            <div class="items-wrapper full-width" style="margin-bottom:0; border-color: #cbd5e1; border-bottom-left-radius:0; border-bottom-right-radius:0; border-bottom:none;">
                 <div class="items-header-bar">
                     <h3>📋 Order Items List</h3>
                     <button type="button" class="add-item-btn" onclick="addNewItemBlock()">➕ Add Row</button>
@@ -296,11 +296,11 @@
                 <div id="dynamicItemsContainer"></div>
             </div>
 
-            <div class="sticky-footer full-width">
+            <div class="sticky-footer full-width" style="margin:0; background:rgba(248, 250, 252, 0.95); border-left:1px solid #cbd5e1; border-right:1px solid #cbd5e1; border-bottom:1px solid #cbd5e1; border-top:none; border-radius:0 0 8px 8px;">
                 <div class="finance-group">
                     <div><span class="label-text">Handled By</span><select id="orderByStaff" style="padding:10px;"><option value="">-- Select --</option></select></div>
                     <div><span class="label-text">Remarks</span><input type="text" id="remarks" placeholder="Optional notes..." style="padding:10px;"></div>
-                    <div><span class="label-text">Grand Total (RM)</span><input type="number" id="totalPrice" placeholder="0.00" oninput="calcBalance()" class="readonly-input" style="padding:10px;"></div>
+                    <div><span class="label-text">Grand Total (RM)</span><input type="number" id="totalPrice" placeholder="0.00" readonly class="readonly-input" style="padding:10px;"></div>
                     <div><span class="label-text">Deposit (RM)</span><input type="number" id="deposit" placeholder="0.00" oninput="calcBalance()" style="padding:10px;"></div>
                     <div><span class="label-text">Balance (RM)</span><input type="number" id="balance" placeholder="0.00" readonly class="readonly-input" style="padding:10px; color:#ef4444;"></div>
                 </div>
@@ -339,18 +339,20 @@
     </div>
 
     <div id="quoteTab" class="tab-content">
-        <div class="form-grid" style="background: #faf5ff; padding: 20px; border-radius: 8px; border: 1px solid #e9d5ff;">
-            <div><span class="label-text">Customer Name</span><input type="text" id="qCustName" placeholder="Name" list="customerList" oninput="checkCRM('name', 'qCustPhone', 'qCarPlate', 'qCustName', 'qCarModel', 'qChassisNumber')"></div>
-            <div><span class="label-text">WhatsApp Number</span><input type="text" id="qCustPhone" placeholder="60123456789" oninput="checkCRM('phone', 'qCustPhone', 'qCarPlate', 'qCustName', 'qCarModel', 'qChassisNumber')"></div>
-            <div>
-                <span class="label-text">Car Plate No.</span>
-                <div style="display:flex; gap:5px;">
-                    <input type="text" id="qCarPlate" placeholder="e.g. JDT1234" oninput="this.value = this.value.toUpperCase().replace(/\s/g, ''); checkCRM('plate', 'qCustPhone', 'qCarPlate', 'qCustName', 'qCarModel', 'qChassisNumber')">
-                    <button type="button" onclick="showPlateHistory('qCarPlate')" style="background:#4338ca; color:white; border:none; border-radius:6px; padding:0 12px; cursor:pointer; font-weight:bold;" title="Deep Cloud Search">🔍</button>
+        <div style="background: #faf5ff; padding: 20px; border-radius: 8px; border: 1px solid #e9d5ff; margin-bottom: 25px;">
+            <div class="form-grid">
+                <div><span class="label-text">Customer Name</span><input type="text" id="qCustName" placeholder="Name" list="customerList" oninput="checkCRM('name', 'qCustPhone', 'qCarPlate', 'qCustName', 'qCarModel', 'qChassisNumber')"></div>
+                <div><span class="label-text">WhatsApp Number</span><input type="text" id="qCustPhone" placeholder="60123456789" oninput="checkCRM('phone', 'qCustPhone', 'qCarPlate', 'qCustName', 'qCarModel', 'qChassisNumber')"></div>
+                <div>
+                    <span class="label-text">Car Plate No.</span>
+                    <div style="display:flex; gap:5px;">
+                        <input type="text" id="qCarPlate" placeholder="e.g. JDT1234" oninput="this.value = this.value.toUpperCase().replace(/\s/g, ''); checkCRM('plate', 'qCustPhone', 'qCarPlate', 'qCustName', 'qCarModel', 'qChassisNumber')">
+                        <button type="button" onclick="showPlateHistory('qCarPlate')" style="background:#4338ca; color:white; border:none; border-radius:6px; padding:0 12px; cursor:pointer; font-weight:bold;" title="Deep Cloud Search">🔍</button>
+                    </div>
                 </div>
+                <div><span class="label-text">Car Model</span><input type="text" id="qCarModel" placeholder="e.g. Honda Civic"></div>
+                <div><span class="label-text">Chassis No.</span><input type="text" id="qChassisNumber" placeholder="e.g. FC1" oninput="this.value = this.value.toUpperCase().replace(/\s/g, '')"></div>
             </div>
-            <div><span class="label-text">Car Model</span><input type="text" id="qCarModel" placeholder="e.g. Honda Civic"></div>
-            <div><span class="label-text">Chassis No.</span><input type="text" id="qChassisNumber" placeholder="e.g. FC1" oninput="this.value = this.value.toUpperCase().replace(/\s/g, '')"></div>
             
             <div class="items-wrapper full-width" style="margin-bottom:0; border-color: #d8b4fe; border-bottom-left-radius:0; border-bottom-right-radius:0; border-bottom:none;">
                 <div class="items-header-bar" style="background-color: #f3e8ff; border-color: #d8b4fe;">
@@ -363,7 +365,7 @@
                 <div id="qDynamicItemsContainer"></div>
             </div>
 
-            <div class="sticky-footer full-width" style="background:rgba(250, 245, 255, 0.95); border-color:#d8b4fe;">
+            <div class="sticky-footer full-width" style="margin:0; background:rgba(250, 245, 255, 0.95); border-left:1px solid #d8b4fe; border-right:1px solid #d8b4fe; border-bottom:1px solid #d8b4fe; border-top:none; border-radius:0 0 8px 8px;">
                 <div class="finance-group">
                     <div><span class="label-text">Quoted By Staff</span><select id="qOrderByStaff" style="padding:10px;"><option value="">-- Select --</option></select></div>
                     <div><span class="label-text">Remarks</span><input type="text" id="qRemarks" placeholder="Optional notes..." style="padding:10px;"></div>
@@ -496,7 +498,7 @@
     ];
 
     // ==========================================
-    // V59 UPDATE: Custom Autocomplete Engine
+    // Custom Autocomplete Engine
     // ==========================================
     window.handlePartInput = function(inputEl, rowId) {
         const val = inputEl.value.toLowerCase().trim();
@@ -531,7 +533,6 @@
                 inputEl.value = m.part;
                 listEl.style.display = 'none';
                 
-                // Only autofill if explicitly clicked!
                 const row = document.getElementById(rowId);
                 if(row) {
                     if(m.partNo) row.querySelector('.i-partNo').value = m.partNo;
@@ -574,7 +575,6 @@
         listEl.style.display = 'block';
     };
 
-    // Close autocomplete dropdowns if clicking anywhere else on screen
     document.addEventListener('click', function(e) {
         if (!e.target.classList.contains('i-part') && e.target.id !== 'r_part') {
             document.querySelectorAll('.autocomplete-list').forEach(el => el.style.display = 'none');
