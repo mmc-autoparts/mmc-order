@@ -10,7 +10,7 @@
     <meta name="apple-mobile-web-app-title" content="MMC Portal">
     <link rel="apple-touch-icon" href="logo.png">
 
-    <title>Malaysia Motor Company - Secure Portal V60</title>
+    <title>Malaysia Motor Company - Secure Portal V61</title>
     
     <link rel="manifest" href="manifest.json">
 
@@ -23,7 +23,7 @@
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js').then(reg => {
                     setInterval(() => {
-                        console.log("Checking server for V60 updates...");
+                        console.log("Checking server for V61 updates...");
                         reg.update();
                     }, 5 * 60 * 1000);
 
@@ -31,7 +31,7 @@
                         const installingWorker = reg.installing;
                         installingWorker.onstatechange = () => {
                             if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                if (confirm("🔄 New system version (V60) available! Click OK to apply.")) {
+                                if (confirm("🔄 New system version (V61) available! Click OK to apply.")) {
                                     installingWorker.postMessage('SKIP_WAITING');
                                 }
                             }
@@ -127,7 +127,6 @@
         .mobile-grid-3 { display: contents; } 
         .mobile-label { display: none; font-size: 11px; color: #64748b; font-weight: 700; margin-bottom: 4px; text-transform: uppercase;}
 
-        /* V60 UPDATE: Adjusted sticky-footer to perfectly align inside the box container */
         .sticky-footer { position: sticky; bottom: 0; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding: 15px 20px; z-index: 50; display: flex; align-items: flex-end; gap: 15px; flex-wrap: wrap; }
         .finance-group { display: flex; gap: 12px; flex: 2; }
         .finance-group > div { flex: 1; }
@@ -232,7 +231,7 @@
 <div id="mainApp" class="container">
     <div class="header-flex">
         <div>
-            <h2>Malaysia Motor Company <span class="version-badge">V60 Enterprise</span> <span id="adminBadge">👑 Boss View</span></h2>
+            <h2>Malaysia Motor Company <span class="version-badge">V61 Enterprise</span> <span id="adminBadge">👑 Boss View</span></h2>
             <div style="margin-top:8px;">
                 <span id="networkBadge" class="net-online">🟢 Online (Live Cloud Sync)</span>
             </div>
@@ -935,7 +934,7 @@
     }
 
     // ==========================================
-    // PRINT CHECKLIST GENERATOR
+    // V61 UPDATE: EXACT MATCH PRINT CHECKLIST
     // ==========================================
     function printChecklist(id, isQuote) {
         const dataList = isQuote ? quotes : orders;
@@ -945,30 +944,87 @@
         let rows = '';
         (data.items || []).forEach((i, idx) => {
             rows += `<tr>
-                <td style="text-align:center; padding:8px; border:1px solid #ccc;">${idx+1}</td>
-                <td style="padding:8px; border:1px solid #ccc;"><strong>${i.part||'-'}</strong> ${i.partNo ? '['+i.partNo+']' : ''}</td>
-                <td style="text-align:center; padding:8px; border:1px solid #ccc;">${i.qty||'1'}</td>
-                <td style="text-align:center; padding:8px; border:1px solid #ccc;"><div style="width:20px;height:20px;border:2px solid #000;margin:auto;"></div></td>
+                <td style="text-align:center; padding:10px; border:1px solid #e2e8f0; font-size:13px;">${idx+1}</td>
+                <td style="text-align:center; padding:10px; border:1px solid #e2e8f0;"><div style="width:16px;height:16px;border:2px solid #94a3b8;border-radius:3px;margin:auto;"></div></td>
+                <td style="padding:10px; border:1px solid #e2e8f0; font-size:13px;"><strong>${i.part||'-'}</strong></td>
+                <td style="padding:10px; border:1px solid #e2e8f0; font-size:13px;">${i.partNo || '-'}</td>
+                <td style="text-align:center; padding:10px; border:1px solid #e2e8f0; font-size:13px;">${i.qty||'1'}</td>
+                <td style="text-align:right; padding:10px; border:1px solid #e2e8f0; font-size:13px;">RM ${parseFloat(i.unitPrice||0).toFixed(2)}</td>
+                <td style="text-align:right; padding:10px; border:1px solid #e2e8f0; font-size:13px;"><strong>RM ${parseFloat(i.subTotal||0).toFixed(2)}</strong></td>
             </tr>`;
         });
         
-        let title = isQuote ? "QUOTATION CHECKLIST" : "PREORDER CHECKLIST";
+        let title = isQuote ? "QUOTATION LIST" : "ORDER LIST / PACKING LIST";
+        let statusText = 'Pending Fulfillment';
+        if (data.status === 'arrived') statusText = 'Arrived';
+        if (data.status === 'completed') statusText = 'Completed';
+        if (isQuote) statusText = 'Quotation';
+        
+        let footerFinance = '';
+        if (isQuote) {
+            footerFinance = `Total Amount: <strong style="font-size:16px;">RM ${parseFloat(data.total||0).toFixed(2)}</strong>`;
+        } else {
+            footerFinance = `
+                Total Amount: <strong>RM ${parseFloat(data.total||0).toFixed(2)}</strong><br>
+                Deposit Paid: RM ${parseFloat(data.deposit||0).toFixed(2)}<br>
+                <div style="margin-top:8px; font-size:16px;">Balance Due: <strong style="color:#ef4444;">RM ${parseFloat(data.balance||0).toFixed(2)}</strong></div>
+            `;
+        }
         
         const html = `
         <html><head><title>${title} - ${data.refNo}</title>
-        <style>body{font-family:sans-serif;padding:30px;} table{width:100%;border-collapse:collapse;margin-top:20px;font-size:14px;} th,td{border:1px solid #ccc;padding:8px;} th{background:#f1f5f9;}</style>
+        <style>
+            @media print {
+                @page { margin: 15mm; }
+                body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            }
+            body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 20px; color: #333; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th { background: #f8fafc !important; font-size: 12px; text-transform: uppercase; color: #475569; padding: 12px 10px; border: 1px solid #e2e8f0; }
+        </style>
         </head><body>
-        <h2 style="text-align:center; margin-bottom:5px;">${title}</h2>
-        <div style="margin-bottom: 20px; font-size:14px;">
-            <strong>Ref No:</strong> ${data.refNo || 'N/A'}<br>
-            <strong>Customer:</strong> ${data.name || ''} / ${data.plate || data.car || '-'}<br>
-            <strong>Date:</strong> ${data.date}<br>
-            <strong>Remarks:</strong> ${data.remarks || '-'}
+        
+        <h2 style="text-align:center; margin-bottom:10px; text-transform:uppercase; letter-spacing:1px; font-weight:800; font-size:22px;">Malaysia Motor Company</h2>
+        <hr style="border: 0; border-bottom: 2px solid #1e293b; margin-bottom: 20px;">
+        <h3 style="text-align:center; margin-bottom:25px; font-size:18px; letter-spacing:1px;">${title}</h3>
+        
+        <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; display: flex; justify-content: space-between; margin-bottom: 25px; font-size: 13px; line-height: 1.6; border: 1px solid #e2e8f0;">
+            <div style="width: 48%;">
+                <strong>Customer Name:</strong> ${data.name || 'N/A'}<br>
+                <strong>Contact:</strong> <span style="color:#2563eb; font-weight:bold;">${data.phone || 'N/A'}</span><br>
+                <strong>Car Details:</strong> ${data.car || ''} ${data.plate ? '['+data.plate+']' : ''}
+            </div>
+            <div style="width: 48%;">
+                <strong>Order No:</strong> ${data.refNo || 'N/A'}<br>
+                <strong>Date:</strong> ${data.date || 'N/A'}<br>
+                <strong>Served By:</strong> ${data.staff || 'N/A'}<br>
+                <strong>Status:</strong> ${statusText}
+            </div>
         </div>
+        
         <table>
-            <thead><tr><th style="width:10%;">No</th><th style="width:60%; text-align:left;">Part Details</th><th style="width:15%;">Qty</th><th style="width:15%;">Picked</th></tr></thead>
+            <thead>
+                <tr>
+                    <th style="width:5%; text-align:center;">No.</th>
+                    <th style="width:5%; text-align:center;">Pack</th>
+                    <th style="width:40%; text-align:left;">Part Description</th>
+                    <th style="width:15%; text-align:left;">Item Code</th>
+                    <th style="width:5%; text-align:center;">QTY</th>
+                    <th style="width:15%; text-align:right;">U.Price</th>
+                    <th style="width:15%; text-align:right;">Total</th>
+                </tr>
+            </thead>
             <tbody>${rows}</tbody>
         </table>
+        
+        <div style="text-align:right; margin-top:25px; font-size:14px; line-height:1.8;">
+            ${footerFinance}
+        </div>
+        
+        <div style="text-align:center; margin-top:60px; font-size:11px; color:#94a3b8;">
+            Thank you for choosing Malaysia Motor Company. Please retain this list for your records.
+        </div>
+        
         </body></html>`;
         
         const p = window.open('', '_blank'); 
