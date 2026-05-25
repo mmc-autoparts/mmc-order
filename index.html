@@ -10,7 +10,7 @@
     <meta name="apple-mobile-web-app-title" content="MMC Portal">
     <link rel="apple-touch-icon" href="logo.png">
 
-    <title>Malaysia Motor Company - Secure Portal V58</title>
+    <title>Malaysia Motor Company - Secure Portal V59</title>
     
     <link rel="manifest" href="manifest.json">
 
@@ -22,16 +22,17 @@
             });
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js').then(reg => {
+                    // V59 UPDATE: Changed to 5 Minutes (300,000 ms)
                     setInterval(() => {
-                        console.log("Checking server for updates...");
+                        console.log("Checking server for V59 updates...");
                         reg.update();
-                    }, 10 * 60 * 1000);
+                    }, 5 * 60 * 1000);
 
                     reg.onupdatefound = () => {
                         const installingWorker = reg.installing;
                         installingWorker.onstatechange = () => {
                             if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                if (confirm("🔄 New system version (V58) available! Click OK to apply.")) {
+                                if (confirm("🔄 New system version (V59) available! Click OK to apply.")) {
                                     installingWorker.postMessage('SKIP_WAITING');
                                 }
                             }
@@ -97,6 +98,12 @@
         input:focus, select:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
         .full-width { grid-column: 1 / -1; }
         .label-text { color: #64748b; font-size: 12px; font-weight: 700; display: block; margin-bottom: 6px; text-transform: uppercase;}
+
+        /* V59 Custom Autocomplete CSS */
+        .input-wrapper { position: relative; width: 100%; }
+        .autocomplete-list { position: absolute; top: 100%; left: 0; z-index: 1000; background: white; border: 1px solid #cbd5e1; border-radius: 6px; max-height: 250px; overflow-y: auto; width: 100%; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+        .autocomplete-item { padding: 10px 12px; cursor: pointer; border-bottom: 1px solid #f1f5f9; font-size: 13px; line-height: 1.4; transition: background 0.1s;}
+        .autocomplete-item:hover { background: #e2e8f0; }
 
         .items-wrapper { border: 1px solid #cbd5e1; border-radius: 8px; margin-bottom: 20px; overflow: hidden; background: #fff;}
         .items-header-bar { display: flex; justify-content: space-between; align-items: center; padding: 12px 18px; background-color: #f8fafc; border-bottom: 1px solid #cbd5e1;}
@@ -227,7 +234,7 @@
 <div id="mainApp" class="container">
     <div class="header-flex">
         <div>
-            <h2>Malaysia Motor Company <span class="version-badge">V58 Enterprise</span> <span id="adminBadge">👑 Boss View</span></h2>
+            <h2>Malaysia Motor Company <span class="version-badge">V59 Enterprise</span> <span id="adminBadge">👑 Boss View</span></h2>
             <div style="margin-top:8px;">
                 <span id="networkBadge" class="net-online">🟢 Online (Live Cloud Sync)</span>
             </div>
@@ -394,7 +401,12 @@
             <h3 style="margin-top:0; color:#3730a3;">Manual Input (Low Stock)</h3>
             <p style="font-size:13px; color:#4f46e5; margin-top:-5px; margin-bottom:15px;">Leave supplier blank if unsure. Boss can fill it later.</p>
             <div class="restock-row">
-                <div><span class="label-text">Part Description</span><input type="text" id="r_part" placeholder="e.g. Brake Pad" list="partList" onchange="autoFillRestockDetails(this)"></div>
+                <div><span class="label-text">Part Description</span>
+                    <div class="input-wrapper">
+                        <input type="text" id="r_part" placeholder="e.g. Brake Pad" autocomplete="off" oninput="handleRestockInput(this)" onfocus="handleRestockInput(this)">
+                        <div id="r_autocomplete" class="autocomplete-list" style="display:none;"></div>
+                    </div>
+                </div>
                 <div><span class="label-text">Item Code / OEM No</span><input type="text" id="r_code" placeholder="OEM Code" oninput="this.value = this.value.toUpperCase().replace(/\s/g, '')" onkeypress="if(event.key==='Enter') addRestockItem()"></div>
                 <div><span class="label-text">Brand</span><input type="text" id="r_brand" placeholder="e.g. TRW"></div>
                 <div><span class="label-text">Supplier</span><input type="text" id="r_supp" placeholder="e.g. Emerald" list="supplierList"></div>
@@ -444,7 +456,7 @@
 <div id="photoModal" onclick="closePhoto()"><img id="modalImg" src=""><div style="color:white; margin-top:15px; font-weight:bold; letter-spacing:1px;">Click anywhere to close</div></div>
 <div id="historyModal"><div id="historyContent"></div></div>
 
-<datalist id="partList"></datalist><datalist id="customerList"></datalist><datalist id="supplierList"></datalist>
+<datalist id="customerList"></datalist><datalist id="supplierList"></datalist>
 
 <script>
     // ------------------------------------------------------------------
@@ -482,6 +494,92 @@
         "125D31R Battery (Right Terminal)", "125D31L Battery (Left Terminal)",
         "5W-30 Fully Synthetic Engine Oil", "0W-20 Advanced Engine Oil"
     ];
+
+    // ==========================================
+    // V59 UPDATE: Custom Autocomplete Engine
+    // ==========================================
+    window.handlePartInput = function(inputEl, rowId) {
+        const val = inputEl.value.toLowerCase().trim();
+        const listEl = document.getElementById('autocomplete_' + rowId);
+        listEl.innerHTML = '';
+        
+        if (val.length < 2) { listEl.style.display = 'none'; return; }
+        
+        let matches = [];
+        
+        smartSearchDefaults.forEach(def => {
+            if (def.toLowerCase().includes(val)) { matches.push({ part: def, partNo: '', brand: '', supplier: '', price: '' }); }
+        });
+        
+        productDictionary.forEach(p => {
+            if (!matches.find(m => m.part === p.part && m.partNo === p.partNo) && 
+               (p.part.toLowerCase().includes(val) || (p.partNo && p.partNo.toLowerCase().includes(val)))) {
+                matches.push(p);
+            }
+        });
+        
+        matches = matches.slice(0, 10); 
+        
+        if (matches.length === 0) { listEl.style.display = 'none'; return; }
+        
+        matches.forEach(m => {
+            const div = document.createElement('div');
+            div.className = 'autocomplete-item';
+            div.innerHTML = `<strong style="color:#0f172a;">${m.part}</strong> <span style="color:#64748b; font-size:11px;">${m.partNo ? `[${m.partNo}]` : ''} ${m.brand ? `Brd:${m.brand}` : ''}</span> <strong style="color:#10b981; float:right;">${m.price ? `RM${m.price}` : ''}</strong>`;
+            
+            div.onclick = () => {
+                inputEl.value = m.part;
+                listEl.style.display = 'none';
+                
+                // Only autofill if explicitly clicked!
+                const row = document.getElementById(rowId);
+                if(row) {
+                    if(m.partNo) row.querySelector('.i-partNo').value = m.partNo;
+                    if(m.brand) row.querySelector('.i-brand').value = m.brand;
+                    if(m.supplier) row.querySelector('.i-supplier').value = m.supplier;
+                    if(m.price && !row.querySelector('.i-unitPrice').value) row.querySelector('.i-unitPrice').value = m.price;
+                    if(rowId.startsWith('q_')) calcQRowTotal(rowId); else calcRowTotal(rowId);
+                }
+            };
+            listEl.appendChild(div);
+        });
+        listEl.style.display = 'block';
+    };
+
+    window.handleRestockInput = function(inputEl) {
+        const val = inputEl.value.toLowerCase().trim();
+        const listEl = document.getElementById('r_autocomplete');
+        listEl.innerHTML = '';
+        
+        if (val.length < 2) { listEl.style.display = 'none'; return; }
+        
+        let matches = productDictionary.filter(p => p.part.toLowerCase().includes(val) || (p.partNo && p.partNo.toLowerCase().includes(val))).slice(0, 10);
+        
+        if (matches.length === 0) { listEl.style.display = 'none'; return; }
+        
+        matches.forEach(m => {
+            const div = document.createElement('div');
+            div.className = 'autocomplete-item';
+            div.innerHTML = `<strong style="color:#0f172a;">${m.part}</strong> <span style="color:#64748b; font-size:11px;">${m.partNo ? `[${m.partNo}]` : ''} ${m.brand ? `Brd:${m.brand}` : ''}</span>`;
+            
+            div.onclick = () => {
+                inputEl.value = m.part;
+                listEl.style.display = 'none';
+                if(m.partNo && !document.getElementById('r_code').value) document.getElementById('r_code').value = m.partNo;
+                if(m.brand && !document.getElementById('r_brand').value) document.getElementById('r_brand').value = m.brand;
+                if(m.supplier && !document.getElementById('r_supp').value) document.getElementById('r_supp').value = m.supplier;
+            };
+            listEl.appendChild(div);
+        });
+        listEl.style.display = 'block';
+    };
+
+    // Close autocomplete dropdowns if clicking anywhere else on screen
+    document.addEventListener('click', function(e) {
+        if (!e.target.classList.contains('i-part') && e.target.id !== 'r_part') {
+            document.querySelectorAll('.autocomplete-list').forEach(el => el.style.display = 'none');
+        }
+    });
 
     // ==========================================
     // FIREBASE STORAGE & CANVAS ROTATION
@@ -523,7 +621,7 @@
     }
 
     // ==========================================
-    // OFFLINE QUEUE & SYNC (WITH V58 BUG FIX LOCK)
+    // OFFLINE QUEUE & SYNC
     // ==========================================
     const netBadge = document.getElementById('networkBadge');
     function updateNetworkStatus() {
@@ -566,13 +664,12 @@
         };
     }
 
-    // V58 UPDATE: The Sync Lock to prevent double uploads
     let isSyncingOffline = false;
 
     async function checkOfflineQueue() {
         if(!navigator.onLine || !offlineDB || isSyncingOffline) return;
         
-        isSyncingOffline = true; // 🔒 LOCK THE VAULT
+        isSyncingOffline = true; 
 
         const tx = offlineDB.transaction('offlineData', 'readonly');
         const req = tx.objectStore('offlineData').getAll();
@@ -610,7 +707,7 @@
                     console.error("Sync Error:", error);
                 }
             }
-            isSyncingOffline = false; // 🔓 UNLOCK THE VAULT
+            isSyncingOffline = false; 
         };
         
         req.onerror = () => { isSyncingOffline = false; };
@@ -760,17 +857,15 @@
 
     function buildDictionaries() {
         let pDict = {}; let sSet = new Set();
-        const scanItems = (itemsArray) => { (itemsArray || []).forEach(i => { if(i.part && i.part.trim() !== '') { let key = i.part.trim().toUpperCase(); if(!pDict[key]) pDict[key] = { part: i.part, partNo: i.partNo, brand: i.brand, supplier: i.supplier, price: i.unitPrice }; } }); };
+        const scanItems = (itemsArray) => { (itemsArray || []).forEach(i => { if(i.part && i.part.trim() !== '') { let key = (i.part.trim() + '_' + (i.partNo || '')).toUpperCase(); if(!pDict[key]) pDict[key] = { part: i.part, partNo: i.partNo, brand: i.brand, supplier: i.supplier, price: i.unitPrice }; } }); };
         orders.forEach(o => scanItems(o.items)); quotes.forEach(q => scanItems(q.items));
         restockItems.forEach(r => { 
-            if(r.part && r.part.trim() !== '') { let key = r.part.trim().toUpperCase(); if(!pDict[key]) pDict[key] = { part: r.part, partNo: r.code, brand: r.brand, supplier: r.supp, price: '' }; } 
+            if(r.part && r.part.trim() !== '') { let key = (r.part.trim() + '_' + (r.code || '')).toUpperCase(); if(!pDict[key]) pDict[key] = { part: r.part, partNo: r.code, brand: r.brand, supplier: r.supp, price: '' }; } 
             if(r.supp && r.supp.trim() !== '') sSet.add(r.supp.trim());
         });
         
-        productDictionary = Object.values(pDict); let pList = document.getElementById('partList'); pList.innerHTML = '';
-        smartSearchDefaults.forEach(def => { let opt = document.createElement('option'); opt.value = def; pList.appendChild(opt); });
-        productDictionary.forEach(p => { let opt = document.createElement('option'); opt.value = p.part; pList.appendChild(opt); });
-
+        productDictionary = Object.values(pDict); 
+        
         let cDict = {};
         orders.forEach(o => { if(o.name && o.name.trim() !== '') cDict[o.name.trim().toUpperCase()] = o; });
         quotes.forEach(q => { if(q.name && q.name.trim() !== '') cDict[q.name.trim().toUpperCase()] = q; });
@@ -785,27 +880,6 @@
             filterSelect.innerHTML += `<option value="${s}">${s}</option>`;
         });
         filterSelect.value = currentFilterVal || 'all';
-    }
-
-    function autoFillPartDetails(inputEl, rowId) {
-        let val = inputEl.value.trim().toUpperCase(); let found = productDictionary.find(p => p.part.toUpperCase() === val);
-        if(found) {
-            let row = document.getElementById(rowId); if(!row) return;
-            let pNo = row.querySelector('.i-partNo'); let brand = row.querySelector('.i-brand');
-            let supp = row.querySelector('.i-supplier'); let price = row.querySelector('.i-unitPrice');
-            if(!pNo.value) pNo.value = found.partNo || ''; if(!brand.value) brand.value = found.brand || '';
-            if(!supp.value) supp.value = found.supplier || ''; if(!price.value && found.price) price.value = found.price;
-            if(rowId.startsWith('q_')) { calcQRowTotal(rowId); } else { calcRowTotal(rowId); }
-        }
-    }
-
-    function autoFillRestockDetails(inputEl) {
-        let val = inputEl.value.trim().toUpperCase(); let found = productDictionary.find(p => p.part.toUpperCase() === val);
-        if(found) {
-            if(!document.getElementById('r_code').value) document.getElementById('r_code').value = found.partNo || '';
-            if(!document.getElementById('r_brand').value) document.getElementById('r_brand').value = found.brand || '';
-            if(!document.getElementById('r_supp').value) document.getElementById('r_supp').value = found.supplier || '';
-        }
     }
 
     function loadDatabaseData() {
@@ -861,7 +935,7 @@
     }
 
     // ==========================================
-    // V58 UPDATE: PRINT CHECKLIST GENERATOR
+    // PRINT CHECKLIST GENERATOR
     // ==========================================
     function printChecklist(id, isQuote) {
         const dataList = isQuote ? quotes : orders;
@@ -937,7 +1011,10 @@
             <div class="row-num">0</div>
             <div>
                 <span class="mobile-label">Part Needed</span>
-                <input type="text" class="i-part pos-input" placeholder="Part Desc" value="${data ? data.part : ''}" list="partList" onchange="autoFillPartDetails(this, '${currentId}')">
+                <div class="input-wrapper">
+                    <input type="text" class="i-part pos-input" placeholder="Part Desc" value="${data ? data.part : ''}" autocomplete="off" oninput="handlePartInput(this, '${currentId}')" onfocus="handlePartInput(this, '${currentId}')">
+                    <div id="autocomplete_${currentId}" class="autocomplete-list" style="display:none;"></div>
+                </div>
             </div>
             <div>
                 <span class="mobile-label">Item Code / OEM No</span>
@@ -949,7 +1026,7 @@
             </div>
             <div>
                 <span class="mobile-label">Supplier</span>
-                <input type="text" class="i-supplier pos-input" placeholder="Supplier" value="${data && data.supplier ? data.supplier : ''}">
+                <input type="text" class="i-supplier pos-input" placeholder="Supplier" value="${data && data.supplier ? data.supplier : ''}" list="supplierList">
             </div>
             <div class="mobile-grid-3">
                 <div>
@@ -1178,7 +1255,6 @@
                 waActionButtons = `<a href="https://wa.me/${order.phone}?text=${encodeURIComponent(msgRemind)}" target="_blank" class="wa-btn wa-btn-remind">🔔 Remind Collection</a>` + waActionButtons; 
             }
 
-            // V58 UPDATE: Print Checklist button instead of PDF
             let mainActions = '';
             if (isOffline) {
                 mainActions = `<span style="font-size:12px; color:#ef4444; font-weight:bold;">⏳ Waiting for Internet...</span>`;
@@ -1275,7 +1351,10 @@
             <div class="row-num">0</div>
             <div>
                 <span class="mobile-label">Part Needed</span>
-                <input type="text" class="i-part pos-input" placeholder="Part Desc" value="${data ? data.part : ''}" list="partList" onchange="autoFillPartDetails(this, '${currentId}')">
+                <div class="input-wrapper">
+                    <input type="text" class="i-part pos-input" placeholder="Part Desc" value="${data ? data.part : ''}" autocomplete="off" oninput="handlePartInput(this, '${currentId}')" onfocus="handlePartInput(this, '${currentId}')">
+                    <div id="autocomplete_${currentId}" class="autocomplete-list" style="display:none;"></div>
+                </div>
             </div>
             <div>
                 <span class="mobile-label">Item Code / OEM No</span>
@@ -1287,7 +1366,7 @@
             </div>
             <div>
                 <span class="mobile-label">Supplier</span>
-                <input type="text" class="i-supplier pos-input" placeholder="Supplier" value="${data && data.supplier ? data.supplier : ''}">
+                <input type="text" class="i-supplier pos-input" placeholder="Supplier" value="${data && data.supplier ? data.supplier : ''}" list="supplierList">
             </div>
             <div class="mobile-grid-3">
                 <div>
@@ -1463,7 +1542,6 @@
             const isOffline = quote.id.startsWith('off_');
             const badgeClass = isOffline ? 'ref-offline' : 'ref-badge';
             
-            // V58 UPDATE: Print Checklist button instead of PDF
             let mainActions = '';
             if (isOffline) {
                 mainActions = `<span style="font-size:12px; color:#ef4444; font-weight:bold;">⏳ Waiting for Internet...</span>`;
