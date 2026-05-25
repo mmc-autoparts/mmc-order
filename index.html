@@ -10,12 +10,9 @@
     <meta name="apple-mobile-web-app-title" content="MMC Portal">
     <link rel="apple-touch-icon" href="logo.png">
 
-    <title>Malaysia Motor Company - Secure Portal V57</title>
+    <title>Malaysia Motor Company - Secure Portal V58</title>
     
     <link rel="manifest" href="manifest.json">
-    
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 
     <script>
         if ('serviceWorker' in navigator) {
@@ -34,7 +31,7 @@
                         const installingWorker = reg.installing;
                         installingWorker.onstatechange = () => {
                             if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                if (confirm("🔄 New system version (V57) available! Click OK to apply.")) {
+                                if (confirm("🔄 New system version (V58) available! Click OK to apply.")) {
                                     installingWorker.postMessage('SKIP_WAITING');
                                 }
                             }
@@ -120,8 +117,6 @@
         .photo-thumbnail { width: 48px; height: 48px; object-fit: cover; border-radius: 4px; cursor: pointer; border: 1px solid #cbd5e1; box-shadow: 0 2px 4px rgba(0,0,0,0.05);}
         .photo-wrapper { position: relative; display: inline-block; }
         .remove-single-btn { position: absolute; top: -6px; right: -6px; background: #ef4444; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 10px; font-weight: bold; cursor: pointer; z-index: 2;}
-        
-        /* V57 UPDATE: Rotate Button */
         .rotate-single-btn { position: absolute; top: -6px; left: -6px; background: #f59e0b; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; font-weight: bold; cursor: pointer; z-index: 2;}
 
         .mobile-grid-3 { display: contents; } 
@@ -232,7 +227,7 @@
 <div id="mainApp" class="container">
     <div class="header-flex">
         <div>
-            <h2>Malaysia Motor Company <span class="version-badge">V57 Enterprise</span> <span id="adminBadge">👑 Boss View</span></h2>
+            <h2>Malaysia Motor Company <span class="version-badge">V58 Enterprise</span> <span id="adminBadge">👑 Boss View</span></h2>
             <div style="margin-top:8px;">
                 <span id="networkBadge" class="net-online">🟢 Online (Live Cloud Sync)</span>
             </div>
@@ -482,7 +477,6 @@
     let staffList = ['Hock', 'Kelvin', 'Nana', 'Adi', 'Khairul', 'Sani', 'Lun']; 
     let orderLimit = 200; let quoteLimit = 200; let restockLimit = 200;
 
-    // V57 UPDATE: Smart Defaults for Fast Setup
     const smartSearchDefaults = [
         "Honda Chassis SNA / Civic", "Honda Chassis TMO / City", "Honda Chassis FC / Civic",
         "125D31R Battery (Right Terminal)", "125D31L Battery (Left Terminal)",
@@ -490,7 +484,7 @@
     ];
 
     // ==========================================
-    // FIREBASE STORAGE & CANVAS ROTATION (V57)
+    // FIREBASE STORAGE & CANVAS ROTATION
     // ==========================================
     async function uploadBase64ToStorage(base64Array) {
         let uploadedUrls = [];
@@ -529,7 +523,7 @@
     }
 
     // ==========================================
-    // OFFLINE QUEUE & SYNC
+    // OFFLINE QUEUE & SYNC (WITH V58 BUG FIX LOCK)
     // ==========================================
     const netBadge = document.getElementById('networkBadge');
     function updateNetworkStatus() {
@@ -572,39 +566,54 @@
         };
     }
 
+    // V58 UPDATE: The Sync Lock to prevent double uploads
+    let isSyncingOffline = false;
+
     async function checkOfflineQueue() {
-        if(!navigator.onLine || !offlineDB) return;
+        if(!navigator.onLine || !offlineDB || isSyncingOffline) return;
+        
+        isSyncingOffline = true; // 🔒 LOCK THE VAULT
+
         const tx = offlineDB.transaction('offlineData', 'readonly');
         const req = tx.objectStore('offlineData').getAll();
+        
         req.onsuccess = async () => {
             const items = req.result;
             if(items.length > 0) {
-                alert(`🔄 Internet Restored!\nUploading ${items.length} offline items and photos to Cloud...`);
-                for(let item of items) {
-                    const type = item.dataType; delete item.dataType; delete item.tempId; delete item.id;
-                    if (item.items) {
-                        for(let i=0; i<item.items.length; i++) {
-                            if(item.items[i].photos && item.items[i].photos.length > 0) item.items[i].photos = await uploadBase64ToStorage(item.items[i].photos);
+                alert(`🔄 Internet Restored!\nUploading ${items.length} offline items to Cloud...`);
+                
+                try {
+                    for(let item of items) {
+                        const type = item.dataType; delete item.dataType; delete item.tempId; delete item.id;
+                        if (item.items) {
+                            for(let i=0; i<item.items.length; i++) {
+                                if(item.items[i].photos && item.items[i].photos.length > 0) item.items[i].photos = await uploadBase64ToStorage(item.items[i].photos);
+                            }
+                        }
+                        if(item.editId) { 
+                            let targetId = item.editId; delete item.editId;
+                            if(type === 'order') await db.ref('orders/' + targetId).update(item);
+                            else if(type === 'quote') await db.ref('quotations/' + targetId).update(item);
+                        } else { 
+                            if(type === 'order') {
+                                const snap = await db.ref('orderCounter').transaction(cv => (cv || 1000) + 1);
+                                item.refNo = 'MMC-' + snap.snapshot.val(); item.status = 'waiting'; await db.ref('orders').push(item);
+                            } else if(type === 'quote') {
+                                 const snap = await db.ref('quoteCounter').transaction(cv => (cv || 1000) + 1);
+                                 item.refNo = 'QT-' + snap.snapshot.val(); await db.ref('quotations').push(item);
+                            } else if (type === 'restock') { await db.ref('restock').push(item); }
                         }
                     }
-                    if(item.editId) { 
-                        let targetId = item.editId; delete item.editId;
-                        if(type === 'order') await db.ref('orders/' + targetId).update(item);
-                        else if(type === 'quote') await db.ref('quotations/' + targetId).update(item);
-                    } else { 
-                        if(type === 'order') {
-                            const snap = await db.ref('orderCounter').transaction(cv => (cv || 1000) + 1);
-                            item.refNo = 'MMC-' + snap.snapshot.val(); item.status = 'waiting'; await db.ref('orders').push(item);
-                        } else if(type === 'quote') {
-                             const snap = await db.ref('quoteCounter').transaction(cv => (cv || 1000) + 1);
-                             item.refNo = 'QT-' + snap.snapshot.val(); await db.ref('quotations').push(item);
-                        } else if (type === 'restock') { await db.ref('restock').push(item); }
-                    }
+                    const txDel = offlineDB.transaction('offlineData', 'readwrite');
+                    txDel.objectStore('offlineData').clear(); 
+                } catch (error) {
+                    console.error("Sync Error:", error);
                 }
-                const txDel = offlineDB.transaction('offlineData', 'readwrite');
-                txDel.objectStore('offlineData').clear(); 
             }
+            isSyncingOffline = false; // 🔓 UNLOCK THE VAULT
         };
+        
+        req.onerror = () => { isSyncingOffline = false; };
     }
 
     function getStandardDateStr(dateObj = new Date()) {
@@ -852,61 +861,47 @@
     }
 
     // ==========================================
-    // PDF GENERATOR (V57)
+    // V58 UPDATE: PRINT CHECKLIST GENERATOR
     // ==========================================
-    function generateInvoicePDF(id, isQuote) {
+    function printChecklist(id, isQuote) {
         const dataList = isQuote ? quotes : orders;
         const data = dataList.find(x => x.id === id);
         if(!data) return;
 
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        const title = isQuote ? "QUOTATION" : "TAX INVOICE";
-        
-        doc.setFontSize(22);
-        doc.text("MALAYSIA MOTOR COMPANY", 105, 20, { align: "center" });
-        doc.setFontSize(10);
-        doc.text(title, 105, 28, { align: "center" });
-        
-        doc.text(`Ref No: ${data.refNo || 'N/A'}`, 15, 45);
-        doc.text(`Date: ${data.date || getStandardDateStr()}`, 15, 52);
-        doc.text(`Customer: ${data.name || ''}`, 15, 59);
-        
-        doc.text(`Phone: ${data.phone || ''}`, 130, 45);
-        doc.text(`Plate No: ${data.plate || ''}`, 130, 52);
-        doc.text(`Car Model: ${data.car || ''}`, 130, 59);
-        
-        const tableBody = [];
-        (data.items || []).forEach(i => {
-            const partDesc = `${i.part || ''} ${i.partNo ? '['+i.partNo+']' : ''}`;
-            tableBody.push([
-                partDesc,
-                i.qty || '1',
-                `RM ${parseFloat(i.unitPrice || 0).toFixed(2)}`,
-                `RM ${parseFloat(i.subTotal || 0).toFixed(2)}`
-            ]);
+        let rows = '';
+        (data.items || []).forEach((i, idx) => {
+            rows += `<tr>
+                <td style="text-align:center; padding:8px; border:1px solid #ccc;">${idx+1}</td>
+                <td style="padding:8px; border:1px solid #ccc;"><strong>${i.part||'-'}</strong> ${i.partNo ? '['+i.partNo+']' : ''}</td>
+                <td style="text-align:center; padding:8px; border:1px solid #ccc;">${i.qty||'1'}</td>
+                <td style="text-align:center; padding:8px; border:1px solid #ccc;"><div style="width:20px;height:20px;border:2px solid #000;margin:auto;"></div></td>
+            </tr>`;
         });
-
-        doc.autoTable({
-            startY: 68,
-            headStyles: { fillColor: [15, 23, 42] },
-            head: [['Description', 'Qty', 'Unit Price', 'Total']],
-            body: tableBody,
-        });
-
-        const finalY = doc.lastAutoTable.finalY || 72;
-        doc.setFontSize(10);
         
-        if(!isQuote) {
-            doc.text(`Grand Total: RM ${parseFloat(data.total || 0).toFixed(2)}`, 140, finalY + 10);
-            doc.text(`Deposit Paid: RM ${parseFloat(data.deposit || 0).toFixed(2)}`, 140, finalY + 16);
-            doc.text(`Balance Due: RM ${parseFloat(data.balance || 0).toFixed(2)}`, 140, finalY + 22);
-        } else {
-            doc.text(`Quotation Total: RM ${parseFloat(data.total || 0).toFixed(2)}`, 140, finalY + 10);
-        }
+        let title = isQuote ? "QUOTATION CHECKLIST" : "PREORDER CHECKLIST";
         
-        doc.text("Thank you for your business!", 15, finalY + 35);
-        doc.save(`MMC_${isQuote ? 'Quote' : 'Invoice'}_${data.refNo || Date.now()}.pdf`);
+        const html = `
+        <html><head><title>${title} - ${data.refNo}</title>
+        <style>body{font-family:sans-serif;padding:30px;} table{width:100%;border-collapse:collapse;margin-top:20px;font-size:14px;} th,td{border:1px solid #ccc;padding:8px;} th{background:#f1f5f9;}</style>
+        </head><body>
+        <h2 style="text-align:center; margin-bottom:5px;">${title}</h2>
+        <div style="margin-bottom: 20px; font-size:14px;">
+            <strong>Ref No:</strong> ${data.refNo || 'N/A'}<br>
+            <strong>Customer:</strong> ${data.name || ''} / ${data.plate || data.car || '-'}<br>
+            <strong>Date:</strong> ${data.date}<br>
+            <strong>Remarks:</strong> ${data.remarks || '-'}
+        </div>
+        <table>
+            <thead><tr><th style="width:10%;">No</th><th style="width:60%; text-align:left;">Part Details</th><th style="width:15%;">Qty</th><th style="width:15%;">Picked</th></tr></thead>
+            <tbody>${rows}</tbody>
+        </table>
+        </body></html>`;
+        
+        const p = window.open('', '_blank'); 
+        p.document.write(html); 
+        p.document.close(); 
+        p.focus(); 
+        setTimeout(() => { p.print(); p.close(); }, 350);
     }
 
     // ==========================================
@@ -1183,6 +1178,7 @@
                 waActionButtons = `<a href="https://wa.me/${order.phone}?text=${encodeURIComponent(msgRemind)}" target="_blank" class="wa-btn wa-btn-remind">🔔 Remind Collection</a>` + waActionButtons; 
             }
 
+            // V58 UPDATE: Print Checklist button instead of PDF
             let mainActions = '';
             if (isOffline) {
                 mainActions = `<span style="font-size:12px; color:#ef4444; font-weight:bold;">⏳ Waiting for Internet...</span>`;
@@ -1199,7 +1195,7 @@
                     mainActions += `<button class="delete-btn" onclick="deleteOrder('${order.id}')">✖ Del</button>`;
                 }
                 mainActions += `</div>`;
-                mainActions += `<button class="print-btn" onclick="generateInvoicePDF('${order.id}', false)" style="width:100%; margin-top:5px; margin-bottom:5px;">📄 PDF Invoice</button>`;
+                mainActions += `<button class="print-btn" onclick="printChecklist('${order.id}', false)" style="width:100%; margin-top:5px; margin-bottom:5px;">🖨️ Print Checklist</button>`;
             }
 
             const badgeClass = isOffline ? 'ref-offline' : 'ref-badge';
@@ -1467,6 +1463,7 @@
             const isOffline = quote.id.startsWith('off_');
             const badgeClass = isOffline ? 'ref-offline' : 'ref-badge';
             
+            // V58 UPDATE: Print Checklist button instead of PDF
             let mainActions = '';
             if (isOffline) {
                 mainActions = `<span style="font-size:12px; color:#ef4444; font-weight:bold;">⏳ Waiting for Internet...</span>`;
@@ -1477,7 +1474,7 @@
                     mainActions += `<button class="delete-btn" onclick="deleteQuote('${quote.id}')">✖ Del</button>`;
                 }
                 mainActions += `</div>`;
-                mainActions += `<button class="print-btn" onclick="generateInvoicePDF('${quote.id}', true)" style="width:100%; margin-top:5px; margin-bottom:5px;">📄 PDF Quote</button>`;
+                mainActions += `<button class="print-btn" onclick="printChecklist('${quote.id}', true)" style="width:100%; margin-top:5px; margin-bottom:5px;">🖨️ Print Checklist</button>`;
             }
 
             tr.innerHTML = `
@@ -1515,7 +1512,7 @@
     }
 
     // ==========================================
-    // RESTOCK SYSTEM (V57 BOSS VIEW UPGRADE)
+    // RESTOCK SYSTEM
     // ==========================================
     function calcRestockCost() {
         const qty = parseFloat(document.getElementById('r_needOrder').value) || 1;
