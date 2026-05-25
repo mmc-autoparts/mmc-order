@@ -9,13 +9,9 @@
     <meta name="apple-mobile-web-app-title" content="MMC Portal">
     <link rel="apple-touch-icon" href="logo.png">
 
-    <title>Malaysia Motor Company - Secure Portal V57</title>
+    <title>Malaysia Motor Company - Secure Portal</title>
     
     <link rel="manifest" href="manifest.json">
-    
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
-
     <script>
         if ('serviceWorker' in navigator) {
             let refreshing = false;
@@ -24,6 +20,8 @@
             });
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js').then(reg => {
+                    
+                    // V56 UPDATE: Auto-check server every 10 minutes (600,000 ms)
                     setInterval(() => {
                         console.log("Checking server for updates...");
                         reg.update();
@@ -33,7 +31,7 @@
                         const installingWorker = reg.installing;
                         installingWorker.onstatechange = () => {
                             if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                if (confirm("🔄 New system version (V57) available! Click OK to apply.")) {
+                                if (confirm("🔄 New system version (V56) available! Click OK to apply.")) {
                                     installingWorker.postMessage('SKIP_WAITING');
                                 }
                             }
@@ -62,6 +60,7 @@
         .login-field label { background: transparent; color: #475569; font-weight: bold; font-size: 14px; padding: 14px; width: 85px; text-align: left; border-right: 1px solid #cbd5e1; margin: 0;}
         .login-input { border: none; padding: 14px; font-size: 16px; flex: 1; outline: none; width: 100%; background: transparent;}
         
+        /* V56 UPDATE: Tactile Premium Buttons */
         button { transition: transform 0.1s ease, box-shadow 0.2s ease, background-color 0.2s ease; }
         button:active { transform: scale(0.97); }
         
@@ -107,7 +106,7 @@
         
         .pos-table-header { display: grid; grid-template-columns: 35px 2fr 1.5fr 1fr 1fr 50px 80px 90px 110px 70px 40px; gap: 6px; background: #e2e8f0; padding: 10px 12px; border-bottom: 1px solid #cbd5e1; font-weight: 700; font-size: 11px; color: #475569; text-transform: uppercase;}
         .pos-table-row { display: grid; grid-template-columns: 35px 2fr 1.5fr 1fr 1fr 50px 80px 90px 110px 70px 40px; gap: 6px; padding: 8px 12px; border-bottom: 1px solid #f1f5f9; align-items: start;}
-        .pos-table-row:hover { background-color: #f8fafc; } 
+        .pos-table-row:hover { background-color: #f8fafc; } /* V56 UPDATE: Row hover effect */
         .row-num { font-size: 14px; color: #64748b; display: flex; align-items: center; justify-content: center; height: 38px; font-weight: 700;}
         .pos-input { border: 1px solid #cbd5e1 !important; padding: 8px 6px !important; height: 38px; border-radius: 4px !important;}
         .readonly-input { background-color: #f1f5f9; color: #0f172a; font-weight: 700;}
@@ -118,14 +117,12 @@
         .row-gallery { grid-column: 2 / -1; display: flex; gap: 8px; flex-wrap: wrap; padding-top: 6px; }
         .photo-thumbnail { width: 48px; height: 48px; object-fit: cover; border-radius: 4px; cursor: pointer; border: 1px solid #cbd5e1; box-shadow: 0 2px 4px rgba(0,0,0,0.05);}
         .photo-wrapper { position: relative; display: inline-block; }
-        .remove-single-btn { position: absolute; top: -6px; right: -6px; background: #ef4444; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 10px; font-weight: bold; cursor: pointer; z-index: 2;}
-        
-        /* V57 UPDATE: Rotate Button */
-        .rotate-single-btn { position: absolute; top: -6px; left: -6px; background: #f59e0b; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; font-weight: bold; cursor: pointer; z-index: 2;}
+        .remove-single-btn { position: absolute; top: -6px; right: -6px; background: #ef4444; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 10px; font-weight: bold; cursor: pointer;}
 
         .mobile-grid-3 { display: contents; } 
         .mobile-label { display: none; font-size: 11px; color: #64748b; font-weight: 700; margin-bottom: 4px; text-transform: uppercase;}
 
+        /* V56 UPDATE: Glassmorphism Sticky Footer */
         .sticky-footer { position: sticky; bottom: 0; background: rgba(248, 250, 252, 0.95); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding: 15px 20px; border-top: 1px solid #cbd5e1; border-radius: 0 0 12px 12px; box-shadow: 0 -10px 25px -5px rgba(0,0,0,0.08); z-index: 50; display: flex; align-items: flex-end; gap: 15px; flex-wrap: wrap; margin-left: -30px; margin-right: -30px; margin-bottom:-25px; margin-top:20px;}
         .finance-group { display: flex; gap: 12px; flex: 2; }
         .finance-group > div { flex: 1; }
@@ -147,7 +144,7 @@
         th, td { padding: 14px 16px; border-bottom: 1px solid #e2e8f0; text-align: left; vertical-align: middle;}
         th { background-color: #f8fafc; color: #334155; font-weight: 700; border-bottom: 2px solid #cbd5e1; text-transform: uppercase; font-size: 12px;}
         tbody tr { transition: background-color 0.15s ease; }
-        tbody tr:hover { background-color: #f1f5f9; } 
+        tbody tr:hover { background-color: #f1f5f9; } /* V56 UPDATE: Table Row Hover */
         
         .status-btn { padding: 8px 12px; border: none; border-radius: 20px; font-weight: 700; font-size: 12px; width: 100%; margin-bottom: 6px;}
         .status-waiting { background-color: #fef3c7; color: #b45309; border: 1px solid #fde68a;}
@@ -231,7 +228,7 @@
 <div id="mainApp" class="container">
     <div class="header-flex">
         <div>
-            <h2>Malaysia Motor Company <span class="version-badge">V57 Enterprise</span> <span id="adminBadge">👑 Boss View</span></h2>
+            <h2>Malaysia Motor Company <span class="version-badge">V56 Enterprise</span> <span id="adminBadge">👑 Boss View</span></h2>
             <div style="margin-top:8px;">
                 <span id="networkBadge" class="net-online">🟢 Online (Live Cloud Sync)</span>
             </div>
@@ -404,10 +401,6 @@
                 <div><span class="label-text">Supplier</span><input type="text" id="r_supp" placeholder="e.g. Emerald" list="supplierList"></div>
                 <div><span class="label-text">On Hand Qty</span><input type="number" id="r_onHand" placeholder="0"></div>
                 <div><span class="label-text">Order Qty</span><input type="number" id="r_needOrder" placeholder="1"></div>
-                
-                <div class="boss-restock" style="display:none;"><span class="label-text">Unit Cost (RM)</span><input type="number" id="r_unitCost" placeholder="0.00" oninput="calcRestockCost()"></div>
-                <div class="boss-restock" style="display:none;"><span class="label-text">Total Cost (RM)</span><input type="number" id="r_totalCost" placeholder="0.00" readonly class="readonly-input"></div>
-
                 <button class="add-item-btn" onclick="addRestockItem()" style="height:42px; width:100%;">➕ Add</button>
             </div>
         </div>
@@ -436,8 +429,19 @@
 
         <div class="table-responsive">
             <table>
-                <thead id="restockThead">
-                    </thead>
+                <thead>
+                    <tr>
+                        <th style="width:100px;">Date Added</th>
+                        <th>Part Description</th>
+                        <th>Item Code / OEM</th>
+                        <th>Brand</th>
+                        <th>Supplier <span style="font-size:10px; color:#b45309;">(Boss Edit)</span></th>
+                        <th style="text-align:center; width: 80px;">On Hand</th>
+                        <th style="text-align:center; width: 90px;">Order Qty</th>
+                        <th style="text-align:center; width: 100px;">Status</th>
+                        <th style="text-align:center; width: 80px;">Actions</th>
+                    </tr>
+                </thead>
                 <tbody id="restockTableBody"></tbody>
             </table>
         </div>
@@ -471,6 +475,7 @@
     
     const BOSS_EMAIL = "admin@mmc.com"; 
 
+    // Global variables
     let orders = []; let quotes = []; let restockItems = []; let currentRestockView = []; 
     let productDictionary = []; let customerDictionary = [];
     let editingId = null; let qEditingId = null; 
@@ -481,15 +486,8 @@
     let staffList = ['Hock', 'Kelvin', 'Nana', 'Adi', 'Khairul', 'Sani', 'Lun']; 
     let orderLimit = 200; let quoteLimit = 200; let restockLimit = 200;
 
-    // V57 UPDATE: Smart Defaults for Fast Setup
-    const smartSearchDefaults = [
-        "Honda Chassis SNA / Civic", "Honda Chassis TMO / City", "Honda Chassis FC / Civic",
-        "125D31R Battery (Right Terminal)", "125D31L Battery (Left Terminal)",
-        "5W-30 Fully Synthetic Engine Oil", "0W-20 Advanced Engine Oil"
-    ];
-
     // ==========================================
-    // FIREBASE STORAGE & CANVAS ROTATION (V57)
+    // FIREBASE STORAGE PHOTO UPLOADER
     // ==========================================
     async function uploadBase64ToStorage(base64Array) {
         let uploadedUrls = [];
@@ -503,32 +501,8 @@
         return uploadedUrls;
     }
 
-    function rotatePhotoBase64(base64data, callback) {
-        const img = new Image();
-        img.onload = function() {
-            const canvas = document.createElement('canvas');
-            canvas.width = img.height;
-            canvas.height = img.width;
-            const ctx = canvas.getContext('2d');
-            ctx.translate(canvas.width / 2, canvas.height / 2);
-            ctx.rotate(90 * Math.PI / 180);
-            ctx.drawImage(img, -img.width / 2, -img.height / 2);
-            callback(canvas.toDataURL('image/jpeg', 0.8));
-        };
-        img.src = base64data;
-    }
-
-    window.rotateImage = function(itemId, index, isQuote) {
-        let targetMap = isQuote ? qItemPhotosMap : itemPhotosMap;
-        let targetRender = isQuote ? renderQGalleryUI : renderGalleryUI;
-        rotatePhotoBase64(targetMap[itemId][index], (newBase64) => {
-            targetMap[itemId][index] = newBase64;
-            targetRender(itemId);
-        });
-    }
-
     // ==========================================
-    // OFFLINE QUEUE & SYNC
+    // OFFLINE QUEUE & SYNC VISUALIZATION
     // ==========================================
     const netBadge = document.getElementById('networkBadge');
     function updateNetworkStatus() {
@@ -537,7 +511,7 @@
             netBadge.className = 'net-online';
             checkOfflineQueue(); 
         } else {
-            netBadge.innerText = '🔴 Offline (Saving Local)';
+            netBadge.innerText = '🔴 Offline (Saving to Local Storage)';
             netBadge.className = 'net-offline';
         }
     }
@@ -558,12 +532,13 @@
         const tx = offlineDB.transaction('offlineData', 'readwrite');
         tx.objectStore('offlineData').put(payload);
         tx.oncomplete = () => {
-            alert("⚠️ Saved Offline!\n\nThis record is saved to this device and will automatically upload to the cloud when WiFi connects.");
+            alert("⚠️ Saved Offline!\n\nThis record is saved to this device and will appear in your list as 'Pending Sync'. It will upload to the cloud automatically the second WiFi connects again.");
+            
             if(type === 'order') {
-                payload.id = 'off_' + payload.tempId; payload.status = 'offline'; payload.refNo = '📡 PENDING'; 
+                payload.id = 'off_' + payload.tempId; payload.status = 'offline'; payload.refNo = '📡 PENDING SYNC'; 
                 orders.unshift(payload); renderTable();
             } else if(type === 'quote') {
-                payload.id = 'off_' + payload.tempId; payload.refNo = '📡 PENDING';
+                payload.id = 'off_' + payload.tempId; payload.refNo = '📡 PENDING SYNC';
                 quotes.unshift(payload); renderQTable();
             } else if(type === 'restock') {
                 payload.id = 'off_' + payload.tempId; restockItems.unshift(payload); renderRestockTable();
@@ -578,14 +553,19 @@
         req.onsuccess = async () => {
             const items = req.result;
             if(items.length > 0) {
-                alert(`🔄 Internet Restored!\nUploading ${items.length} offline items and photos to Cloud...`);
+                alert(`🔄 Internet Restored!\nUploading ${items.length} offline items and photos to Cloud... This may take a moment.`);
                 for(let item of items) {
-                    const type = item.dataType; delete item.dataType; delete item.tempId; delete item.id;
+                    const type = item.dataType;
+                    delete item.dataType; delete item.tempId; delete item.id;
+                    
                     if (item.items) {
                         for(let i=0; i<item.items.length; i++) {
-                            if(item.items[i].photos && item.items[i].photos.length > 0) item.items[i].photos = await uploadBase64ToStorage(item.items[i].photos);
+                            if(item.items[i].photos && item.items[i].photos.length > 0) {
+                                item.items[i].photos = await uploadBase64ToStorage(item.items[i].photos);
+                            }
                         }
                     }
+                    
                     if(item.editId) { 
                         let targetId = item.editId; delete item.editId;
                         if(type === 'order') await db.ref('orders/' + targetId).update(item);
@@ -593,34 +573,46 @@
                     } else { 
                         if(type === 'order') {
                             const snap = await db.ref('orderCounter').transaction(cv => (cv || 1000) + 1);
-                            item.refNo = 'MMC-' + snap.snapshot.val(); item.status = 'waiting'; await db.ref('orders').push(item);
+                            item.refNo = 'MMC-' + snap.snapshot.val();
+                            item.status = 'waiting'; 
+                            await db.ref('orders').push(item);
                         } else if(type === 'quote') {
                              const snap = await db.ref('quoteCounter').transaction(cv => (cv || 1000) + 1);
-                             item.refNo = 'QT-' + snap.snapshot.val(); await db.ref('quotations').push(item);
-                        } else if (type === 'restock') { await db.ref('restock').push(item); }
+                             item.refNo = 'QT-' + snap.snapshot.val();
+                             await db.ref('quotations').push(item);
+                        } else if (type === 'restock') {
+                             await db.ref('restock').push(item);
+                        }
                     }
                 }
                 const txDel = offlineDB.transaction('offlineData', 'readwrite');
                 txDel.objectStore('offlineData').clear(); 
+                alert("✅ All offline data and photos successfully synced to Cloud!");
             }
         };
     }
 
     function getStandardDateStr(dateObj = new Date()) {
         const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-        let d = dateObj.getDate().toString().padStart(2, '0'); let m = months[dateObj.getMonth()]; let y = dateObj.getFullYear(); return `${d} ${m} ${y}`;
+        let d = dateObj.getDate().toString().padStart(2, '0');
+        let m = months[dateObj.getMonth()]; let y = dateObj.getFullYear();
+        return `${d} ${m} ${y}`;
     }
 
     const DEVICE_AUTH_KEY = "mmc_authorized_device_v1";
     function checkDeviceAuthorization() {
-        if (localStorage.getItem(DEVICE_AUTH_KEY) === "true") { document.getElementById('normalLoginBox').style.display = 'block'; document.getElementById('deviceLockBox').style.display = 'none'; } 
-        else { document.getElementById('normalLoginBox').style.display = 'none'; document.getElementById('deviceLockBox').style.display = 'block'; }
+        if (localStorage.getItem(DEVICE_AUTH_KEY) === "true") {
+            document.getElementById('normalLoginBox').style.display = 'block'; document.getElementById('deviceLockBox').style.display = 'none';
+        } else {
+            document.getElementById('normalLoginBox').style.display = 'none'; document.getElementById('deviceLockBox').style.display = 'block';
+        }
     }
     
     function authorizeDevice() {
         let pin = prompt("Enter Master PIN to authorize this device:");
-        if (pin && btoa(pin) === "TU1DODg4") { localStorage.setItem(DEVICE_AUTH_KEY, "true"); alert("✅ Device Authorized Successfully!"); checkDeviceAuthorization(); } 
-        else if (pin !== null) { alert("❌ Incorrect PIN!"); }
+        if (pin && btoa(pin) === "TU1DODg4") { 
+            localStorage.setItem(DEVICE_AUTH_KEY, "true"); alert("✅ Device Authorized Successfully!"); checkDeviceAuthorization(); 
+        } else if (pin !== null) { alert("❌ Incorrect PIN!"); }
     }
     window.onload = function() { checkDeviceAuthorization(); };
 
@@ -638,12 +630,10 @@
             document.getElementById('adminTools').style.display = isAdmin ? 'flex' : 'none';
             document.getElementById('cashDashboard').style.display = isAdmin ? 'flex' : 'none';
             
-            // V57 UPDATE: Show Boss Restock Views
-            document.querySelectorAll('.boss-restock').forEach(el => el.style.display = isAdmin ? 'block' : 'none');
-            
             document.getElementById('loginScreen').style.display = 'none'; document.getElementById('mainApp').style.display = 'block';
             document.getElementById('loginError').style.display = 'none'; document.getElementById('loginBtnTrigger').innerText = "Secure Login";
-            forceDataSync(); loadStaffConfig(); 
+            forceDataSync();
+            loadStaffConfig(); 
             if (!isDataLoaded) { addNewItemBlock(); addQItemBlock(); isDataLoaded = true; }
         } else {
             document.getElementById('loginScreen').style.display = 'flex'; document.getElementById('mainApp').style.display = 'none';
@@ -661,24 +651,37 @@
     }
     function logoutSystem() { auth.signOut(); }
 
-    function forceDataSync() { db.ref('orders').off(); db.ref('restock').off(); db.ref('quotations').off(); loadDatabaseData(); loadRestockData(); loadQuoteData(); }
+    function forceDataSync() {
+        db.ref('orders').off(); db.ref('restock').off(); db.ref('quotations').off();
+        loadDatabaseData(); loadRestockData(); loadQuoteData();
+    }
     
     function loadStaffConfig() {
-        db.ref('settings/staff').on('value', snap => { if(snap.val()) staffList = snap.val(); renderStaffDropdowns(); });
+        db.ref('settings/staff').on('value', snap => {
+            if(snap.val()) { staffList = snap.val(); }
+            renderStaffDropdowns();
+        });
     }
     function renderStaffDropdowns() {
         let html = '<option value="">-- Select --</option>';
         staffList.forEach(s => { html += `<option value="${s}">${s}</option>`; });
-        let oVal = document.getElementById('orderByStaff').value; let qVal = document.getElementById('qOrderByStaff').value;
-        document.getElementById('orderByStaff').innerHTML = html; document.getElementById('qOrderByStaff').innerHTML = html;
+        
+        let oVal = document.getElementById('orderByStaff').value;
+        let qVal = document.getElementById('qOrderByStaff').value;
+        
+        document.getElementById('orderByStaff').innerHTML = html;
+        document.getElementById('qOrderByStaff').innerHTML = html;
+        
         if(staffList.includes(oVal)) document.getElementById('orderByStaff').value = oVal;
         if(staffList.includes(qVal)) document.getElementById('qOrderByStaff').value = qVal;
     }
     function manageStaff() {
         if(!isAdmin) return;
-        let input = prompt("👥 Manage Staff List (separate names by comma):", staffList.join(', '));
+        let currentString = staffList.join(', ');
+        let input = prompt("👥 Manage Staff List (separate names by comma):", currentString);
         if(input !== null) {
-            db.ref('settings/staff').set(input.split(',').map(s => s.trim()).filter(s => s));
+            let newStaff = input.split(',').map(s => s.trim()).filter(s => s);
+            db.ref('settings/staff').set(newStaff);
             alert("✅ Staff list updated instantly across all devices!");
         }
     }
@@ -698,13 +701,19 @@
     async function showPlateHistory(inputId) {
         let plate = document.getElementById(inputId).value.trim().toUpperCase().replace(/\s/g, '');
         if(!plate) return alert("Please enter a Car Plate Number first.");
+        
         document.getElementById('historyContent').innerHTML = `<h3 style="color:#b45309; text-align:center;">🔍 Deep Searching Cloud for ${plate}...</h3><p style="text-align:center;">Please wait while we check all historical records.</p>`;
         document.getElementById('historyModal').style.display = 'flex';
-        let historyHtml = `<h3>📖 Digital Service Book: <span style="color:#b45309">${plate}</span></h3><ul style="text-align:left; padding-left:15px; margin-bottom:20px;">`; let foundAny = false;
+
+        let historyHtml = `<h3>📖 Digital Service Book: <span style="color:#b45309">${plate}</span></h3><ul style="text-align:left; padding-left:15px; margin-bottom:20px;">`;
+        let foundAny = false;
+        
         try {
             const snapshot = await db.ref('orders').orderByChild('plate').equalTo(plate).once('value');
-            const historyOrders = []; snapshot.forEach(child => { historyOrders.push({ id: child.key, ...child.val() }); });
+            const historyOrders = [];
+            snapshot.forEach(child => { historyOrders.push({ id: child.key, ...child.val() }); });
             historyOrders.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
+
             historyOrders.forEach(o => {
                 foundAny = true;
                 (o.items||[]).forEach(i => {
@@ -716,7 +725,8 @@
                     </li>`;
                 });
             });
-        } catch (error) {}
+        } catch (error) { console.error("Deep search failed: ", error); }
+
         if(!foundAny) historyHtml += '<li style="color:#ef4444; font-weight:bold;">No purchase history found for this car plate.</li>';
         historyHtml += `</ul><button onclick="document.getElementById('historyModal').style.display='none'" style="padding:12px; width:100%; background:#ef4444; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer; font-size:15px;">Close History</button>`;
         document.getElementById('historyContent').innerHTML = historyHtml;
@@ -755,7 +765,6 @@
         });
         
         productDictionary = Object.values(pDict); let pList = document.getElementById('partList'); pList.innerHTML = '';
-        smartSearchDefaults.forEach(def => { let opt = document.createElement('option'); opt.value = def; pList.appendChild(opt); });
         productDictionary.forEach(p => { let opt = document.createElement('option'); opt.value = p.part; pList.appendChild(opt); });
 
         let cDict = {};
@@ -848,64 +857,6 @@
     }
 
     // ==========================================
-    // PDF GENERATOR (V57)
-    // ==========================================
-    function generateInvoicePDF(id, isQuote) {
-        const dataList = isQuote ? quotes : orders;
-        const data = dataList.find(x => x.id === id);
-        if(!data) return;
-
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        const title = isQuote ? "QUOTATION" : "TAX INVOICE";
-        
-        doc.setFontSize(22);
-        doc.text("MALAYSIA MOTOR COMPANY", 105, 20, { align: "center" });
-        doc.setFontSize(10);
-        doc.text(title, 105, 28, { align: "center" });
-        
-        doc.text(`Ref No: ${data.refNo || 'N/A'}`, 15, 45);
-        doc.text(`Date: ${data.date || getStandardDateStr()}`, 15, 52);
-        doc.text(`Customer: ${data.name || ''}`, 15, 59);
-        
-        doc.text(`Phone: ${data.phone || ''}`, 130, 45);
-        doc.text(`Plate No: ${data.plate || ''}`, 130, 52);
-        doc.text(`Car Model: ${data.car || ''}`, 130, 59);
-        
-        const tableBody = [];
-        (data.items || []).forEach(i => {
-            const partDesc = `${i.part || ''} ${i.partNo ? '['+i.partNo+']' : ''}`;
-            tableBody.push([
-                partDesc,
-                i.qty || '1',
-                `RM ${parseFloat(i.unitPrice || 0).toFixed(2)}`,
-                `RM ${parseFloat(i.subTotal || 0).toFixed(2)}`
-            ]);
-        });
-
-        doc.autoTable({
-            startY: 68,
-            headStyles: { fillColor: [15, 23, 42] },
-            head: [['Description', 'Qty', 'Unit Price', 'Total']],
-            body: tableBody,
-        });
-
-        const finalY = doc.lastAutoTable.finalY || 72;
-        doc.setFontSize(10);
-        
-        if(!isQuote) {
-            doc.text(`Grand Total: RM ${parseFloat(data.total || 0).toFixed(2)}`, 140, finalY + 10);
-            doc.text(`Deposit Paid: RM ${parseFloat(data.deposit || 0).toFixed(2)}`, 140, finalY + 16);
-            doc.text(`Balance Due: RM ${parseFloat(data.balance || 0).toFixed(2)}`, 140, finalY + 22);
-        } else {
-            doc.text(`Quotation Total: RM ${parseFloat(data.total || 0).toFixed(2)}`, 140, finalY + 10);
-        }
-        
-        doc.text("Thank you for your business!", 15, finalY + 35);
-        doc.save(`MMC_${isQuote ? 'Quote' : 'Invoice'}_${data.refNo || Date.now()}.pdf`);
-    }
-
-    // ==========================================
     // PREORDER LOGIC
     // ==========================================
     function calcRowTotal(rowId) {
@@ -922,7 +873,12 @@
         const total = parseFloat(document.getElementById('totalPrice').value) || 0; 
         let depositInput = document.getElementById('deposit');
         let deposit = parseFloat(depositInput.value) || 0;
-        if(deposit > total) { deposit = total; depositInput.value = deposit.toFixed(2); }
+        
+        if(deposit > total) {
+            deposit = total;
+            depositInput.value = deposit.toFixed(2);
+        }
+        
         document.getElementById('balance').value = Math.max(0, total - deposit).toFixed(2);
     }
     
@@ -940,7 +896,7 @@
 
     function processItemPhotos(event, itemId) {
         const files = event.target.files; if (!files || files.length === 0) return;
-        if (itemPhotosMap[itemId].length + files.length > 5) { alert("⚠️ Max 5 photos!"); event.target.value = ''; return; }
+        if (itemPhotosMap[itemId].length + files.length > 5) { alert("⚠️ Max 5 photos per item!"); event.target.value = ''; return; }
         Array.from(files).forEach(file => {
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -954,10 +910,9 @@
         }); event.target.value = ''; 
     }
 
-    // V57 UPDATE: Added the Rotate ↻ button inside the photo wrapper
     function renderGalleryUI(itemId) {
         const gallery = document.getElementById('gallery_' + itemId); document.getElementById('count_' + itemId).innerText = itemPhotosMap[itemId].length;
-        gallery.innerHTML = ''; itemPhotosMap[itemId].forEach((b64Data, index) => { gallery.innerHTML += `<div class="photo-wrapper"><img src="${b64Data}" class="photo-thumbnail" onclick="showPhoto('${b64Data}')"><button type="button" class="rotate-single-btn" onclick="rotateImage('${itemId}', ${index}, false)">↻</button><button type="button" class="remove-single-btn" onclick="removeSinglePhoto('${itemId}', ${index})">✖</button></div>`; });
+        gallery.innerHTML = ''; itemPhotosMap[itemId].forEach((b64Data, index) => { gallery.innerHTML += `<div class="photo-wrapper"><img src="${b64Data}" class="photo-thumbnail" onclick="showPhoto('${b64Data}')"><button type="button" class="remove-single-btn" onclick="removeSinglePhoto('${itemId}', ${index})">✖</button></div>`; });
     }
     function removeSinglePhoto(itemId, index) { itemPhotosMap[itemId].splice(index, 1); renderGalleryUI(itemId); }
     function showPhoto(src) { document.getElementById('modalImg').src = src; document.getElementById('photoModal').style.display = 'block'; }
@@ -994,10 +949,6 @@
     }
 
     async function saveOrUpdateOrder() {
-        // V57 UPDATE: Strict Double-Tap Protection Lock
-        const mainBtn = document.getElementById('mainBtn');
-        if (mainBtn.disabled) return; 
-
         let finalPhone = document.getElementById('custPhone').value.replace(/[^0-9]/g, '');
         if (finalPhone.startsWith('0')) { finalPhone = '60' + finalPhone.substring(1); }
         document.getElementById('custPhone').value = finalPhone; 
@@ -1019,8 +970,9 @@
             saveToOfflineQueue('order', payload); cancelEdit(); return;
         }
 
+        const mainBtn = document.getElementById('mainBtn');
         const originalText = mainBtn.innerText;
-        mainBtn.innerText = "⏳ Processing Photos & Data...";
+        mainBtn.innerText = "⏳ Uploading Photos... Do not close";
         mainBtn.disabled = true;
 
         try {
@@ -1046,7 +998,7 @@
     }
 
     async function toggleStatus(id) { 
-        if(!navigator.onLine) return alert("Requires internet.");
+        if(!navigator.onLine) return alert("Requires internet connection.");
         const order = orders.find(o => o.id === id); if(order.status === 'completed' || order.status === 'offline') return; 
         let newStatus = order.status === 'waiting' ? 'arrived' : 'waiting';
         await db.ref('orders/' + id).update({ status: newStatus }); 
@@ -1057,13 +1009,14 @@
 
     function toggleAllOrderChecks(source) { document.querySelectorAll('.order-check').forEach(cb => cb.checked = source.checked); }
     async function markSelectedArrived() {
-        if(!navigator.onLine) return alert("Requires internet.");
+        if(!navigator.onLine) return alert("Requires internet connection to batch update.");
         let checkboxes = document.querySelectorAll('.order-check:checked');
         if(checkboxes.length === 0) return alert("Please check at least one pending order.");
         if(!confirm(`Mark ${checkboxes.length} selected items as ARRIVED?`)) return;
         let updates = {};
         checkboxes.forEach(cb => { let id = cb.value; let o = orders.find(x => x.id === id); if(o && o.status === 'waiting') updates[id + '/status'] = 'arrived'; });
         if(Object.keys(updates).length > 0) { await db.ref('orders').update(updates); document.getElementById('selectAllOrders').checked = false; } 
+        else { alert("All selected items are already arrived or completed."); }
     }
 
     function clearDateFilter(type) {
@@ -1117,8 +1070,7 @@
             let waActionButtons = `${order.phone&&order.status!=='completed'?`<a href="https://wa.me/${order.phone}?text=${encodeURIComponent(msgR)}" target="_blank" class="wa-btn wa-btn-receipt">📄 WA Receipt</a><a href="https://wa.me/${order.phone}?text=${encodeURIComponent(msgA)}" target="_blank" class="wa-btn wa-btn-arrived">💬 Inform Arrived</a><a href="https://wa.me/${order.phone}?text=${encodeURIComponent(msgN)}" target="_blank" class="wa-btn wa-btn-cancel">❌ Item Not Found</a>`:''}`;
             if(order.status === 'arrived' && order.phone) { waActionButtons = `<a href="https://wa.me/${order.phone}?text=${encodeURIComponent(msgRemind)}" target="_blank" class="wa-btn wa-btn-remind">🔔 Remind Collection</a>` + waActionButtons; }
 
-            // V57 UPDATE: PDF Generation Button inside Actions
-            let mainActions = isOffline ? `<span style="font-size:12px; color:#ef4444; font-weight:bold;">⏳ Waiting for Internet...</span>` : `<div class="action-btns" style="margin-bottom:6px;"><button class="copy-btn" onclick="duplicateOrder('${order.id}')">📋 Copy</button></div><div class="action-btns">${order.status!=='completed'?`<button class="complete-btn" onclick="markCompleted('${order.id}')">✔️ Done</button>`:`<button class="edit-btn" onclick="restoreOrder('${order.id}')">⏪ Return</button>`}<button class="edit-btn" onclick="editOrder('${order.id}')">✏️ Edit</button>${isAdmin?`<button class="delete-btn" onclick="deleteOrder('${order.id}')">✖ Del</button>`:''}</div><button class="print-btn" onclick="generateInvoicePDF('${order.id}', false)" style="width:100%; margin-top:5px; margin-bottom:5px;">📄 PDF Invoice</button>`;
+            let mainActions = isOffline ? `<span style="font-size:12px; color:#ef4444; font-weight:bold;">⏳ Waiting for Internet...</span>` : `<div class="action-btns" style="margin-bottom:6px;"><button class="copy-btn" onclick="duplicateOrder('${order.id}')">📋 Copy</button></div><div class="action-btns">${order.status!=='completed'?`<button class="complete-btn" onclick="markCompleted('${order.id}')">✔️ Done</button>`:`<button class="edit-btn" onclick="restoreOrder('${order.id}')">⏪ Return</button>`}<button class="edit-btn" onclick="editOrder('${order.id}')">✏️ Edit</button>${isAdmin?`<button class="delete-btn" onclick="deleteOrder('${order.id}')">✖ Del</button>`:''}</div>`;
 
             const badgeClass = isOffline ? 'ref-offline' : 'ref-badge';
             const statusVisual = isOffline ? '📡 Offline' : (order.status==='waiting'?'⏳ Wait':(order.status==='arrived'?'✅ Arrived':'📦 Done'));
@@ -1179,10 +1131,9 @@
         }); event.target.value = ''; 
     }
 
-    // V57 UPDATE: Added Rotate ↻ button inside quotation photo wrapper
     function renderQGalleryUI(itemId) {
         const gallery = document.getElementById('q_gallery_' + itemId); document.getElementById('q_count_' + itemId).innerText = qItemPhotosMap[itemId].length;
-        gallery.innerHTML = ''; qItemPhotosMap[itemId].forEach((b64Data, index) => { gallery.innerHTML += `<div class="photo-wrapper"><img src="${b64Data}" class="photo-thumbnail" onclick="showPhoto('${b64Data}')"><button type="button" class="rotate-single-btn" onclick="rotateImage('${itemId}', ${index}, true)">↻</button><button type="button" class="remove-single-btn" onclick="removeQSinglePhoto('${itemId}', ${index})">✖</button></div>`; });
+        gallery.innerHTML = ''; qItemPhotosMap[itemId].forEach((b64Data, index) => { gallery.innerHTML += `<div class="photo-wrapper"><img src="${b64Data}" class="photo-thumbnail" onclick="showPhoto('${b64Data}')"><button type="button" class="remove-single-btn" onclick="removeQSinglePhoto('${itemId}', ${index})">✖</button></div>`; });
     }
     function removeQSinglePhoto(itemId, index) { qItemPhotosMap[itemId].splice(index, 1); renderQGalleryUI(itemId); }
 
@@ -1204,10 +1155,6 @@
     }
 
     async function saveOrUpdateQuote() {
-        // V57 UPDATE: Strict Double-Tap Lock
-        const qMainBtn = document.getElementById('qMainBtn');
-        if (qMainBtn.disabled) return;
-
         let finalPhone = document.getElementById('qCustPhone').value.replace(/[^0-9]/g, '');
         if (finalPhone.startsWith('0')) { finalPhone = '60' + finalPhone.substring(1); }
         document.getElementById('qCustPhone').value = finalPhone; 
@@ -1227,8 +1174,9 @@
             saveToOfflineQueue('quote', payload); cancelQEdit(); return;
         }
 
+        const qMainBtn = document.getElementById('qMainBtn');
         const originalText = qMainBtn.innerText;
-        qMainBtn.innerText = "⏳ Processing Photos & Data...";
+        qMainBtn.innerText = "⏳ Uploading Photos... Do not close";
         qMainBtn.disabled = true;
 
         try {
@@ -1297,9 +1245,7 @@
 
             const isOffline = quote.id.startsWith('off_');
             const badgeClass = isOffline ? 'ref-offline' : 'ref-badge';
-            
-            // V57 UPDATE: PDF Button added
-            let mainActions = isOffline ? `<span style="font-size:12px; color:#ef4444; font-weight:bold;">⏳ Waiting for Internet...</span>` : `<div class="action-btns"><button class="convert-btn" onclick="convertToPreorder('${quote.id}')">➡️ Convert to Order</button></div><div class="action-btns"><button class="edit-btn" onclick="editQuote('${quote.id}')">✏️ Edit</button>${isAdmin?`<button class="delete-btn" onclick="deleteQuote('${quote.id}')">✖ Del</button>`:''}</div><button class="print-btn" onclick="generateInvoicePDF('${quote.id}', true)" style="width:100%; margin-top:5px; margin-bottom:5px;">📄 PDF Quote</button>`;
+            let mainActions = isOffline ? `<span style="font-size:12px; color:#ef4444; font-weight:bold;">⏳ Waiting for Internet...</span>` : `<div class="action-btns"><button class="convert-btn" onclick="convertToPreorder('${quote.id}')">➡️ Convert to Order</button></div><div class="action-btns"><button class="edit-btn" onclick="editQuote('${quote.id}')">✏️ Edit</button>${isAdmin?`<button class="delete-btn" onclick="deleteQuote('${quote.id}')">✖ Del</button>`:''}</div>`;
 
             tr.innerHTML = `<td><span class="${badgeClass}">${quote.refNo}</span><br><small style="color:#64748b;margin-top:6px;display:inline-block;font-weight:700;">${quote.date}</small><br>${quote.staff?`<span class="staff-badge">👤 ${quote.staff}</span>`:''}</td><td><strong style="color:#0f172a;">${quote.name}</strong><br><small style="color:#3b82f6;font-weight:bold;">${quote.phone}</small><br><div style="margin-top:8px;padding-top:8px;border-top:1px dashed #e2e8f0;">${plateHtml}<strong style="color:#334155; font-size:13px; display:inline-block; margin-top:4px;">${quote.car||'-'}</strong> <span class="mono-text" style="color:#64748b;font-size:12px;">${quote.chassis||''}</span></div></td><td>${partsHtml}<div class="notes-text" style="margin-top:8px;color:#059669;font-weight:600;">${quote.remarks?'📝 Remarks: '+quote.remarks:''}</div></td><td><strong style="font-size:18px;color:#0f172a;">RM${quote.total}</strong></td><td><div class="action-btns"><a href="https://wa.me/${quote.phone}?text=${encodeURIComponent(msgQ)}" target="_blank" class="wa-btn wa-btn-quote" style="width:100%;">💬 Send Quotation</a></div></td><td>${mainActions}</td>`;
             tbody.appendChild(tr);
@@ -1307,35 +1253,19 @@
     }
 
     // ==========================================
-    // RESTOCK SYSTEM (V57 BOSS VIEW UPGRADE)
+    // RESTOCK SYSTEM
     // ==========================================
-    function calcRestockCost() {
-        const qty = parseFloat(document.getElementById('r_needOrder').value) || 1;
-        const uCost = parseFloat(document.getElementById('r_unitCost').value) || 0;
-        document.getElementById('r_totalCost').value = (qty * uCost).toFixed(2);
-    }
-    // Bind to qty input as well
-    document.getElementById('r_needOrder').addEventListener('input', calcRestockCost);
-
     async function addRestockItem() {
-        const part = document.getElementById('r_part').value; 
-        const code = document.getElementById('r_code').value.trim().toUpperCase(); 
-        const brand = document.getElementById('r_brand').value; 
-        const supp = document.getElementById('r_supp').value; 
-        const onHandQty = document.getElementById('r_onHand').value || "0"; 
-        const needOrderQty = document.getElementById('r_needOrder').value || "1";
-        
-        // V57 UPDATE: Capture Costings
-        const unitCost = document.getElementById('r_unitCost').value || "0";
-        const totalCost = document.getElementById('r_totalCost').value || "0";
-
+        const part = document.getElementById('r_part').value; const code = document.getElementById('r_code').value.trim().toUpperCase(); const brand = document.getElementById('r_brand').value; const supp = document.getElementById('r_supp').value; const onHandQty = document.getElementById('r_onHand').value || "0"; const needOrderQty = document.getElementById('r_needOrder').value || "1";
         if(!part && !code) return alert("Please enter at least a part description or item code.");
-        const payload = { part, code, brand, supp, onHandQty, needOrderQty, unitCost, totalCost, date: getStandardDateStr(), timestamp: Date.now(), status: 'Not Yet Order' };
+        const payload = { part, code, brand, supp, onHandQty, needOrderQty, date: getStandardDateStr(), timestamp: Date.now(), status: 'Not Yet Order' };
         
-        if (!navigator.onLine) { saveToOfflineQueue('restock', payload); } 
-        else { await db.ref('restock').push(payload); }
-        
-        ['r_part','r_code','r_brand','r_supp','r_onHand','r_needOrder','r_unitCost','r_totalCost'].forEach(id => document.getElementById(id).value = '');
+        if (!navigator.onLine) {
+            saveToOfflineQueue('restock', payload);
+        } else {
+            await db.ref('restock').push(payload);
+        }
+        ['r_part','r_code','r_brand','r_supp','r_onHand','r_needOrder'].forEach(id => document.getElementById(id).value = '');
     }
 
     function updateRestockSupplier(id, newValue) { if(!isAdmin) return; if(navigator.onLine && !id.startsWith('off_')) db.ref('restock/' + id).update({ supp: newValue }); }
@@ -1353,19 +1283,6 @@
     }
 
     function renderRestockTable() {
-        // V57 UPDATE: Dynamic Table Header for Boss View
-        let theadHTML = `<tr>
-            <th style="width:100px;">Date Added</th>
-            <th>Part Description</th>
-            <th>Item Code / OEM</th>
-            <th>Brand</th>
-            <th>Supplier ${isAdmin ? '<span style="font-size:10px; color:#b45309;">(Boss Edit)</span>' : ''}</th>
-            <th style="text-align:center; width: 80px;">On Hand</th>
-            <th style="text-align:center; width: 90px;">Order Qty</th>`;
-        if (isAdmin) { theadHTML += `<th style="text-align:center;">Unit Cost</th><th style="text-align:center;">Total Cost</th>`; }
-        theadHTML += `<th style="text-align:center; width: 100px;">Status</th><th style="text-align:center; width: 80px;">Actions</th></tr>`;
-        document.getElementById('restockThead').innerHTML = theadHTML;
-
         const tbody = document.getElementById('restockTableBody'); tbody.innerHTML = '';
         const view = document.getElementById('rViewFilter').value; const dateVal = document.getElementById('rDateFilter').value;
         const filterDateStr = getFormattedDateForFilter(dateVal); const suppFilter = document.getElementById('rSuppFilter').value;
@@ -1392,24 +1309,17 @@
             }
 
             let suppHtml = (isAdmin && !isOffline) ? `<input type="text" class="pos-input" value="${item.supp||''}" placeholder="Type..." style="width:100px; font-size:12px; background:#fffbeb; color:#b45309; font-weight:bold;" list="supplierList" onchange="updateRestockSupplier('${item.id}', this.value)">` : (item.supp || '-');
-            let costHtml = isAdmin ? `<td style="text-align:center; font-weight:bold; color:#059669;">RM ${parseFloat(item.unitCost||0).toFixed(2)}</td><td style="text-align:center; font-weight:bold; color:#059669;">RM ${parseFloat(item.totalCost||0).toFixed(2)}</td>` : ``;
 
             const tr = document.createElement('tr'); tr.style.opacity = status === 'Ordered' ? '0.6' : '1';
-            tr.innerHTML = `<td><small style="color:#64748b; font-weight:bold;">${item.date}</small></td><td><strong>${item.part || '-'}</strong></td><td class="mono-text">${item.code || '-'}</td><td>${item.brand || '-'}</td><td>${suppHtml}</td><td style="text-align:center; font-weight:bold;">${item.onHandQty || '0'}</td><td style="text-align:center; color:#ef4444; font-weight:bold;">${item.needOrderQty || '1'}</td>${costHtml}<td style="text-align:center;">${statusHtml}</td><td><div class="action-btns" style="flex-direction:column;">${actionHtml}</div></td>`;
+            tr.innerHTML = `<td><small style="color:#64748b; font-weight:bold;">${item.date}</small></td><td><strong>${item.part || '-'}</strong></td><td class="mono-text">${item.code || '-'}</td><td>${item.brand || '-'}</td><td>${suppHtml}</td><td style="text-align:center; font-weight:bold;">${item.onHandQty || '0'}</td><td style="text-align:center; color:#ef4444; font-weight:bold;">${item.needOrderQty || '1'}</td><td style="text-align:center;">${statusHtml}</td><td><div class="action-btns" style="flex-direction:column;">${actionHtml}</div></td>`;
             tbody.appendChild(tr);
         });
     }
 
     function getRestockHTML() {
-        let rows = ''; currentRestockView.forEach((i, idx) => { 
-            const status = i.status || 'Not Yet Order'; 
-            let costHtml = isAdmin ? `<td style="text-align:center; padding:8px; border:1px solid #ccc;">RM ${parseFloat(i.unitCost||0).toFixed(2)}</td><td style="text-align:center; padding:8px; border:1px solid #ccc;">RM ${parseFloat(i.totalCost||0).toFixed(2)}</td>` : '';
-            rows += `<tr><td style="text-align:center; padding:8px; border:1px solid #ccc;">${idx+1}</td><td style="padding:8px; border:1px solid #ccc;">${i.date}</td><td style="padding:8px; border:1px solid #ccc;"><strong>${i.part||'-'}</strong></td><td style="padding:8px; border:1px solid #ccc;">${i.code||'-'}</td><td style="padding:8px; border:1px solid #ccc;">${i.brand||'-'}</td><td style="padding:8px; border:1px solid #ccc;">${i.supp||'-'}</td><td style="text-align:center; padding:8px; border:1px solid #ccc;">${i.onHandQty||'0'}</td><td style="text-align:center; color:red; font-weight:bold; padding:8px; border:1px solid #ccc;">${i.needOrderQty||'1'}</td>${costHtml}<td style="text-align:center; padding:8px; border:1px solid #ccc;">${status}</td></tr>`; 
-        });
+        let rows = ''; currentRestockView.forEach((i, idx) => { const status = i.status || 'Not Yet Order'; rows += `<tr><td style="text-align:center; padding:8px; border:1px solid #ccc;">${idx+1}</td><td style="padding:8px; border:1px solid #ccc;">${i.date}</td><td style="padding:8px; border:1px solid #ccc;"><strong>${i.part||'-'}</strong></td><td style="padding:8px; border:1px solid #ccc;">${i.code||'-'}</td><td style="padding:8px; border:1px solid #ccc;">${i.brand||'-'}</td><td style="padding:8px; border:1px solid #ccc;">${i.supp||'-'}</td><td style="text-align:center; padding:8px; border:1px solid #ccc;">${i.onHandQty||'0'}</td><td style="text-align:center; color:red; font-weight:bold; padding:8px; border:1px solid #ccc;">${i.needOrderQty||'1'}</td><td style="text-align:center; padding:8px; border:1px solid #ccc;">${status}</td></tr>`; });
         let filterTitle = "RESTOCK SUMMARY REPORT"; const suppFilter = document.getElementById('rSuppFilter').value; if(suppFilter && suppFilter !== 'all') { filterTitle = `ORDER LIST FOR: ${suppFilter.toUpperCase()}`; }
-        
-        let headerCost = isAdmin ? `<th style="width:8%; text-align:center;">Unit Cost</th><th style="width:8%; text-align:center;">Total Cost</th>` : '';
-        return `<style>*, *::before, *::after { box-sizing: border-box; } body{font-family:sans-serif;padding:30px;} table{width:100%;border-collapse:collapse;margin-top:20px;font-size:12px;table-layout:fixed;} th,td{border:1px solid #ccc;padding:8px;word-wrap:break-word;} th{background:#f1f5f9;}</style><div id="rInvoiceBody"><h2 style="text-align:center; margin-bottom:5px;">${filterTitle}</h2><table><thead><tr><th style="width:4%; text-align:center;">No</th><th style="width:10%;">Date</th><th style="width:20%; text-align:left;">Part Description</th><th style="width:15%; text-align:left;">Item Code</th><th style="width:10%; text-align:left;">Brand</th><th style="width:10%; text-align:left;">Supplier</th><th style="width:6%; text-align:center;">On Hand</th><th style="width:6%; text-align:center;">Need</th>${headerCost}<th style="width:10%; text-align:center;">Status</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+        return `<style>*, *::before, *::after { box-sizing: border-box; } body{font-family:sans-serif;padding:30px;} table{width:100%;border-collapse:collapse;margin-top:20px;font-size:12px;table-layout:fixed;} th,td{border:1px solid #ccc;padding:8px;word-wrap:break-word;} th{background:#f1f5f9;}</style><div id="rInvoiceBody"><h2 style="text-align:center; margin-bottom:5px;">${filterTitle}</h2><table><thead><tr><th style="width:4%; text-align:center;">No</th><th style="width:10%;">Date</th><th style="width:26%; text-align:left;">Part Description</th><th style="width:15%; text-align:left;">Item Code</th><th style="width:12%; text-align:left;">Brand</th><th style="width:11%; text-align:left;">Supplier</th><th style="width:6%; text-align:center;">On Hand</th><th style="width:6%; text-align:center;">Need</th><th style="width:10%; text-align:center;">Status</th></tr></thead><tbody>${rows}</tbody></table></div>`;
     }
     
     function printRestock() { const p = window.open('', '_blank'); p.document.write('<html><head><title>Order List</title></head><body>'+getRestockHTML()+'</body></html>'); p.document.close(); p.focus(); setTimeout(() => { p.print(); p.close(); }, 350); }
