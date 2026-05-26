@@ -2,9 +2,7 @@ const CACHE_NAME = "mmc-portal-V70"; // UPDATE THIS EVERY TIME YOU CHANGE THE AP
 
 const APP_SHELL = [
     "./",
-    "./index.html",
-    "./manifest.json",
-    "./logo.png"
+    "./index.html"
 ];
 
 self.addEventListener("install", (e) => {
@@ -37,7 +35,6 @@ self.addEventListener("activate", (e) => {
 });
 
 self.addEventListener("fetch", (e) => {
-    // Do not cache Firebase / Google API requests
     if (
         e.request.url.includes("firebaseio.com") ||
         e.request.url.includes("firebaseapp.com") ||
@@ -48,7 +45,6 @@ self.addEventListener("fetch", (e) => {
         return;
     }
 
-    // For page navigation, try network first, fallback to cache
     if (e.request.mode === "navigate") {
         e.respondWith(
             fetch(e.request)
@@ -64,7 +60,6 @@ self.addEventListener("fetch", (e) => {
         return;
     }
 
-    // For normal assets, cache first
     e.respondWith(
         caches.match(e.request).then((response) => {
             return response || fetch(e.request);
