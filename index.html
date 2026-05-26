@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="MMC Portal">
     <link rel="apple-touch-icon" href="logo.png">
-    <title>Malaysia Motor Company - Secure Portal V63</title>
+    <title>Malaysia Motor Company - Secure Portal V64</title>
     <link rel="manifest" href="manifest.json">
     <script>
         if ('serviceWorker' in navigator) {
@@ -16,12 +16,12 @@
             navigator.serviceWorker.addEventListener('controllerchange', () => { if (!refreshing) { window.location.reload(); refreshing = true; }});
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js').then(reg => {
-                    setInterval(() => { console.log("Checking server for V63 updates..."); reg.update(); }, 5 * 60 * 1000);
+                    setInterval(() => { console.log("Checking server for V64 updates..."); reg.update(); }, 5 * 60 * 1000);
                     reg.onupdatefound = () => {
                         const installingWorker = reg.installing;
                         installingWorker.onstatechange = () => {
                             if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                if (confirm("🔄 New system version (V63) available! Click OK to apply.")) { installingWorker.postMessage('SKIP_WAITING'); }
+                                if (confirm("🔄 New system version (V64) available! Click OK to apply.")) { installingWorker.postMessage('SKIP_WAITING'); }
                             }
                         };
                     };
@@ -196,7 +196,7 @@
 <div id="mainApp" class="container">
     <div class="header-flex">
         <div>
-            <h2>Malaysia Motor Company <span class="version-badge">V63 Enterprise</span> <span id="adminBadge">👑 Boss View</span></h2>
+            <h2>Malaysia Motor Company <span class="version-badge">V64 Enterprise</span> <span id="adminBadge">👑 Boss View</span></h2>
             <div style="margin-top:8px;">
                 <span id="networkBadge" class="net-online">🟢 Online (Live Cloud Sync)</span>
             </div>
@@ -550,6 +550,7 @@
         };
     }
 
+    // V64 UPDATE: Fixed UI Cache Glitch with `forceDataSync()` post-upload
     let isSyncingOffline = false;
     async function checkOfflineQueue() {
         if(!navigator.onLine || !offlineDB || isSyncingOffline) return; isSyncingOffline = true; 
@@ -575,7 +576,12 @@
                             else if (type === 'restock') { await db.ref('restock').push(item); }
                         }
                     }
-                    const txDel = offlineDB.transaction('offlineData', 'readwrite'); txDel.objectStore('offlineData').clear(); 
+                    const txDel = offlineDB.transaction('offlineData', 'readwrite'); 
+                    txDel.objectStore('offlineData').clear(); 
+                    
+                    // The Fix: Force the screen to refresh so it doesn't show old local cache!
+                    txDel.oncomplete = () => { forceDataSync(); };
+
                 } catch (error) { console.error("Sync Error:", error); }
             } isSyncingOffline = false; 
         }; req.onerror = () => { isSyncingOffline = false; };
@@ -919,8 +925,7 @@
     function convertToPreorder(id) {
         const quote = quotes.find(q => q.id === id); if(!quote) return; document.getElementById('tabBtnOrder').click();
         document.getElementById('custName').value = quote.name || ''; document.getElementById('custPhone').value = quote.phone || ''; document.getElementById('carPlate').value = quote.plate || ''; document.getElementById('carModel').value = quote.car || ''; document.getElementById('chassisNumber').value = quote.chassis || ''; document.getElementById('orderByStaff').value = quote.staff || ''; document.getElementById('remarks').value = "From Quotation: " + quote.refNo + (quote.remarks ? " - " + quote.remarks : '');
-        document.getElementById('dynamicItemsContainer').innerHTML = ''; itemPhotosMap = {}; itemMapIdCounter = 0;
-        const itemsToLoad = quote.items || []; if(itemsToLoad.length === 0) addNewItemBlock(); itemsToLoad.forEach(data => addNewItemBlock(data));
+        document.getElementById('dynamicItemsContainer').innerHTML = ''; itemPhotosMap = {}; itemMapIdCounter = 0; const itemsToLoad = quote.items || []; if(itemsToLoad.length === 0) addNewItemBlock(); itemsToLoad.forEach(data => addNewItemBlock(data));
         alert("✅ Quotation Loaded! Please enter Deposit and click 'Save Document & Sync' to create Official Order."); window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
@@ -940,7 +945,9 @@
                 let photoHtml = ''; if (item.photos && item.photos.length > 0) { photoHtml = `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;">`; item.photos.forEach(p => { photoHtml += `<img src="${p}" class="photo-thumbnail" onclick="showPhoto('${p}')" style="width:40px;height:40px;border:1px solid #cbd5e1;">`; }); photoHtml += `</div>`; }
                 const pNo = item.partNo && item.partNo.trim() !== '' ? item.partNo.trim() : null; const partNoHTML = pNo ? ` <small class="mono-text" style="color:#64748b; font-weight:bold;">[${pNo}]</small>` : '';
                 partsHtml += `<li><div style="margin-bottom:4px;"><strong style="font-size:14px;color:#0f172a;">${item.part||'-'}</strong>${partNoHTML}${priceDetails}</div><small style="color:#64748b;">Brd: ${item.brand||'-'} • Sup: ${item.supplier||'-'}</small>${photoHtml}</li>`;
-                waList.push(`• ${item.part||'-'} ${pNo ? `[${pNo}] ` : ''}${item.brand ? `(Brand: ${item.brand}) ` : ''}${parseFloat(item.subTotal) > 0 ? ` -> ${item.qty||1} x RM${parseFloat(item.unitPrice||0).toFixed(2)} = RM${parseFloat(item.subTotal||0).toFixed(2)}` : ` -> Qty: ${item.qty||1}`}`);
+                const partNoWA = pNo ? `[${pNo}] ` : ''; const brandWA = item.brand && item.brand.trim() !== '' ? `(Brand: ${item.brand.trim()}) ` : '';
+                const priceWA = parseFloat(item.subTotal) > 0 ? ` -> ${item.qty||1} x RM${parseFloat(item.unitPrice||0).toFixed(2)} = RM${parseFloat(item.subTotal||0).toFixed(2)}` : ` -> Qty: ${item.qty||1}`;
+                waList.push(`• ${item.part||'-'} ${partNoWA}${brandWA}${priceWA}`);
             }); partsHtml += `</ul>`;
             
             const msgQ = `📄 *MALAYSIA MOTOR COMPANY - SEBUTHARGA / QUOTATION*\n\nPelanggan yang dihormati ${quote.name},\nBerikut adalah sebutharga untuk rujukan anda:\n\nDear ${quote.name},\nHere is the quotation for your reference:\n\n*No. Sebutharga / Quote ID:* ${quote.refNo}\n*Car Plate:* ${quote.plate||'-'}\n*Kenderaan / Car:* ${quote.car||''}\n*Senarai Barang / Items:*\n${waList.join('\n')}\n\n*Jumlah / Grand Total:* RM${quote.total}\n\nSila beritahu kami jika anda ingin meneruskan pesanan. / Please let us know if you wish to proceed with the order.\nTerima kasih! / Thank you!`;
@@ -1034,7 +1041,9 @@
                 let photoHtml = ''; if (item.photos && item.photos.length > 0) { photoHtml = `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;">`; item.photos.forEach(p => { photoHtml += `<img src="${p}" class="photo-thumbnail" onclick="showPhoto('${p}')" style="width:40px;height:40px;border:1px solid #cbd5e1;">`; }); photoHtml += `</div>`; }
                 const pNo = item.partNo && item.partNo.trim() !== '' ? item.partNo.trim() : null; const partNoHTML = pNo ? ` <small class="mono-text" style="color:#64748b; font-weight:bold;">[${pNo}]</small>` : '';
                 partsHtml += `<li><div style="margin-bottom:4px;"><strong style="font-size:14px;color:#0f172a;">${item.part||'-'}</strong>${partNoHTML}${priceDetails}</div><small style="color:#64748b;">Brd: ${item.brand||'-'} • Sup: ${item.supplier||'-'}</small>${photoHtml}</li>`;
-                waList.push(`• ${item.part||'-'} ${pNo ? `[${pNo}] ` : ''}${item.brand ? `(Brand: ${item.brand}) ` : ''}${parseFloat(item.subTotal) > 0 ? ` -> ${item.qty||1} x RM${parseFloat(item.unitPrice||0).toFixed(2)} = RM${parseFloat(item.subTotal||0).toFixed(2)}` : ` -> Qty: ${item.qty||1}`}`);
+                const partNoWA = pNo ? `[${pNo}] ` : ''; const brandWA = item.brand && item.brand.trim() !== '' ? `(Brand: ${item.brand.trim()}) ` : '';
+                const priceWA = parseFloat(item.subTotal) > 0 ? ` -> ${item.qty||1} x RM${parseFloat(item.unitPrice||0).toFixed(2)} = RM${parseFloat(item.subTotal||0).toFixed(2)}` : ` -> Qty: ${item.qty||1}`;
+                waList.push(`• ${item.part||'-'} ${partNoWA}${brandWA}${priceWA}`);
             }); partsHtml += `</ul>`;
             
             const msgE = `💬 *MALAYSIA MOTOR COMPANY - MAKLUMBALAS PERTANYAAN / ENQUIRY RESPONSE*\n\nPelanggan yang dihormati ${enq.name},\nTerima kasih kerana menghubungi kami. Berikut adalah maklumat untuk pertanyaan anda:\n\nDear ${enq.name},\nThank you for reaching out. Here is the information regarding your enquiry:\n\n*No. Pertanyaan / Enq ID:* ${enq.refNo}\n*Car Plate:* ${enq.plate||'-'}\n*Kenderaan / Car:* ${enq.car||''}\n*Senarai Barang / Items:*\n${waList.join('\n')}\n\n*Anggaran Jumlah / Estimated Total:* RM${enq.total}\n\nSila beritahu kami jika anda mempunyai sebarang soalan lanjut. / Please let us know if you have any further questions.\nTerima kasih! / Thank you!`;
