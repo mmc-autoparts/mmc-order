@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="MMC Portal">
     <link rel="apple-touch-icon" href="logo.png">
-    <title>Malaysia Motor Company - Secure Portal V65</title>
+    <title>Malaysia Motor Company - Secure Portal V66</title>
     <link rel="manifest" href="manifest.json">
     <script>
         if ('serviceWorker' in navigator) {
@@ -16,12 +16,12 @@
             navigator.serviceWorker.addEventListener('controllerchange', () => { if (!refreshing) { window.location.reload(); refreshing = true; }});
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js').then(reg => {
-                    setInterval(() => { console.log("Checking server for V65 updates..."); reg.update(); }, 5 * 60 * 1000);
+                    setInterval(() => { console.log("Checking server for V66 updates..."); reg.update(); }, 5 * 60 * 1000);
                     reg.onupdatefound = () => {
                         const installingWorker = reg.installing;
                         installingWorker.onstatechange = () => {
                             if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                if (confirm("🔄 New system version (V65) available! Click OK to apply.")) { installingWorker.postMessage('SKIP_WAITING'); }
+                                if (confirm("🔄 New system version (V66) available! Click OK to apply.")) { installingWorker.postMessage('SKIP_WAITING'); }
                             }
                         };
                     };
@@ -147,7 +147,6 @@
         .wa-btn-enq { background-color: #0284c7; }
         .wa-btn-remind { background-color: #eab308; } 
         .ref-badge { background-color: #e2e8f0; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-weight: 700; color: #334155; white-space: nowrap; display: inline-block;}
-        .ref-offline { background-color: #fee2e2; color: #ef4444; border: 1px dashed #ef4444; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-weight: 700; white-space: nowrap; display: inline-block;}
         .staff-badge { background-color: #dbeafe; color: #1d4ed8; border: 1px solid #bfdbfe; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; display: inline-block; margin-top: 6px; }
         .table-item-list { margin: 0; padding-left: 15px; }
         .table-item-list li { margin-bottom: 8px; border-bottom: 1px dashed #e2e8f0; padding-bottom: 8px;}
@@ -196,7 +195,7 @@
 <div id="mainApp" class="container">
     <div class="header-flex">
         <div>
-            <h2>Malaysia Motor Company <span class="version-badge">V65 Enterprise</span> <span id="adminBadge">👑 Boss View</span></h2>
+            <h2>Malaysia Motor Company <span class="version-badge">V66 Enterprise</span> <span id="adminBadge">👑 Boss View</span></h2>
             <div style="margin-top:8px;">
                 <span id="networkBadge" class="net-online">🟢 Online (Live Cloud Sync)</span>
             </div>
@@ -485,6 +484,9 @@
         rotatePhotoBase64(targetMap[itemId][index], (newBase64) => { targetMap[itemId][index] = newBase64; targetRender(itemId); });
     }
 
+    // ==========================================
+    // V66 UPDATE: Reverting Offline Engine to stable V51 version
+    // ==========================================
     const netBadge = document.getElementById('networkBadge');
     function updateNetworkStatus() {
         if(navigator.onLine) { netBadge.innerText = '🟢 Online (Live Cloud Sync)'; netBadge.className = 'net-online'; checkOfflineQueue(); } 
@@ -499,15 +501,13 @@
     function saveToOfflineQueue(type, payload) {
         payload.tempId = Date.now().toString(); payload.dataType = type; const tx = offlineDB.transaction('offlineData', 'readwrite'); tx.objectStore('offlineData').put(payload);
         tx.oncomplete = () => {
-            alert("⚠️ Saved Offline!\n\nThis record is saved to this device and will automatically upload to the cloud when WiFi connects.");
-            if(type === 'order') { payload.id = 'off_' + payload.tempId; payload.status = 'offline'; payload.refNo = '📡 PENDING'; orders.unshift(payload); renderTable(); } 
-            else if(type === 'quote') { payload.id = 'off_' + payload.tempId; payload.refNo = '📡 PENDING'; quotes.unshift(payload); renderQTable(); } 
-            else if(type === 'enquire') { payload.id = 'off_' + payload.tempId; payload.refNo = '📡 PENDING'; enquiries.unshift(payload); renderETable(); } 
-            else if(type === 'restock') { payload.id = 'off_' + payload.tempId; restockItems.unshift(payload); renderRestockTable(); }
+            alert("⚠️ No Internet Connection!\n\nDon't worry, your data has been saved safely to this iPad/PC's Offline Memory.\nIt will upload to the cloud automatically the second WiFi connects again.");
+            if(type === 'order') cancelEdit(); 
+            else if(type === 'quote') cancelQEdit(); 
+            else if(type === 'enquire') cancelEEdit(); 
         };
     }
 
-    // V65 UPDATE: Preserves offline items so they don't vanish from UI during upload
     let isSyncingOffline = false;
     async function checkOfflineQueue() {
         if(!navigator.onLine || !offlineDB || isSyncingOffline) return; isSyncingOffline = true; 
@@ -535,7 +535,7 @@
                     }
                     const txDel = offlineDB.transaction('offlineData', 'readwrite'); 
                     txDel.objectStore('offlineData').clear(); 
-                    txDel.oncomplete = () => { forceDataSync(); };
+                    alert("✅ All offline data successfully synced to Cloud!");
                 } catch (error) { console.error("Sync Error:", error); }
             } isSyncingOffline = false; 
         }; req.onerror = () => { isSyncingOffline = false; };
@@ -607,7 +607,7 @@
         let historyHtml = `<h3>📖 Digital Service Book: <span style="color:#b45309">${plate}</span></h3><ul style="text-align:left; padding-left:15px; margin-bottom:20px;">`; let foundAny = false;
         try {
             const snapshot = await db.ref('orders').orderByChild('plate').equalTo(plate).once('value'); const historyOrders = []; snapshot.forEach(child => { historyOrders.push({ id: child.key, ...child.val() }); }); historyOrders.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
-            historyOrders.forEach(o => { foundAny = true; (o.items||[]).forEach(i => { historyHtml += `<li style="margin-bottom:10px; border-bottom:1px dashed #e2e8f0; padding-bottom:10px;"><b style="color:#475569; display:inline-block; width:110px;">${o.date}</b> <strong style="color:#0f172a;">${i.part}</strong> ${i.partNo ? `[${i.partNo}]` : ''} <span style="color:#10b981; font-weight:bold;">(RM${parseFloat(i.unitPrice||0).toFixed(2)})</span> <br><span style="color:#64748b; font-size:11px; margin-left:110px;">Ref: ${o.refNo||'Offline'} | Qty: ${i.qty||1} | ${o.status==='completed'?'✅ Done':'⏳ Pending'}</span></li>`; }); });
+            historyOrders.forEach(o => { foundAny = true; (o.items||[]).forEach(i => { historyHtml += `<li style="margin-bottom:10px; border-bottom:1px dashed #e2e8f0; padding-bottom:10px;"><b style="color:#475569; display:inline-block; width:110px;">${o.date}</b> <strong style="color:#0f172a;">${i.part}</strong> ${i.partNo ? `[${i.partNo}]` : ''} <span style="color:#10b981; font-weight:bold;">(RM${parseFloat(i.unitPrice||0).toFixed(2)})</span> <br><span style="color:#64748b; font-size:11px; margin-left:110px;">Ref: ${o.refNo} | Qty: ${i.qty||1} | ${o.status==='completed'?'✅ Done':'⏳ Pending'}</span></li>`; }); });
         } catch (error) {}
         if(!foundAny) historyHtml += '<li style="color:#ef4444; font-weight:bold;">No purchase history found for this car plate.</li>';
         historyHtml += `</ul><button onclick="document.getElementById('historyModal').style.display='none'" style="padding:12px; width:100%; background:#ef4444; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer; font-size:15px;">Close History</button>`; document.getElementById('historyContent').innerHTML = historyHtml;
@@ -642,11 +642,11 @@
         Array.from(sSet).sort().forEach(s => { let opt = document.createElement('option'); opt.value = s; sList.appendChild(opt); filterSelect.innerHTML += `<option value="${s}">${s}</option>`; }); filterSelect.value = currentFilterVal || 'all';
     }
 
-    // V65 UPDATE: Preserving local 'off_' orders so they stay on screen during sync!
-    function loadDatabaseData() { db.ref('orders').orderByChild('timestamp').limitToLast(orderLimit).on('value', (snapshot) => { let fresh = []; snapshot.forEach(child => fresh.push({ id: child.key, ...child.val() })); let off = orders.filter(o => o.id && o.id.toString().startsWith('off_')); orders = [...off, ...fresh].sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0)); buildDictionaries(); renderTable(); calculateDailyCash(); }); }
-    function loadQuoteData() { db.ref('quotations').orderByChild('timestamp').limitToLast(quoteLimit).on('value', (snapshot) => { let fresh = []; snapshot.forEach(child => fresh.push({ id: child.key, ...child.val() })); let off = quotes.filter(q => q.id && q.id.toString().startsWith('off_')); quotes = [...off, ...fresh].sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0)); buildDictionaries(); renderQTable(); }); }
-    function loadEnquireData() { db.ref('enquiries').orderByChild('timestamp').limitToLast(enquireLimit).on('value', (snapshot) => { let fresh = []; snapshot.forEach(child => fresh.push({ id: child.key, ...child.val() })); let off = enquiries.filter(e => e.id && e.id.toString().startsWith('off_')); enquiries = [...off, ...fresh].sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0)); buildDictionaries(); renderETable(); }); }
-    function loadRestockData() { db.ref('restock').orderByChild('timestamp').limitToLast(restockLimit).on('value', (snapshot) => { let fresh = []; snapshot.forEach(child => fresh.push({ id: child.key, ...child.val() })); let off = restockItems.filter(r => r.id && r.id.toString().startsWith('off_')); restockItems = [...off, ...fresh].sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0)); buildDictionaries(); renderRestockTable(); }); }
+    // V66 UPDATE: Reverting back to V51 standard loading (no local 'off_' merging to prevent UI glitches)
+    function loadDatabaseData() { db.ref('orders').orderByChild('timestamp').limitToLast(orderLimit).on('value', (snapshot) => { orders = []; snapshot.forEach(child => { orders.push({ id: child.key, ...child.val() }); }); orders.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0)); buildDictionaries(); renderTable(); calculateDailyCash(); }); }
+    function loadQuoteData() { db.ref('quotations').orderByChild('timestamp').limitToLast(quoteLimit).on('value', (snapshot) => { quotes = []; snapshot.forEach(child => { quotes.push({ id: child.key, ...child.val() }); }); quotes.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0)); buildDictionaries(); renderQTable(); }); }
+    function loadEnquireData() { db.ref('enquiries').orderByChild('timestamp').limitToLast(enquireLimit).on('value', (snapshot) => { enquiries = []; snapshot.forEach(child => { enquiries.push({ id: child.key, ...child.val() }); }); enquiries.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0)); buildDictionaries(); renderETable(); }); }
+    function loadRestockData() { db.ref('restock').orderByChild('timestamp').limitToLast(restockLimit).on('value', (snapshot) => { restockItems = []; snapshot.forEach(child => { restockItems.push({ id: child.key, ...child.val() }); }); restockItems.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0)); buildDictionaries(); renderRestockTable(); }); }
     
     function loadMoreRecords(type) {
         if(type === 'order') { orderLimit += 200; db.ref('orders').off(); loadDatabaseData(); } else if(type === 'quote') { quoteLimit += 200; db.ref('quotations').off(); loadQuoteData(); } else if(type === 'enquire') { enquireLimit += 200; db.ref('enquiries').off(); loadEnquireData(); } else if(type === 'restock') { restockLimit += 200; db.ref('restock').off(); loadRestockData(); }
@@ -740,7 +740,7 @@
         document.querySelectorAll('#ordersTab .pos-table-row').forEach(card => { const id = card.id; const p = { part: card.querySelector('.i-part').value, partNo: card.querySelector('.i-partNo').value.trim().toUpperCase(), brand: card.querySelector('.i-brand').value, supplier: card.querySelector('.i-supplier').value, qty: card.querySelector('.i-qty').value || "1", unitPrice: card.querySelector('.i-unitPrice').value || "0", subTotal: card.querySelector('.i-subTotal').value || "0", eta: card.querySelector('.i-eta').value, photos: itemPhotosMap[id] || [] }; if (p.part || p.partNo) payload.items.push(p); });
         if(!payload.name) return alert("Please fill Customer Name."); if(payload.items.length === 0) return alert("Enter at least 1 Part.");
 
-        if (!navigator.onLine) { if(editingId) payload.editId = editingId; else { payload.date = getStandardDateStr(); payload.status = 'waiting'; payload.timestamp = Date.now(); } saveToOfflineQueue('order', payload); cancelEdit(); return; }
+        if (!navigator.onLine) { if(editingId) payload.editId = editingId; else { payload.date = getStandardDateStr(); payload.status = 'waiting'; payload.timestamp = Date.now(); } saveToOfflineQueue('order', payload); return; }
 
         const originalText = mainBtn.innerText; mainBtn.innerText = "⏳ Processing Photos & Data..."; mainBtn.disabled = true;
         try {
@@ -793,26 +793,21 @@
             const tr = document.createElement('tr'); tr.style.opacity = order.status === 'completed' ? '0.6' : '1';
             const plateHtml = order.plate ? `<span style="background:#fef08a; color:#b45309; padding:2px 6px; border-radius:4px; font-weight:bold; font-size:12px; letter-spacing:1px;">${order.plate}</span><br>` : '';
 
-            const isOffline = order.status === 'offline';
             let waActionButtons = '';
             if (order.phone && order.status !== 'completed') { waActionButtons += `<a href="https://wa.me/${order.phone}?text=${encodeURIComponent(msgR)}" target="_blank" class="wa-btn wa-btn-receipt">📄 WA Receipt</a><a href="https://wa.me/${order.phone}?text=${encodeURIComponent(msgA)}" target="_blank" class="wa-btn wa-btn-arrived">💬 Inform Arrived</a><a href="https://wa.me/${order.phone}?text=${encodeURIComponent(msgN)}" target="_blank" class="wa-btn wa-btn-cancel">❌ Item Not Found</a>`; }
             if(order.status === 'arrived' && order.phone) { waActionButtons = `<a href="https://wa.me/${order.phone}?text=${encodeURIComponent(msgRemind)}" target="_blank" class="wa-btn wa-btn-remind">🔔 Remind Collection</a>` + waActionButtons; }
 
             let mainActions = '';
-            if (isOffline) { mainActions = `<span style="font-size:12px; color:#ef4444; font-weight:bold;">⏳ Waiting for Internet...</span>`; } 
-            else {
-                mainActions += `<div class="action-btns" style="margin-bottom:6px;"><button class="copy-btn" onclick="duplicateOrder('${order.id}')">📋 Copy</button></div><div class="action-btns">`;
-                if (order.status !== 'completed') { mainActions += `<button class="complete-btn" onclick="markCompleted('${order.id}')">✔️ Done</button>`; } else { mainActions += `<button class="edit-btn" onclick="restoreOrder('${order.id}')">⏪ Return</button>`; }
-                mainActions += `<button class="edit-btn" onclick="editOrder('${order.id}')">✏️ Edit</button>`;
-                if (isAdmin) { mainActions += `<button class="delete-btn" onclick="deleteOrder('${order.id}')">✖ Del</button>`; }
-                mainActions += `</div><button class="print-btn" onclick="printChecklist('${order.id}', 'order')" style="width:100%; margin-top:5px; margin-bottom:5px;">🖨️ Print Checklist</button>`;
-            }
+            mainActions += `<div class="action-btns" style="margin-bottom:6px;"><button class="copy-btn" onclick="duplicateOrder('${order.id}')">📋 Copy</button></div><div class="action-btns">`;
+            if (order.status !== 'completed') { mainActions += `<button class="complete-btn" onclick="markCompleted('${order.id}')">✔️ Done</button>`; } else { mainActions += `<button class="edit-btn" onclick="restoreOrder('${order.id}')">⏪ Return</button>`; }
+            mainActions += `<button class="edit-btn" onclick="editOrder('${order.id}')">✏️ Edit</button>`;
+            if (isAdmin) { mainActions += `<button class="delete-btn" onclick="deleteOrder('${order.id}')">✖ Del</button>`; }
+            mainActions += `</div><button class="print-btn" onclick="printChecklist('${order.id}', 'order')" style="width:100%; margin-top:5px; margin-bottom:5px;">🖨️ Print Checklist</button>`;
 
-            const badgeClass = isOffline ? 'ref-offline' : 'ref-badge';
-            const statusVisual = isOffline ? '📡 Offline' : (order.status==='waiting'?'⏳ Wait':(order.status==='arrived'?'✅ Arrived':'📦 Done'));
-            const statusClass = isOffline ? 'status-offline' : (order.status==='completed'?'status-completed':(order.status==='waiting'?'status-waiting':'status-arrived'));
+            const statusVisual = order.status==='waiting'?'⏳ Wait':(order.status==='arrived'?'✅ Arrived':'📦 Done');
+            const statusClass = order.status==='completed'?'status-completed':(order.status==='waiting'?'status-waiting':'status-arrived');
 
-            tr.innerHTML = `<td><input type="checkbox" class="order-check" value="${order.id}" ${isOffline?'disabled':''}></td><td><span class="${badgeClass}">${order.refNo}</span><br><small style="color:#64748b;margin-top:6px;display:inline-block;font-weight:700;">${order.date}</small><br>${order.staff?`<span class="staff-badge">👤 ${order.staff}</span>`:''}</td><td><strong style="color:#0f172a;">${order.name}</strong><br><small style="color:#3b82f6;font-weight:bold;">${order.phone}</small><br><div style="margin-top:8px;padding-top:8px;border-top:1px dashed #e2e8f0;">${plateHtml}<strong style="color:#334155; font-size:13px; display:inline-block; margin-top:4px;">${order.car||'-'}</strong> <span class="mono-text" style="color:#64748b;font-size:11px;">${order.chassis?'('+order.chassis+')':''}</span></div></td><td>${partsHtml}<div class="notes-text" style="margin-top:8px;color:#059669;font-weight:600;">${order.remarks?'📝 Remarks: '+order.remarks:''}</div></td><td><small style="color:#64748b;">Total: RM${order.total}</small><br><small style="color:#64748b;">Paid: RM${order.deposit}</small><br><strong style="font-size:15px;margin-top:6px;display:inline-block;color:#0f172a;">Bal: RM${order.balance}</strong></td><td><button class="status-btn ${statusClass}" onclick="${isOffline?'':'toggleStatus(\''+order.id+'\')'}">${statusVisual}</button></td><td><div class="action-btns" style="flex-direction:column;align-items:stretch;">${waActionButtons}</div></td><td>${mainActions}</td>`;
+            tr.innerHTML = `<td><input type="checkbox" class="order-check" value="${order.id}"></td><td><span class="ref-badge">${order.refNo}</span><br><small style="color:#64748b;margin-top:6px;display:inline-block;font-weight:700;">${order.date}</small><br>${order.staff?`<span class="staff-badge">👤 ${order.staff}</span>`:''}</td><td><strong style="color:#0f172a;">${order.name}</strong><br><small style="color:#3b82f6;font-weight:bold;">${order.phone}</small><br><div style="margin-top:8px;padding-top:8px;border-top:1px dashed #e2e8f0;">${plateHtml}<strong style="color:#334155; font-size:13px; display:inline-block; margin-top:4px;">${order.car||'-'}</strong> <span class="mono-text" style="color:#64748b;font-size:11px;">${order.chassis?'('+order.chassis+')':''}</span></div></td><td>${partsHtml}<div class="notes-text" style="margin-top:8px;color:#059669;font-weight:600;">${order.remarks?'📝 Remarks: '+order.remarks:''}</div></td><td><small style="color:#64748b;">Total: RM${order.total}</small><br><small style="color:#64748b;">Paid: RM${order.deposit}</small><br><strong style="font-size:15px;margin-top:6px;display:inline-block;color:#0f172a;">Bal: RM${order.balance}</strong></td><td><button class="status-btn ${statusClass}" onclick="toggleStatus('${order.id}')">${statusVisual}</button></td><td><div class="action-btns" style="flex-direction:column;align-items:stretch;">${waActionButtons}</div></td><td>${mainActions}</td>`;
             tbody.appendChild(tr);
         });
     }
@@ -867,7 +862,7 @@
         document.querySelectorAll('#quoteTab .pos-table-row').forEach(card => { const id = card.id; const p = { part: card.querySelector('.i-part').value, partNo: card.querySelector('.i-partNo').value.trim().toUpperCase(), brand: card.querySelector('.i-brand').value, supplier: card.querySelector('.i-supplier').value, qty: card.querySelector('.i-qty').value || "1", unitPrice: card.querySelector('.i-unitPrice').value || "0", subTotal: card.querySelector('.i-subTotal').value || "0", eta: card.querySelector('.i-eta').value, photos: qItemPhotosMap[id] || [] }; if (p.part || p.partNo) payload.items.push(p); });
         if(payload.items.length === 0) return alert("Enter at least 1 Part.");
 
-        if (!navigator.onLine) { if(qEditingId) payload.editId = qEditingId; else { payload.date = getStandardDateStr(); payload.timestamp = Date.now(); } saveToOfflineQueue('quote', payload); cancelQEdit(); return; }
+        if (!navigator.onLine) { if(qEditingId) payload.editId = qEditingId; else { payload.date = getStandardDateStr(); payload.timestamp = Date.now(); } saveToOfflineQueue('quote', payload); return; }
 
         const originalText = qMainBtn.innerText; qMainBtn.innerText = "⏳ Processing Photos & Data..."; qMainBtn.disabled = true;
         try {
@@ -909,17 +904,13 @@
             
             const msgQ = `📄 *MALAYSIA MOTOR COMPANY - SEBUTHARGA / QUOTATION*\n\nPelanggan yang dihormati ${quote.name},\nBerikut adalah sebutharga untuk rujukan anda:\n\nDear ${quote.name},\nHere is the quotation for your reference:\n\n*No. Sebutharga / Quote ID:* ${quote.refNo}\n*Car Plate:* ${quote.plate||'-'}\n*Kenderaan / Car:* ${quote.car||''}\n*Senarai Barang / Items:*\n${waList.join('\n')}\n\n*Jumlah / Grand Total:* RM${quote.total}\n\nSila beritahu kami jika anda ingin meneruskan pesanan. / Please let us know if you wish to proceed with the order.\nTerima kasih! / Thank you!`;
             const tr = document.createElement('tr'); const plateHtml = quote.plate ? `<span style="background:#fef08a; color:#b45309; padding:2px 6px; border-radius:4px; font-weight:bold; font-size:12px; letter-spacing:1px;">${quote.plate}</span><br>` : '';
-            const isOffline = quote.id.startsWith('off_'); const badgeClass = isOffline ? 'ref-offline' : 'ref-badge';
             
             let mainActions = '';
-            if (isOffline) { mainActions = `<span style="font-size:12px; color:#ef4444; font-weight:bold;">⏳ Waiting for Internet...</span>`; } 
-            else {
-                mainActions += `<div class="action-btns"><button class="convert-btn" onclick="convertToPreorder('${quote.id}')">➡️ Convert to Order</button></div><div class="action-btns"><button class="edit-btn" onclick="editQuote('${quote.id}')">✏️ Edit</button>`;
-                if (isAdmin) { mainActions += `<button class="delete-btn" onclick="deleteQuote('${quote.id}')">✖ Del</button>`; }
-                mainActions += `</div><button class="print-btn" onclick="printChecklist('${quote.id}', 'quote')" style="width:100%; margin-top:5px; margin-bottom:5px;">🖨️ Print Checklist</button>`;
-            }
+            mainActions += `<div class="action-btns"><button class="convert-btn" onclick="convertToPreorder('${quote.id}')">➡️ Convert to Order</button></div><div class="action-btns"><button class="edit-btn" onclick="editQuote('${quote.id}')">✏️ Edit</button>`;
+            if (isAdmin) { mainActions += `<button class="delete-btn" onclick="deleteQuote('${quote.id}')">✖ Del</button>`; }
+            mainActions += `</div><button class="print-btn" onclick="printChecklist('${quote.id}', 'quote')" style="width:100%; margin-top:5px; margin-bottom:5px;">🖨️ Print Checklist</button>`;
 
-            tr.innerHTML = `<td><span class="${badgeClass}">${quote.refNo}</span><br><small style="color:#64748b;margin-top:6px;display:inline-block;font-weight:700;">${quote.date}</small><br>${quote.staff?`<span class="staff-badge">👤 ${quote.staff}</span>`:''}</td><td><strong style="color:#0f172a;">${quote.name}</strong><br><small style="color:#3b82f6;font-weight:bold;">${quote.phone}</small><br><div style="margin-top:8px;padding-top:8px;border-top:1px dashed #e2e8f0;">${plateHtml}<strong style="color:#334155; font-size:13px; display:inline-block; margin-top:4px;">${quote.car||'-'}</strong> <span class="mono-text" style="color:#64748b;font-size:12px;">${quote.chassis||''}</span></div></td><td>${partsHtml}<div class="notes-text" style="margin-top:8px;color:#059669;font-weight:600;">${quote.remarks?'📝 Remarks: '+quote.remarks:''}</div></td><td><strong style="font-size:18px;color:#0f172a;">RM${quote.total}</strong></td><td><div class="action-btns"><a href="https://wa.me/${quote.phone}?text=${encodeURIComponent(msgQ)}" target="_blank" class="wa-btn wa-btn-quote" style="width:100%;">💬 Send Quotation</a></div></td><td>${mainActions}</td>`;
+            tr.innerHTML = `<td><span class="ref-badge">${quote.refNo}</span><br><small style="color:#64748b;margin-top:6px;display:inline-block;font-weight:700;">${quote.date}</small><br>${quote.staff?`<span class="staff-badge">👤 ${quote.staff}</span>`:''}</td><td><strong style="color:#0f172a;">${quote.name}</strong><br><small style="color:#3b82f6;font-weight:bold;">${quote.phone}</small><br><div style="margin-top:8px;padding-top:8px;border-top:1px dashed #e2e8f0;">${plateHtml}<strong style="color:#334155; font-size:13px; display:inline-block; margin-top:4px;">${quote.car||'-'}</strong> <span class="mono-text" style="color:#64748b;font-size:12px;">${quote.chassis||''}</span></div></td><td>${partsHtml}<div class="notes-text" style="margin-top:8px;color:#059669;font-weight:600;">${quote.remarks?'📝 Remarks: '+quote.remarks:''}</div></td><td><strong style="font-size:18px;color:#0f172a;">RM${quote.total}</strong></td><td><div class="action-btns"><a href="https://wa.me/${quote.phone}?text=${encodeURIComponent(msgQ)}" target="_blank" class="wa-btn wa-btn-quote" style="width:100%;">💬 Send Quotation</a></div></td><td>${mainActions}</td>`;
             tbody.appendChild(tr);
         });
     }
@@ -963,7 +954,7 @@
         document.querySelectorAll('#enquireTab .pos-table-row').forEach(card => { const id = card.id; const p = { part: card.querySelector('.i-part').value, partNo: card.querySelector('.i-partNo').value.trim().toUpperCase(), brand: card.querySelector('.i-brand').value, supplier: card.querySelector('.i-supplier').value, qty: card.querySelector('.i-qty').value || "1", unitPrice: card.querySelector('.i-unitPrice').value || "0", subTotal: card.querySelector('.i-subTotal').value || "0", eta: card.querySelector('.i-eta').value, photos: eItemPhotosMap[id] || [] }; if (p.part || p.partNo) payload.items.push(p); });
         if(payload.items.length === 0) return alert("Enter at least 1 Part.");
 
-        if (!navigator.onLine) { if(eEditingId) payload.editId = eEditingId; else { payload.date = getStandardDateStr(); payload.timestamp = Date.now(); } saveToOfflineQueue('enquire', payload); cancelEEdit(); return; }
+        if (!navigator.onLine) { if(eEditingId) payload.editId = eEditingId; else { payload.date = getStandardDateStr(); payload.timestamp = Date.now(); } saveToOfflineQueue('enquire', payload); return; }
 
         const originalText = eMainBtn.innerText; eMainBtn.innerText = "⏳ Processing Photos & Data..."; eMainBtn.disabled = true;
         try {
@@ -1005,17 +996,13 @@
             
             const msgE = `💬 *MALAYSIA MOTOR COMPANY - MAKLUMBALAS PERTANYAAN / ENQUIRY RESPONSE*\n\nPelanggan yang dihormati ${enq.name},\nTerima kasih kerana menghubungi kami. Berikut adalah maklumat untuk pertanyaan anda:\n\nDear ${enq.name},\nThank you for reaching out. Here is the information regarding your enquiry:\n\n*No. Pertanyaan / Enq ID:* ${enq.refNo}\n*Car Plate:* ${enq.plate||'-'}\n*Kenderaan / Car:* ${enq.car||''}\n*Senarai Barang / Items:*\n${waList.join('\n')}\n\n*Anggaran Jumlah / Estimated Total:* RM${enq.total}\n\nSila beritahu kami jika anda mempunyai sebarang soalan lanjut. / Please let us know if you have any further questions.\nTerima kasih! / Thank you!`;
             const tr = document.createElement('tr'); const plateHtml = enq.plate ? `<span style="background:#fef08a; color:#b45309; padding:2px 6px; border-radius:4px; font-weight:bold; font-size:12px; letter-spacing:1px;">${enq.plate}</span><br>` : '';
-            const isOffline = enq.id.startsWith('off_'); const badgeClass = isOffline ? 'ref-offline' : 'ref-badge';
             
             let mainActions = '';
-            if (isOffline) { mainActions = `<span style="font-size:12px; color:#ef4444; font-weight:bold;">⏳ Waiting for Internet...</span>`; } 
-            else {
-                mainActions += `<div class="action-btns"><button class="convert-btn-alt" onclick="convertEnqToQuote('${enq.id}')">➡️ Convert to Quote</button></div><div class="action-btns"><button class="edit-btn" onclick="editEnquire('${enq.id}')">✏️ Edit</button>`;
-                if (isAdmin) { mainActions += `<button class="delete-btn" onclick="deleteEnquire('${enq.id}')">✖ Del</button>`; }
-                mainActions += `</div><button class="print-btn" onclick="printChecklist('${enq.id}', 'enquire')" style="width:100%; margin-top:5px; margin-bottom:5px;">🖨️ Print Enquiry</button>`;
-            }
+            mainActions += `<div class="action-btns"><button class="convert-btn-alt" onclick="convertEnqToQuote('${enq.id}')">➡️ Convert to Quote</button></div><div class="action-btns"><button class="edit-btn" onclick="editEnquire('${enq.id}')">✏️ Edit</button>`;
+            if (isAdmin) { mainActions += `<button class="delete-btn" onclick="deleteEnquire('${enq.id}')">✖ Del</button>`; }
+            mainActions += `</div><button class="print-btn" onclick="printChecklist('${enq.id}', 'enquire')" style="width:100%; margin-top:5px; margin-bottom:5px;">🖨️ Print Enquiry</button>`;
 
-            tr.innerHTML = `<td><span class="${badgeClass}">${enq.refNo}</span><br><small style="color:#64748b;margin-top:6px;display:inline-block;font-weight:700;">${enq.date}</small><br>${enq.staff?`<span class="staff-badge">👤 ${enq.staff}</span>`:''}</td><td><strong style="color:#0f172a;">${enq.name}</strong><br><small style="color:#3b82f6;font-weight:bold;">${enq.phone}</small><br><div style="margin-top:8px;padding-top:8px;border-top:1px dashed #e2e8f0;">${plateHtml}<strong style="color:#334155; font-size:13px; display:inline-block; margin-top:4px;">${enq.car||'-'}</strong> <span class="mono-text" style="color:#64748b;font-size:12px;">${enq.chassis||''}</span></div></td><td>${partsHtml}<div class="notes-text" style="margin-top:8px;color:#059669;font-weight:600;">${enq.remarks?'📝 Remarks: '+enq.remarks:''}</div></td><td><strong style="font-size:18px;color:#0f172a;">RM${enq.total}</strong></td><td><div class="action-btns"><a href="https://wa.me/${enq.phone}?text=${encodeURIComponent(msgE)}" target="_blank" class="wa-btn wa-btn-enq" style="width:100%;">💬 Send Enquiry</a></div></td><td>${mainActions}</td>`;
+            tr.innerHTML = `<td><span class="ref-badge">${enq.refNo}</span><br><small style="color:#64748b;margin-top:6px;display:inline-block;font-weight:700;">${enq.date}</small><br>${enq.staff?`<span class="staff-badge">👤 ${enq.staff}</span>`:''}</td><td><strong style="color:#0f172a;">${enq.name}</strong><br><small style="color:#3b82f6;font-weight:bold;">${enq.phone}</small><br><div style="margin-top:8px;padding-top:8px;border-top:1px dashed #e2e8f0;">${plateHtml}<strong style="color:#334155; font-size:13px; display:inline-block; margin-top:4px;">${enq.car||'-'}</strong> <span class="mono-text" style="color:#64748b;font-size:12px;">${enq.chassis||''}</span></div></td><td>${partsHtml}<div class="notes-text" style="margin-top:8px;color:#059669;font-weight:600;">${enq.remarks?'📝 Remarks: '+enq.remarks:''}</div></td><td><strong style="font-size:18px;color:#0f172a;">RM${enq.total}</strong></td><td><div class="action-btns"><a href="https://wa.me/${enq.phone}?text=${encodeURIComponent(msgE)}" target="_blank" class="wa-btn wa-btn-enq" style="width:100%;">💬 Send Enquiry</a></div></td><td>${mainActions}</td>`;
             tbody.appendChild(tr);
         });
     }
@@ -1040,12 +1027,12 @@
         try { if (!navigator.onLine) { saveToOfflineQueue('restock', payload); } else { if (payload.photos && payload.photos.length > 0) { payload.photos = await uploadBase64ToStorage(payload.photos); } await db.ref('restock').push(payload); } ['r_part','r_code','r_brand','r_supp','r_onHand','r_needOrder','r_unitCost','r_totalCost'].forEach(id => document.getElementById(id).value = ''); currentRestockPhotos = []; renderRestockGalleryUI(); } catch (e) { alert("Error: " + e.message); } finally { btn.innerText = origText; btn.disabled = false; }
     }
 
-    function updateRestockSupplier(id, newValue) { if(!isAdmin) return; if(navigator.onLine && !id.startsWith('off_')) db.ref('restock/' + id).update({ supp: newValue }); }
+    function updateRestockSupplier(id, newValue) { if(!isAdmin) return; if(navigator.onLine) db.ref('restock/' + id).update({ supp: newValue }); }
     async function markRestockOrdered(id) { if(!navigator.onLine) return; await db.ref('restock/' + id).update({ status: 'Ordered' }); }
     async function returnToNotYet(id) { if(!navigator.onLine) return; await db.ref('restock/' + id).update({ status: 'Not Yet Order' }); }
     async function deleteRestock(id) { if(!navigator.onLine) return; if(isAdmin && confirm("Delete this record permanently?")) { await db.ref('restock/' + id).remove(); } }
     
-    async function markFilteredOrdered() { if(!isAdmin) return alert("Admin only."); if(!navigator.onLine) return alert("Requires internet."); let toUpdate = currentRestockView.filter(i => i.status !== 'Ordered' && !i.id.startsWith('off_')); if(toUpdate.length === 0) return alert('No pending items found in your current view.'); if(!confirm(`Mark all ${toUpdate.length} items on this screen as ORDERED?`)) return; let updates = {}; toUpdate.forEach(i => { updates[i.id + '/status'] = 'Ordered'; }); await db.ref('restock').update(updates); }
+    async function markFilteredOrdered() { if(!isAdmin) return alert("Admin only."); if(!navigator.onLine) return alert("Requires internet."); let toUpdate = currentRestockView.filter(i => i.status !== 'Ordered'); if(toUpdate.length === 0) return alert('No pending items found in your current view.'); if(!confirm(`Mark all ${toUpdate.length} items on this screen as ORDERED?`)) return; let updates = {}; toUpdate.forEach(i => { updates[i.id + '/status'] = 'Ordered'; }); await db.ref('restock').update(updates); }
 
     function renderRestockTable() {
         let theadHTML = `<tr><th style="width:100px;">Date Added</th><th>Part Description</th><th>Item Code / OEM</th><th>Brand</th><th>Supplier ${isAdmin ? '<span style="font-size:10px; color:#b45309;">(Boss Edit)</span>' : ''}</th><th style="text-align:center; width: 60px;">On Hand</th><th style="text-align:center; width: 60px;">Order Qty</th>`;
@@ -1056,10 +1043,12 @@
         const view = document.getElementById('rViewFilter').value; const dateVal = document.getElementById('rDateFilter').value; const filterDateStr = getFormattedDateForFilter(dateVal); const suppFilter = document.getElementById('rSuppFilter').value;
         currentRestockView = restockItems.filter(item => { const status = item.status || 'Not Yet Order'; if (view === 'active' && status === 'Ordered') return false; if (view === 'history' && status !== 'Ordered') return false; if (filterDateStr && item.date !== filterDateStr) return false; if (suppFilter !== 'all' && (item.supp||'').trim() !== suppFilter) return false; return true; });
         currentRestockView.forEach(item => {
-            const isOffline = item.id.startsWith('off_'); const status = item.status || 'Not Yet Order';
-            let statusHtml = ''; if (isOffline) { statusHtml = `<span style="padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; background:#fee2e2; color:#ef4444; border: 1px dashed #ef4444;">Offline</span>`; } else if (status === 'Ordered') { statusHtml = `<span style="padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; background:#d1fae5; color:#047857;">Ordered</span>`; } else { statusHtml = `<span style="padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; background:#fef3c7; color:#b45309;">Not Yet Order</span>`; }
-            let actionHtml = ''; if(isOffline) { actionHtml = `<span style="font-size:11px; color:#ef4444; font-weight:bold;">⏳ Wait...</span>`; } else { if (status !== 'Ordered') { actionHtml += `<button class="complete-btn" onclick="markRestockOrdered('${item.id}')" style="width:100%; margin-bottom:4px;">✔️ Done</button>`; } else { actionHtml += `<button class="edit-btn" onclick="returnToNotYet('${item.id}')" style="width:100%; margin-bottom:4px;">⏪ Return</button>`; } if (isAdmin) { actionHtml += `<button class="delete-btn" onclick="deleteRestock('${item.id}')" style="width:100%;">✖ Del</button>`; } }
-            let suppHtml = (isAdmin && !isOffline) ? `<input type="text" class="pos-input" value="${item.supp||''}" placeholder="Type..." style="width:100px; font-size:12px; background:#fffbeb; color:#b45309; font-weight:bold;" list="supplierList" onchange="updateRestockSupplier('${item.id}', this.value)">` : (item.supp || '-');
+            const status = item.status || 'Not Yet Order';
+            const statusHtml = status === 'Ordered' ? `<span style="padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; background:#d1fae5; color:#047857;">Ordered</span>` : `<span style="padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; background:#fef3c7; color:#b45309;">Not Yet Order</span>`;
+            let actionHtml = ''; 
+            if (status !== 'Ordered') { actionHtml += `<button class="complete-btn" onclick="markRestockOrdered('${item.id}')" style="width:100%; margin-bottom:4px;">✔️ Done</button>`; } else { actionHtml += `<button class="edit-btn" onclick="returnToNotYet('${item.id}')" style="width:100%; margin-bottom:4px;">⏪ Return</button>`; } 
+            if (isAdmin) { actionHtml += `<button class="delete-btn" onclick="deleteRestock('${item.id}')" style="width:100%;">✖ Del</button>`; } 
+            let suppHtml = isAdmin ? `<input type="text" class="pos-input" value="${item.supp||''}" placeholder="Type..." style="width:100px; font-size:12px; background:#fffbeb; color:#b45309; font-weight:bold;" list="supplierList" onchange="updateRestockSupplier('${item.id}', this.value)">` : (item.supp || '-');
             let costHtml = isAdmin ? `<td style="text-align:center; font-weight:bold; color:#059669;">RM ${parseFloat(item.unitCost||0).toFixed(2)}</td><td style="text-align:center; font-weight:bold; color:#059669;">RM ${parseFloat(item.totalCost||0).toFixed(2)}</td>` : ``;
             let photoHtml = ''; if (item.photos && item.photos.length > 0) { photoHtml = `<div style="display:flex; gap:4px; flex-wrap:wrap; justify-content:center;">`; item.photos.forEach(p => { photoHtml += `<img src="${p}" class="photo-thumbnail" onclick="showPhoto('${p}')" style="width:35px;height:35px;border:1px solid #cbd5e1; cursor:pointer;">`; }); photoHtml += `</div>`; } else { photoHtml = `<span style="color:#94a3b8; font-size:11px;">No Photo</span>`; }
             const tr = document.createElement('tr'); tr.style.opacity = status === 'Ordered' ? '0.6' : '1';
