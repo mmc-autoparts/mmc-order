@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="MMC Portal">
     <link rel="apple-touch-icon" href="logo.png">
-    <title>Malaysia Motor Company - Secure Portal V64</title>
+    <title>Malaysia Motor Company - Secure Portal V65</title>
     <link rel="manifest" href="manifest.json">
     <script>
         if ('serviceWorker' in navigator) {
@@ -16,12 +16,12 @@
             navigator.serviceWorker.addEventListener('controllerchange', () => { if (!refreshing) { window.location.reload(); refreshing = true; }});
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js').then(reg => {
-                    setInterval(() => { console.log("Checking server for V64 updates..."); reg.update(); }, 5 * 60 * 1000);
+                    setInterval(() => { console.log("Checking server for V65 updates..."); reg.update(); }, 5 * 60 * 1000);
                     reg.onupdatefound = () => {
                         const installingWorker = reg.installing;
                         installingWorker.onstatechange = () => {
                             if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                if (confirm("🔄 New system version (V64) available! Click OK to apply.")) { installingWorker.postMessage('SKIP_WAITING'); }
+                                if (confirm("🔄 New system version (V65) available! Click OK to apply.")) { installingWorker.postMessage('SKIP_WAITING'); }
                             }
                         };
                     };
@@ -196,7 +196,7 @@
 <div id="mainApp" class="container">
     <div class="header-flex">
         <div>
-            <h2>Malaysia Motor Company <span class="version-badge">V64 Enterprise</span> <span id="adminBadge">👑 Boss View</span></h2>
+            <h2>Malaysia Motor Company <span class="version-badge">V65 Enterprise</span> <span id="adminBadge">👑 Boss View</span></h2>
             <div style="margin-top:8px;">
                 <span id="networkBadge" class="net-online">🟢 Online (Live Cloud Sync)</span>
             </div>
@@ -236,13 +236,7 @@
             <div class="form-grid">
                 <div><span class="label-text">Customer Name</span><input type="text" id="custName" placeholder="Name" list="customerList" oninput="checkCRM('name', 'custPhone', 'carPlate', 'custName', 'carModel', 'chassisNumber')"></div>
                 <div><span class="label-text">WhatsApp Number</span><input type="text" id="custPhone" placeholder="60123456789" oninput="checkCRM('phone', 'custPhone', 'carPlate', 'custName', 'carModel', 'chassisNumber')"></div>
-                <div>
-                    <span class="label-text">Car Plate No.</span>
-                    <div style="display:flex; gap:5px;">
-                        <input type="text" id="carPlate" placeholder="e.g. JDT1234" oninput="this.value = this.value.toUpperCase().replace(/\s/g, ''); checkCRM('plate', 'custPhone', 'carPlate', 'custName', 'carModel', 'chassisNumber')">
-                        <button type="button" onclick="showPlateHistory('carPlate')" style="background:#4338ca; color:white; border:none; border-radius:6px; padding:0 12px; cursor:pointer; font-weight:bold;" title="Deep Cloud Search">🔍</button>
-                    </div>
-                </div>
+                <div><span class="label-text">Car Plate No.</span><div style="display:flex; gap:5px;"><input type="text" id="carPlate" placeholder="e.g. JDT1234" oninput="this.value = this.value.toUpperCase().replace(/\s/g, ''); checkCRM('plate', 'custPhone', 'carPlate', 'custName', 'carModel', 'chassisNumber')"><button type="button" onclick="showPlateHistory('carPlate')" style="background:#4338ca; color:white; border:none; border-radius:6px; padding:0 12px; cursor:pointer; font-weight:bold;" title="Deep Cloud Search">🔍</button></div></div>
                 <div><span class="label-text">Car Model</span><input type="text" id="carModel" placeholder="e.g. Honda Civic"></div>
                 <div><span class="label-text">Chassis No.</span><input type="text" id="chassisNumber" placeholder="e.g. FC1" oninput="this.value = this.value.toUpperCase().replace(/\s/g, '')"></div>
             </div>
@@ -261,25 +255,14 @@
                     <div><span class="label-text">Deposit (RM)</span><input type="number" id="deposit" placeholder="0.00" oninput="calcBalance()" style="padding:10px;"></div>
                     <div><span class="label-text">Balance (RM)</span><input type="number" id="balance" placeholder="0.00" readonly class="readonly-input" style="padding:10px; color:#ef4444;"></div>
                 </div>
-                <div class="button-group">
-                    <button class="main-save-btn" id="mainBtn" onclick="saveOrUpdateOrder()">💾 Save & Sync</button>
-                    <button class="cancel-btn" id="cancelBtn" onclick="cancelEdit()">Cancel</button>
-                </div>
+                <div class="button-group"><button class="main-save-btn" id="mainBtn" onclick="saveOrUpdateOrder()">💾 Save & Sync</button><button class="cancel-btn" id="cancelBtn" onclick="cancelEdit()">Cancel</button></div>
             </div>
         </div>
 
         <div class="top-controls">
             <input type="text" id="searchInput" class="search-bar" placeholder="🔍 Search Name, Plate, Code, Remark, Staff..." oninput="renderTable()">
-            <select id="viewFilter" onchange="renderTable()" style="font-weight: bold; color: #2563eb; padding: 12px; border-radius: 20px;">
-                <option value="active">Active Orders Only</option>
-                <option value="history">Completed History</option>
-                <option value="all">All Records</option>
-            </select>
-            <div style="display:flex; align-items:center; gap:8px;">
-                <span style="font-size:13px; font-weight:bold; color:#475569;">Date:</span>
-                <input type="date" id="orderDateFilter" onchange="renderTable()" style="padding:12px; border-radius:20px; width:140px; border:1px solid #cbd5e1;">
-                <button onclick="clearDateFilter('order')" style="padding:12px; border-radius:20px; cursor:pointer; border:1px solid #cbd5e1; background:white; font-weight:bold;">Clear</button>
-            </div>
+            <select id="viewFilter" onchange="renderTable()" style="font-weight: bold; color: #2563eb; padding: 12px; border-radius: 20px;"><option value="active">Active Orders Only</option><option value="history">Completed History</option><option value="all">All Records</option></select>
+            <div style="display:flex; align-items:center; gap:8px;"><span style="font-size:13px; font-weight:bold; color:#475569;">Date:</span><input type="date" id="orderDateFilter" onchange="renderTable()" style="padding:12px; border-radius:20px; width:140px; border:1px solid #cbd5e1;"><button onclick="clearDateFilter('order')" style="padding:12px; border-radius:20px; cursor:pointer; border:1px solid #cbd5e1; background:white; font-weight:bold;">Clear</button></div>
             <button onclick="markSelectedArrived()" class="complete-btn" style="padding:12px 18px; border-radius:20px; cursor:pointer; border:none; font-weight:bold;">✅ Mark Selected Arrived</button>
             <button id="exportBtn" class="export-btn" onclick="exportCSV()" style="padding:12px; border-radius:20px;">📥 Export Excel</button>
         </div>
@@ -298,13 +281,7 @@
             <div class="form-grid">
                 <div><span class="label-text">Customer Name</span><input type="text" id="qCustName" placeholder="Name" list="customerList" oninput="checkCRM('name', 'qCustPhone', 'qCarPlate', 'qCustName', 'qCarModel', 'qChassisNumber')"></div>
                 <div><span class="label-text">WhatsApp Number</span><input type="text" id="qCustPhone" placeholder="60123456789" oninput="checkCRM('phone', 'qCustPhone', 'qCarPlate', 'qCustName', 'qCarModel', 'qChassisNumber')"></div>
-                <div>
-                    <span class="label-text">Car Plate No.</span>
-                    <div style="display:flex; gap:5px;">
-                        <input type="text" id="qCarPlate" placeholder="e.g. JDT1234" oninput="this.value = this.value.toUpperCase().replace(/\s/g, ''); checkCRM('plate', 'qCustPhone', 'qCarPlate', 'qCustName', 'qCarModel', 'qChassisNumber')">
-                        <button type="button" onclick="showPlateHistory('qCarPlate')" style="background:#4338ca; color:white; border:none; border-radius:6px; padding:0 12px; cursor:pointer; font-weight:bold;" title="Deep Cloud Search">🔍</button>
-                    </div>
-                </div>
+                <div><span class="label-text">Car Plate No.</span><div style="display:flex; gap:5px;"><input type="text" id="qCarPlate" placeholder="e.g. JDT1234" oninput="this.value = this.value.toUpperCase().replace(/\s/g, ''); checkCRM('plate', 'qCustPhone', 'qCarPlate', 'qCustName', 'qCarModel', 'qChassisNumber')"><button type="button" onclick="showPlateHistory('qCarPlate')" style="background:#4338ca; color:white; border:none; border-radius:6px; padding:0 12px; cursor:pointer; font-weight:bold;" title="Deep Cloud Search">🔍</button></div></div>
                 <div><span class="label-text">Car Model</span><input type="text" id="qCarModel" placeholder="e.g. Honda Civic"></div>
                 <div><span class="label-text">Chassis No.</span><input type="text" id="qChassisNumber" placeholder="e.g. FC1" oninput="this.value = this.value.toUpperCase().replace(/\s/g, '')"></div>
             </div>
@@ -321,20 +298,13 @@
                     <div><span class="label-text">Remarks</span><input type="text" id="qRemarks" placeholder="Optional notes..." style="padding:10px;"></div>
                     <div><span class="label-text">Quotation Grand Total (RM)</span><input type="number" id="qTotalPrice" placeholder="0.00" class="readonly-input" readonly style="padding:10px; color:#6d28d9;"></div>
                 </div>
-                <div class="button-group">
-                    <button class="main-save-quote" id="qMainBtn" onclick="saveOrUpdateQuote()">💾 Save Quotation</button>
-                    <button class="cancel-btn" id="qCancelBtn" onclick="cancelQEdit()">Cancel Edit</button>
-                </div>
+                <div class="button-group"><button class="main-save-quote" id="qMainBtn" onclick="saveOrUpdateQuote()">💾 Save Quotation</button><button class="cancel-btn" id="qCancelBtn" onclick="cancelQEdit()">Cancel Edit</button></div>
             </div>
         </div>
 
         <div class="top-controls">
             <input type="text" id="qSearchInput" class="search-bar" placeholder="🔍 Search Name, Plate, Code, Remark, Staff..." oninput="renderQTable()">
-            <div style="display:flex; align-items:center; gap:8px;">
-                <span style="font-size:13px; font-weight:bold; color:#475569;">Date:</span>
-                <input type="date" id="quoteDateFilter" onchange="renderQTable()" style="padding:12px; border-radius:20px; width:160px; border:1px solid #cbd5e1;">
-                <button onclick="clearDateFilter('quote')" style="padding:12px 18px; border-radius:20px; cursor:pointer; border:1px solid #cbd5e1; background:white; font-weight:bold;">Clear</button>
-            </div>
+            <div style="display:flex; align-items:center; gap:8px;"><span style="font-size:13px; font-weight:bold; color:#475569;">Date:</span><input type="date" id="quoteDateFilter" onchange="renderQTable()" style="padding:12px; border-radius:20px; width:160px; border:1px solid #cbd5e1;"><button onclick="clearDateFilter('quote')" style="padding:12px 18px; border-radius:20px; cursor:pointer; border:1px solid #cbd5e1; background:white; font-weight:bold;">Clear</button></div>
         </div>
 
         <div class="table-responsive">
@@ -351,13 +321,7 @@
             <div class="form-grid">
                 <div><span class="label-text">Customer Name</span><input type="text" id="eCustName" placeholder="Name" list="customerList" oninput="checkCRM('name', 'eCustPhone', 'eCarPlate', 'eCustName', 'eCarModel', 'eChassisNumber')"></div>
                 <div><span class="label-text">WhatsApp Number</span><input type="text" id="eCustPhone" placeholder="60123456789" oninput="checkCRM('phone', 'eCustPhone', 'eCarPlate', 'eCustName', 'eCarModel', 'eChassisNumber')"></div>
-                <div>
-                    <span class="label-text">Car Plate No.</span>
-                    <div style="display:flex; gap:5px;">
-                        <input type="text" id="eCarPlate" placeholder="e.g. JDT1234" oninput="this.value = this.value.toUpperCase().replace(/\s/g, ''); checkCRM('plate', 'eCustPhone', 'eCarPlate', 'eCustName', 'eCarModel', 'eChassisNumber')">
-                        <button type="button" onclick="showPlateHistory('eCarPlate')" style="background:#4338ca; color:white; border:none; border-radius:6px; padding:0 12px; cursor:pointer; font-weight:bold;" title="Deep Cloud Search">🔍</button>
-                    </div>
-                </div>
+                <div><span class="label-text">Car Plate No.</span><div style="display:flex; gap:5px;"><input type="text" id="eCarPlate" placeholder="e.g. JDT1234" oninput="this.value = this.value.toUpperCase().replace(/\s/g, ''); checkCRM('plate', 'eCustPhone', 'eCarPlate', 'eCustName', 'eCarModel', 'eChassisNumber')"><button type="button" onclick="showPlateHistory('eCarPlate')" style="background:#4338ca; color:white; border:none; border-radius:6px; padding:0 12px; cursor:pointer; font-weight:bold;" title="Deep Cloud Search">🔍</button></div></div>
                 <div><span class="label-text">Car Model</span><input type="text" id="eCarModel" placeholder="e.g. Honda Civic"></div>
                 <div><span class="label-text">Chassis No.</span><input type="text" id="eChassisNumber" placeholder="e.g. FC1" oninput="this.value = this.value.toUpperCase().replace(/\s/g, '')"></div>
             </div>
@@ -374,20 +338,13 @@
                     <div><span class="label-text">Remarks</span><input type="text" id="eRemarks" placeholder="Optional notes..." style="padding:10px;"></div>
                     <div><span class="label-text">Estimated Total (RM)</span><input type="number" id="eTotalPrice" placeholder="0.00" class="readonly-input" readonly style="padding:10px; color:#0369a1;"></div>
                 </div>
-                <div class="button-group">
-                    <button class="main-save-enq" id="eMainBtn" onclick="saveOrUpdateEnquire()">💾 Save Enquiry</button>
-                    <button class="cancel-btn" id="eCancelBtn" onclick="cancelEEdit()">Cancel Edit</button>
-                </div>
+                <div class="button-group"><button class="main-save-enq" id="eMainBtn" onclick="saveOrUpdateEnquire()">💾 Save Enquiry</button><button class="cancel-btn" id="eCancelBtn" onclick="cancelEEdit()">Cancel Edit</button></div>
             </div>
         </div>
 
         <div class="top-controls">
             <input type="text" id="eSearchInput" class="search-bar" placeholder="🔍 Search Name, Plate, Code, Remark, Staff..." oninput="renderETable()">
-            <div style="display:flex; align-items:center; gap:8px;">
-                <span style="font-size:13px; font-weight:bold; color:#475569;">Date:</span>
-                <input type="date" id="enquireDateFilter" onchange="renderETable()" style="padding:12px; border-radius:20px; width:160px; border:1px solid #cbd5e1;">
-                <button onclick="clearDateFilter('enquire')" style="padding:12px 18px; border-radius:20px; cursor:pointer; border:1px solid #cbd5e1; background:white; font-weight:bold;">Clear</button>
-            </div>
+            <div style="display:flex; align-items:center; gap:8px;"><span style="font-size:13px; font-weight:bold; color:#475569;">Date:</span><input type="date" id="enquireDateFilter" onchange="renderETable()" style="padding:12px; border-radius:20px; width:160px; border:1px solid #cbd5e1;"><button onclick="clearDateFilter('enquire')" style="padding:12px 18px; border-radius:20px; cursor:pointer; border:1px solid #cbd5e1; background:white; font-weight:bold;">Clear</button></div>
         </div>
 
         <div class="table-responsive">
@@ -550,7 +507,7 @@
         };
     }
 
-    // V64 UPDATE: Fixed UI Cache Glitch with `forceDataSync()` post-upload
+    // V65 UPDATE: Preserves offline items so they don't vanish from UI during upload
     let isSyncingOffline = false;
     async function checkOfflineQueue() {
         if(!navigator.onLine || !offlineDB || isSyncingOffline) return; isSyncingOffline = true; 
@@ -578,10 +535,7 @@
                     }
                     const txDel = offlineDB.transaction('offlineData', 'readwrite'); 
                     txDel.objectStore('offlineData').clear(); 
-                    
-                    // The Fix: Force the screen to refresh so it doesn't show old local cache!
                     txDel.oncomplete = () => { forceDataSync(); };
-
                 } catch (error) { console.error("Sync Error:", error); }
             } isSyncingOffline = false; 
         }; req.onerror = () => { isSyncingOffline = false; };
@@ -688,10 +642,11 @@
         Array.from(sSet).sort().forEach(s => { let opt = document.createElement('option'); opt.value = s; sList.appendChild(opt); filterSelect.innerHTML += `<option value="${s}">${s}</option>`; }); filterSelect.value = currentFilterVal || 'all';
     }
 
-    function loadDatabaseData() { db.ref('orders').orderByChild('timestamp').limitToLast(orderLimit).on('value', (snapshot) => { orders = []; snapshot.forEach((child) => { orders.push({ id: child.key, ...child.val() }); }); orders.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0)); buildDictionaries(); renderTable(); calculateDailyCash(); }); }
-    function loadQuoteData() { db.ref('quotations').orderByChild('timestamp').limitToLast(quoteLimit).on('value', (snapshot) => { quotes = []; snapshot.forEach((child) => { quotes.push({ id: child.key, ...child.val() }); }); quotes.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0)); buildDictionaries(); renderQTable(); }); }
-    function loadEnquireData() { db.ref('enquiries').orderByChild('timestamp').limitToLast(enquireLimit).on('value', (snapshot) => { enquiries = []; snapshot.forEach((child) => { enquiries.push({ id: child.key, ...child.val() }); }); enquiries.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0)); buildDictionaries(); renderETable(); }); }
-    function loadRestockData() { db.ref('restock').orderByChild('timestamp').limitToLast(restockLimit).on('value', (snapshot) => { restockItems = []; snapshot.forEach((child) => { restockItems.push({ id: child.key, ...child.val() }); }); restockItems.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0)); buildDictionaries(); renderRestockTable(); }); }
+    // V65 UPDATE: Preserving local 'off_' orders so they stay on screen during sync!
+    function loadDatabaseData() { db.ref('orders').orderByChild('timestamp').limitToLast(orderLimit).on('value', (snapshot) => { let fresh = []; snapshot.forEach(child => fresh.push({ id: child.key, ...child.val() })); let off = orders.filter(o => o.id && o.id.toString().startsWith('off_')); orders = [...off, ...fresh].sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0)); buildDictionaries(); renderTable(); calculateDailyCash(); }); }
+    function loadQuoteData() { db.ref('quotations').orderByChild('timestamp').limitToLast(quoteLimit).on('value', (snapshot) => { let fresh = []; snapshot.forEach(child => fresh.push({ id: child.key, ...child.val() })); let off = quotes.filter(q => q.id && q.id.toString().startsWith('off_')); quotes = [...off, ...fresh].sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0)); buildDictionaries(); renderQTable(); }); }
+    function loadEnquireData() { db.ref('enquiries').orderByChild('timestamp').limitToLast(enquireLimit).on('value', (snapshot) => { let fresh = []; snapshot.forEach(child => fresh.push({ id: child.key, ...child.val() })); let off = enquiries.filter(e => e.id && e.id.toString().startsWith('off_')); enquiries = [...off, ...fresh].sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0)); buildDictionaries(); renderETable(); }); }
+    function loadRestockData() { db.ref('restock').orderByChild('timestamp').limitToLast(restockLimit).on('value', (snapshot) => { let fresh = []; snapshot.forEach(child => fresh.push({ id: child.key, ...child.val() })); let off = restockItems.filter(r => r.id && r.id.toString().startsWith('off_')); restockItems = [...off, ...fresh].sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0)); buildDictionaries(); renderRestockTable(); }); }
     
     function loadMoreRecords(type) {
         if(type === 'order') { orderLimit += 200; db.ref('orders').off(); loadDatabaseData(); } else if(type === 'quote') { quoteLimit += 200; db.ref('quotations').off(); loadQuoteData(); } else if(type === 'enquire') { enquireLimit += 200; db.ref('enquiries').off(); loadEnquireData(); } else if(type === 'restock') { restockLimit += 200; db.ref('restock').off(); loadRestockData(); }
@@ -825,7 +780,9 @@
                 let photoHtml = ''; if (item.photos && item.photos.length > 0) { photoHtml = `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;">`; item.photos.forEach(p => { photoHtml += `<img src="${p}" class="photo-thumbnail" onclick="showPhoto('${p}')" style="width:40px;height:40px;border:1px solid #cbd5e1;">`; }); photoHtml += `</div>`; }
                 const pNo = item.partNo && item.partNo.trim() !== '' ? item.partNo.trim() : null; const partNoHTML = pNo ? ` <small class="mono-text" style="color:#64748b; font-weight:bold;">[${pNo}]</small>` : '';
                 partsHtml += `<li><div style="margin-bottom:4px;"><strong style="font-size:14px;color:#0f172a;">${item.part||'-'}</strong>${partNoHTML}${priceDetails}</div><small style="color:#64748b;">Brd: ${item.brand||'-'} • Sup: ${item.supplier||'-'}</small>${photoHtml}</li>`;
-                waList.push(`• ${item.part||'-'} ${pNo ? `[${pNo}] ` : ''}${item.brand ? `(Brand: ${item.brand}) ` : ''}${parseFloat(item.subTotal) > 0 ? ` -> ${item.qty||1} x RM${parseFloat(item.unitPrice||0).toFixed(2)} = RM${parseFloat(item.subTotal||0).toFixed(2)}` : ` -> Qty: ${item.qty||1}`}`);
+                const partNoWA = pNo ? `[${pNo}] ` : ''; const brandWA = item.brand && item.brand.trim() !== '' ? `(Brand: ${item.brand.trim()}) ` : '';
+                const priceWA = parseFloat(item.subTotal) > 0 ? ` -> ${item.qty||1} x RM${parseFloat(item.unitPrice||0).toFixed(2)} = RM${parseFloat(item.subTotal||0).toFixed(2)}` : ` -> Qty: ${item.qty||1}`;
+                waList.push(`• ${item.part||'-'} ${partNoWA}${brandWA}${priceWA}`);
             }); partsHtml += `</ul>`;
             
             const msgR = `🧾 *MALAYSIA MOTOR COMPANY - RESIT / RECEIPT*\n\nPelanggan yang dihormati ${order.name},\nTerima kasih. Pesanan anda disahkan!\n\n*Order ID:* ${order.refNo}\n*Car Plate:* ${order.plate||'-'}\n*Car Model:* ${order.car||''}\n*Items:*\n${waList.join('\n')}\n\n*Total:* RM${order.total}\n*Deposit:* RM${order.deposit}\n*Balance Due:* RM${order.balance}`;
