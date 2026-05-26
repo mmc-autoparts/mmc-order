@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="MMC Portal">
     <link rel="apple-touch-icon" href="logo.png">
-    <title>Malaysia Motor Company - Secure Portal V67</title>
+    <title>Malaysia Motor Company - Secure Portal V68</title>
     <link rel="manifest" href="manifest.json">
     <script>
         if ('serviceWorker' in navigator) {
@@ -16,12 +16,12 @@
             navigator.serviceWorker.addEventListener('controllerchange', () => { if (!refreshing) { window.location.reload(); refreshing = true; }});
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js').then(reg => {
-                    setInterval(() => { console.log("Checking server for V67 updates..."); reg.update(); }, 5 * 60 * 1000);
+                    setInterval(() => { console.log("Checking server for V68 updates..."); reg.update(); }, 5 * 60 * 1000);
                     reg.onupdatefound = () => {
                         const installingWorker = reg.installing;
                         installingWorker.onstatechange = () => {
                             if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                if (confirm("🔄 New system version (V67) available! Click OK to apply.")) { installingWorker.postMessage('SKIP_WAITING'); }
+                                if (confirm("🔄 New system version (V68) available! Click OK to apply.")) { installingWorker.postMessage('SKIP_WAITING'); }
                             }
                         };
                     };
@@ -195,7 +195,7 @@
 <div id="mainApp" class="container">
     <div class="header-flex">
         <div>
-            <h2>Malaysia Motor Company <span class="version-badge">V67 Enterprise</span> <span id="adminBadge">👑 Boss View</span></h2>
+            <h2>Malaysia Motor Company <span class="version-badge">V68 Enterprise</span> <span id="adminBadge">👑 Boss View</span></h2>
             <div style="margin-top:8px;">
                 <span id="networkBadge" class="net-online">🟢 Online (Live Cloud Sync)</span>
             </div>
@@ -464,11 +464,28 @@
 
     async function uploadBase64ToStorage(base64Array) {
         let uploadedUrls = [];
+
+        if (!Array.isArray(base64Array)) return uploadedUrls;
+
         for (let b64 of base64Array) {
-            if (b64.startsWith('http')) { uploadedUrls.push(b64); continue; } 
-            const fileRef = storage.ref('order_photos/' + Date.now() + '_' + Math.floor(Math.random()*1000) + '.jpg');
-            await fileRef.putString(b64, 'data_url'); uploadedUrls.push(await fileRef.getDownloadURL());
-        } return uploadedUrls;
+            if (!b64) continue;
+
+            if (typeof b64 === 'string' && b64.startsWith('http')) {
+                uploadedUrls.push(b64);
+                continue;
+            }
+
+            if (typeof b64 !== 'string' || !b64.startsWith('data:image')) {
+                console.warn('Skipped invalid photo data during sync:', b64);
+                continue;
+            }
+
+            const fileRef = storage.ref('order_photos/' + Date.now() + '_' + Math.floor(Math.random() * 100000) + '.jpg');
+            await fileRef.putString(b64, 'data_url');
+            uploadedUrls.push(await fileRef.getDownloadURL());
+        }
+
+        return uploadedUrls;
     }
 
     function rotatePhotoBase64(base64data, callback) {
@@ -485,7 +502,7 @@
     }
 
     // ==========================================
-    // V67 OFFLINE ENGINE - Pending Sync UI + Auto Cloud Upload
+    // V68 OFFLINE ENGINE - Auth Ready + Better Error + Safer Photo Sync
     // ==========================================
     const netBadge = document.getElementById('networkBadge');
 
@@ -595,6 +612,14 @@
     async function checkOfflineQueue() {
         if (!navigator.onLine || !offlineDB || isSyncingOffline) return;
 
+        // V68: wait until Firebase Auth session is ready before cloud sync.
+        // This prevents Firebase Rules from rejecting writes during reconnect/login restore.
+        if (!auth.currentUser) {
+            console.warn('Offline sync skipped: Firebase auth user not ready yet. Retrying in 3 seconds.');
+            setTimeout(() => checkOfflineQueue(), 3000);
+            return;
+        }
+
         isSyncingOffline = true;
 
         const tx = offlineDB.transaction('offlineData', 'readonly');
@@ -632,7 +657,7 @@
                         item.photos = await uploadBase64ToStorage(item.photos);
                     }
 
-                    // V67 safety: new offline records are supported. Existing-record offline edits are blocked in save functions.
+                    // V68 safety: new offline records are supported. Existing-record offline edits are blocked in save functions.
                     if (item.editId) {
                         const targetId = item.editId;
                         delete item.editId;
@@ -676,8 +701,14 @@
                 };
 
             } catch (error) {
-                console.error("Sync Error:", error);
-                alert("❌ Offline sync failed.\n\nYour data is still safely kept in this device and will retry when online.");
+                console.error('Sync Error:', error);
+
+                alert(
+                    '❌ Offline sync failed.\n\n' +
+                    'Reason: ' + (error && error.message ? error.message : error) + '\n\n' +
+                    'Your data is still safely kept in this device and will retry when online.'
+                );
+
                 isSyncingOffline = false;
             }
         };
@@ -788,7 +819,7 @@
         Array.from(sSet).sort().forEach(s => { let opt = document.createElement('option'); opt.value = s; sList.appendChild(opt); filterSelect.innerHTML += `<option value="${s}">${s}</option>`; }); filterSelect.value = currentFilterVal || 'all';
     }
 
-    // V67 UPDATE: Cloud loading stays standard; offline pending records are merged inside render functions
+    // V68 UPDATE: Cloud loading stays standard; offline pending records are merged inside render functions
     function loadDatabaseData() { db.ref('orders').orderByChild('timestamp').limitToLast(orderLimit).on('value', (snapshot) => { orders = []; snapshot.forEach(child => { orders.push({ id: child.key, ...child.val() }); }); orders.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0)); buildDictionaries(); renderTable(); calculateDailyCash(); }); }
     function loadQuoteData() { db.ref('quotations').orderByChild('timestamp').limitToLast(quoteLimit).on('value', (snapshot) => { quotes = []; snapshot.forEach(child => { quotes.push({ id: child.key, ...child.val() }); }); quotes.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0)); buildDictionaries(); renderQTable(); }); }
     function loadEnquireData() { db.ref('enquiries').orderByChild('timestamp').limitToLast(enquireLimit).on('value', (snapshot) => { enquiries = []; snapshot.forEach(child => { enquiries.push({ id: child.key, ...child.val() }); }); enquiries.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0)); buildDictionaries(); renderETable(); }); }
