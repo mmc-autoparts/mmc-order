@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="MMC Portal">
     <link rel="apple-touch-icon" href="logo.png">
-    <title>Malaysia Motor Company - Secure Portal V68</title>
+    <title>Malaysia Motor Company - Secure Portal V70</title>
     <link rel="manifest" href="manifest.json">
     <script>
         if ('serviceWorker' in navigator) {
@@ -16,12 +16,12 @@
             navigator.serviceWorker.addEventListener('controllerchange', () => { if (!refreshing) { window.location.reload(); refreshing = true; }});
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js').then(reg => {
-                    setInterval(() => { console.log("Checking server for V68 updates..."); reg.update(); }, 5 * 60 * 1000);
+                    setInterval(() => { console.log("Checking server for V70 updates..."); reg.update(); }, 5 * 60 * 1000);
                     reg.onupdatefound = () => {
                         const installingWorker = reg.installing;
                         installingWorker.onstatechange = () => {
                             if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                if (confirm("🔄 New system version (V68) available! Click OK to apply.")) { installingWorker.postMessage('SKIP_WAITING'); }
+                                if (confirm("🔄 New system version (V70) available! Click OK to apply.")) { installingWorker.postMessage('SKIP_WAITING'); }
                             }
                         };
                     };
@@ -195,7 +195,7 @@
 <div id="mainApp" class="container">
     <div class="header-flex">
         <div>
-            <h2>Malaysia Motor Company <span class="version-badge">V68 Enterprise</span> <span id="adminBadge">👑 Boss View</span></h2>
+            <h2>Malaysia Motor Company <span class="version-badge">V70 Enterprise</span> <span id="adminBadge">👑 Boss View</span></h2>
             <div style="margin-top:8px;">
                 <span id="networkBadge" class="net-online">🟢 Online (Live Cloud Sync)</span>
             </div>
@@ -212,6 +212,10 @@
             <button onclick="manageStaff()" style="background:#2563eb; color:white; border:none; padding:10px 15px; border-radius:6px; font-weight:bold; cursor:pointer; box-shadow: 0 2px 4px rgba(37,99,235,0.2);">👥 Manage Staff List</button>
             <button onclick="backupDatabase()" style="background:#b45309; color:white; border:none; padding:10px 15px; border-radius:6px; font-weight:bold; cursor:pointer; box-shadow: 0 2px 4px rgba(180,83,9,0.2);">💾 Backup Database</button>
             <label style="background:#b45309; color:white; border:none; padding:10px 15px; border-radius:6px; font-weight:bold; cursor:pointer; box-shadow: 0 2px 4px rgba(180,83,9,0.2);">📂 Restore Backup<input type="file" id="restoreFileInput" accept=".json" style="display:none;" onchange="restoreDatabase(event)"></label>
+            <button onclick="checkPendingCount()" style="background:#0f766e; color:white; border:none; padding:10px 15px; border-radius:6px; font-weight:bold; cursor:pointer; box-shadow: 0 2px 4px rgba(15,118,110,0.2);">🔎 Check Pending</button>
+            <button onclick="clearLocalOfflineQueue()" style="background:#dc2626; color:white; border:none; padding:10px 15px; border-radius:6px; font-weight:bold; cursor:pointer; box-shadow: 0 2px 4px rgba(220,38,38,0.2);">🧹 Clear Local Queue</button>
+            <button onclick="backupAndResetRecords()" style="background:#7f1d1d; color:white; border:none; padding:10px 15px; border-radius:6px; font-weight:bold; cursor:pointer; box-shadow: 0 2px 4px rgba(127,29,29,0.25);">⚠️ Backup & Reset Records</button>
+            <button onclick="manageDeviceApprovals()" style="background:#312e81; color:white; border:none; padding:10px 15px; border-radius:6px; font-weight:bold; cursor:pointer; box-shadow: 0 2px 4px rgba(49,46,129,0.25);">🛡️ Device Approval</button>
         </div>
     </div>
 
@@ -502,7 +506,7 @@
     }
 
     // ==========================================
-    // V68 OFFLINE ENGINE - Auth Ready + Better Error + Safer Photo Sync
+    // V70 OFFLINE ENGINE - Auth Ready + Better Error + Safer Photo Sync
     // ==========================================
     const netBadge = document.getElementById('networkBadge');
 
@@ -609,11 +613,41 @@
         };
     }
 
+
+    function getOfflineQueueItems() {
+        return new Promise((resolve, reject) => {
+            if (!offlineDB) return resolve([]);
+            const tx = offlineDB.transaction('offlineData', 'readonly');
+            const req = tx.objectStore('offlineData').getAll();
+            req.onsuccess = () => resolve(req.result || []);
+            req.onerror = () => reject(req.error || new Error('Unable to read offline queue.'));
+        });
+    }
+
+    function deleteOfflineQueueItem(tempId) {
+        return new Promise((resolve, reject) => {
+            if (!offlineDB || !tempId) return resolve();
+            const tx = offlineDB.transaction('offlineData', 'readwrite');
+            tx.objectStore('offlineData').delete(tempId);
+            tx.oncomplete = () => resolve();
+            tx.onerror = () => reject(tx.error || new Error('Unable to clear uploaded offline item.'));
+        });
+    }
+
+    function clearOfflineQueueStore() {
+        return new Promise((resolve, reject) => {
+            if (!offlineDB) return resolve();
+            const tx = offlineDB.transaction('offlineData', 'readwrite');
+            tx.objectStore('offlineData').clear();
+            tx.oncomplete = () => resolve();
+            tx.onerror = () => reject(tx.error || new Error('Unable to clear offline queue.'));
+        });
+    }
+
     async function checkOfflineQueue() {
         if (!navigator.onLine || !offlineDB || isSyncingOffline) return;
 
-        // V68: wait until Firebase Auth session is ready before cloud sync.
-        // This prevents Firebase Rules from rejecting writes during reconnect/login restore.
+        // V70: wait until Firebase Auth session is ready before cloud sync.
         if (!auth.currentUser) {
             console.warn('Offline sync skipped: Firebase auth user not ready yet. Retrying in 3 seconds.');
             setTimeout(() => checkOfflineQueue(), 3000);
@@ -633,12 +667,16 @@
                 return;
             }
 
-            alert(`🔄 Internet Restored!\nUploading ${items.length} offline item(s) to Cloud...`);
+            alert(`🔄 Internet Restored!
+Uploading ${items.length} offline item(s) to Cloud...`);
+
+            let successCount = 0;
 
             try {
                 for (let rawItem of items) {
                     let item = JSON.parse(JSON.stringify(rawItem));
                     const type = item.dataType;
+                    const tempId = rawItem.tempId;
 
                     delete item.dataType;
                     delete item.tempId;
@@ -657,7 +695,6 @@
                         item.photos = await uploadBase64ToStorage(item.photos);
                     }
 
-                    // V68 safety: new offline records are supported. Existing-record offline edits are blocked in save functions.
                     if (item.editId) {
                         const targetId = item.editId;
                         delete item.editId;
@@ -682,33 +719,29 @@
                             await db.ref('restock').push(item);
                         }
                     }
+
+                    // V70 safety: remove each local pending item immediately after successful cloud upload.
+                    // This prevents duplicate uploads if the next pending item fails halfway.
+                    await deleteOfflineQueueItem(tempId);
+                    successCount++;
+                    refreshOfflineRecords();
                 }
 
-                const txDel = offlineDB.transaction('offlineData', 'readwrite');
-                txDel.objectStore('offlineData').clear();
-
-                txDel.oncomplete = function() {
-                    offlineRecords = [];
-                    refreshOfflineRecords();
-                    forceDataSync();
-                    alert("✅ All offline data successfully synced to Cloud!");
-                    isSyncingOffline = false;
-                };
-
-                txDel.onerror = function() {
-                    alert("⚠️ Data uploaded, but offline queue could not be cleared. Please check before saving again.");
-                    isSyncingOffline = false;
-                };
+                refreshOfflineRecords();
+                forceDataSync(true);
+                alert(`✅ Offline sync completed!
+Uploaded ${successCount} item(s) to Cloud.`);
+                isSyncingOffline = false;
 
             } catch (error) {
                 console.error('Sync Error:', error);
-
+                refreshOfflineRecords();
                 alert(
                     '❌ Offline sync failed.\n\n' +
+                    'Uploaded before failure: ' + successCount + ' item(s).\n' +
                     'Reason: ' + (error && error.message ? error.message : error) + '\n\n' +
-                    'Your data is still safely kept in this device and will retry when online.'
+                    'Only the remaining unsynced data is still kept in this device and will retry when online.'
                 );
-
                 isSyncingOffline = false;
             }
         };
@@ -723,31 +756,250 @@
         let d = dateObj.getDate().toString().padStart(2, '0'); let m = months[dateObj.getMonth()]; let y = dateObj.getFullYear(); return `${d} ${m} ${y}`;
     }
 
-    const DEVICE_AUTH_KEY = "mmc_authorized_device_v1";
-    function checkDeviceAuthorization() {
-        if (localStorage.getItem(DEVICE_AUTH_KEY) === "true") { document.getElementById('normalLoginBox').style.display = 'block'; document.getElementById('deviceLockBox').style.display = 'none'; } 
-        else { document.getElementById('normalLoginBox').style.display = 'none'; document.getElementById('deviceLockBox').style.display = 'block'; }
+    // ==========================================
+    // V70 DEVICE APPROVAL SYSTEM - Plan B
+    // Device must be approved AND linked to the correct staff email.
+    // ==========================================
+    const DEVICE_AUTH_KEY = "mmc_authorized_device_v1"; // Old MMC888 local key kept for admin migration/emergency only.
+    const DEVICE_ID_KEY = "mmc_device_id_v70";
+    const DEVICE_NAME_KEY = "mmc_device_name_v70";
+    let currentDeviceId = null;
+    let currentDeviceName = null;
+    let isDeviceApproved = false;
+
+    function escapeHTML(value) {
+        return String(value == null ? '' : value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
     }
-    function authorizeDevice() { let pin = prompt("Enter Master PIN to authorize this device:"); if (pin && btoa(pin) === "TU1DODg4") { localStorage.setItem(DEVICE_AUTH_KEY, "true"); alert("✅ Device Authorized Successfully!"); checkDeviceAuthorization(); } else if (pin !== null) { alert("❌ Incorrect PIN!"); } }
-    window.addEventListener('load', checkDeviceAuthorization);
+
+    function getOrCreateDeviceId() {
+        let id = localStorage.getItem(DEVICE_ID_KEY);
+        if (!id) {
+            if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+                id = 'device_' + window.crypto.randomUUID();
+            } else {
+                id = 'device_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 12);
+            }
+            localStorage.setItem(DEVICE_ID_KEY, id);
+        }
+        currentDeviceId = id;
+        return id;
+    }
+
+    function getDeviceName() {
+        let name = localStorage.getItem(DEVICE_NAME_KEY);
+        if (!name) {
+            const ua = navigator.userAgent || '';
+            let platform = 'Company Device';
+            if (/iPad/i.test(ua)) platform = 'iPad';
+            else if (/iPhone/i.test(ua)) platform = 'iPhone';
+            else if (/Android/i.test(ua)) platform = 'Android Device';
+            else if (/Windows/i.test(ua)) platform = 'Windows PC';
+            else if (/Macintosh|Mac OS/i.test(ua)) platform = 'Mac';
+            name = platform + ' - ' + new Date().toLocaleDateString('en-GB');
+            localStorage.setItem(DEVICE_NAME_KEY, name);
+        }
+        currentDeviceName = name;
+        return name;
+    }
+
+    function showNormalLogin() {
+        const normalBox = document.getElementById('normalLoginBox');
+        const lockBox = document.getElementById('deviceLockBox');
+        if (normalBox) normalBox.style.display = 'block';
+        if (lockBox) lockBox.style.display = 'none';
+        document.getElementById('loginScreen').style.display = 'flex';
+        document.getElementById('mainApp').style.display = 'none';
+    }
+
+    function showDevicePendingScreen(userEmail, reasonText) {
+        const deviceId = getOrCreateDeviceId();
+        const deviceName = getDeviceName();
+        const normalBox = document.getElementById('normalLoginBox');
+        const lockBox = document.getElementById('deviceLockBox');
+        if (normalBox) normalBox.style.display = 'none';
+        if (lockBox) {
+            lockBox.style.display = 'block';
+            lockBox.innerHTML = `
+                <h3 style="color:#ef4444;">🚫 Device Not Approved</h3>
+                <p style="color:#64748b; font-size:14px; line-height:1.5; margin-bottom:18px;">
+                    This computer/iPad is not approved for this staff account yet.<br>
+                    Please ask Boss/Admin to approve this device.
+                </p>
+                <div style="text-align:left; background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px; padding:12px; font-size:12px; color:#334155; margin-bottom:15px; word-break:break-all;">
+                    <strong>Login Email:</strong> ${escapeHTML(userEmail || '-')}<br>
+                    <strong>Device Name:</strong> ${escapeHTML(deviceName)}<br>
+                    <strong>Device ID:</strong> ${escapeHTML(deviceId)}<br>
+                    <strong>Status:</strong> ${escapeHTML(reasonText || 'Pending Boss Approval')}
+                </div>
+                <button class="login-btn" onclick="logoutSystem()" style="background:#64748b; margin-bottom:10px;">Logout</button>
+                ${(userEmail || '').toLowerCase() === BOSS_EMAIL.toLowerCase() ? '<button class="login-btn" style="background:#f59e0b;" onclick="bossEmergencyApproveDevice()">🔑 Boss Emergency Approve This Device</button>' : ''}
+            `;
+        }
+        document.getElementById('loginScreen').style.display = 'flex';
+        document.getElementById('mainApp').style.display = 'none';
+    }
+
+    async function createDeviceRequest(user) {
+        const deviceId = getOrCreateDeviceId();
+        const deviceName = getDeviceName();
+        const payload = {
+            deviceId: deviceId,
+            deviceName: deviceName,
+            requestedEmail: user.email,
+            status: 'pending',
+            userAgent: navigator.userAgent || '',
+            requestedAt: firebase.database.ServerValue.TIMESTAMP,
+            lastSeen: firebase.database.ServerValue.TIMESTAMP
+        };
+        try {
+            await db.ref('deviceRequests/' + deviceId).update(payload);
+        } catch (err) {
+            console.warn('Device request could not be written. Check Firebase rules for deviceRequests.', err);
+        }
+    }
+
+    async function approveCurrentAdminDevice() {
+        const user = auth.currentUser;
+        if (!user || user.email.toLowerCase() !== BOSS_EMAIL.toLowerCase()) return false;
+        const deviceId = getOrCreateDeviceId();
+        const deviceName = getDeviceName();
+        await db.ref('approvedDevices/' + deviceId).set({
+            deviceId: deviceId,
+            deviceName: deviceName,
+            allowedEmail: user.email,
+            approved: true,
+            blocked: false,
+            approvedBy: user.email,
+            approvedAt: firebase.database.ServerValue.TIMESTAMP,
+            lastSeen: firebase.database.ServerValue.TIMESTAMP,
+            note: 'Boss/admin device approved by MMC888 emergency migration.'
+        });
+        await db.ref('deviceRequests/' + deviceId).update({ status: 'approved', approvedAt: firebase.database.ServerValue.TIMESTAMP, approvedBy: user.email });
+        localStorage.setItem(DEVICE_AUTH_KEY, 'true');
+        isDeviceApproved = true;
+        return true;
+    }
+
+    async function bossEmergencyApproveDevice() {
+        const user = auth.currentUser;
+        if (!user || user.email.toLowerCase() !== BOSS_EMAIL.toLowerCase()) {
+            alert('Please login as Boss/Admin first.');
+            return;
+        }
+        const pin = prompt('Enter Master PIN to approve this Boss device:');
+        if (!pin) return;
+        if (btoa(pin) !== 'TU1DODg4') {
+            alert('❌ Incorrect PIN.');
+            return;
+        }
+        try {
+            await approveCurrentAdminDevice();
+            alert('✅ Boss device approved. Reloading system now.');
+            window.location.reload();
+        } catch (err) {
+            alert('❌ Unable to approve this device: ' + (err && err.message ? err.message : err));
+        }
+    }
+
+    async function verifyDeviceAccess(user) {
+        const deviceId = getOrCreateDeviceId();
+        getDeviceName();
+
+        try {
+            const snap = await db.ref('approvedDevices/' + deviceId).once('value');
+            const device = snap.val();
+            const userEmail = (user.email || '').toLowerCase();
+            const allowedEmail = device && device.allowedEmail ? String(device.allowedEmail).toLowerCase() : '';
+
+            if (device && device.approved === true && device.blocked !== true && (allowedEmail === '*' || allowedEmail === userEmail)) {
+                await db.ref('approvedDevices/' + deviceId).update({
+                    lastSeen: firebase.database.ServerValue.TIMESTAMP,
+                    lastLoginEmail: user.email
+                });
+                isDeviceApproved = true;
+                return true;
+            }
+
+            // Boss/Admin migration path: existing MMC888 approved boss device can approve itself once.
+            if (userEmail === BOSS_EMAIL.toLowerCase() && localStorage.getItem(DEVICE_AUTH_KEY) === 'true') {
+                await approveCurrentAdminDevice();
+                return true;
+            }
+
+            await createDeviceRequest(user);
+
+            if (device && device.blocked === true) {
+                showDevicePendingScreen(user.email, 'Blocked by Boss/Admin');
+            } else if (device && allowedEmail && allowedEmail !== '*' && allowedEmail !== userEmail) {
+                showDevicePendingScreen(user.email, 'This device is approved for another staff: ' + device.allowedEmail);
+            } else {
+                showDevicePendingScreen(user.email, 'Pending Boss Approval');
+            }
+            isDeviceApproved = false;
+            return false;
+        } catch (err) {
+            console.error('Device approval check failed:', err);
+            showDevicePendingScreen(user.email, 'Device check failed: ' + (err && err.message ? err.message : err));
+            isDeviceApproved = false;
+            return false;
+        }
+    }
+
+    async function showMainAppForUser(user) {
+        isAdmin = (user.email.toLowerCase() === BOSS_EMAIL.toLowerCase());
+        document.getElementById('exportBtn').style.display = isAdmin ? 'block' : 'none';
+        document.getElementById('adminBadge').style.display = isAdmin ? 'inline-block' : 'none';
+        document.getElementById('adminTools').style.display = isAdmin ? 'flex' : 'none';
+        document.getElementById('cashDashboard').style.display = isAdmin ? 'flex' : 'none';
+        document.querySelectorAll('.boss-restock').forEach(el => el.style.display = isAdmin ? 'block' : 'none');
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('mainApp').style.display = 'block';
+        document.getElementById('loginError').style.display = 'none';
+        document.getElementById('loginBtnTrigger').innerText = 'Secure Login';
+        forceDataSync();
+        loadStaffConfig();
+        if (!isDataLoaded) {
+            addNewItemBlock();
+            addQItemBlock();
+            addEItemBlock();
+            isDataLoaded = true;
+        }
+    }
 
     function switchTab(tabId, btnElement) {
-        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active')); document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(tabId).classList.add('active'); btnElement.classList.add('active');
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        btnElement.classList.add('active');
     }
 
-    auth.onAuthStateChanged((user) => {
+    auth.onAuthStateChanged(async (user) => {
         if (user) {
-            isAdmin = (user.email.toLowerCase() === BOSS_EMAIL.toLowerCase());
-            document.getElementById('exportBtn').style.display = isAdmin ? 'block' : 'none'; document.getElementById('adminBadge').style.display = isAdmin ? 'inline-block' : 'none'; document.getElementById('adminTools').style.display = isAdmin ? 'flex' : 'none'; document.getElementById('cashDashboard').style.display = isAdmin ? 'flex' : 'none';
-            document.querySelectorAll('.boss-restock').forEach(el => el.style.display = isAdmin ? 'block' : 'none');
-            document.getElementById('loginScreen').style.display = 'none'; document.getElementById('mainApp').style.display = 'block'; document.getElementById('loginError').style.display = 'none'; document.getElementById('loginBtnTrigger').innerText = "Secure Login";
-            forceDataSync(); loadStaffConfig(); 
-            if (!isDataLoaded) { addNewItemBlock(); addQItemBlock(); addEItemBlock(); isDataLoaded = true; }
+            const approved = await verifyDeviceAccess(user);
+            if (!approved) return;
+            await showMainAppForUser(user);
         } else {
-            document.getElementById('loginScreen').style.display = 'flex'; document.getElementById('mainApp').style.display = 'none';
-            isAdmin = false; orders = []; restockItems = []; quotes = []; enquiries = []; productDictionary = []; customerDictionary = [];
-            db.ref('orders').off(); db.ref('restock').off(); db.ref('quotations').off(); db.ref('enquiries').off(); db.ref('settings/staff').off(); checkDeviceAuthorization(); 
+            isDeviceApproved = false;
+            isAdmin = false;
+            orders = [];
+            restockItems = [];
+            quotes = [];
+            enquiries = [];
+            productDictionary = [];
+            customerDictionary = [];
+            db.ref('orders').off();
+            db.ref('restock').off();
+            db.ref('quotations').off();
+            db.ref('enquiries').off();
+            db.ref('settings/staff').off();
+            db.ref('deviceRequests').off();
+            db.ref('approvedDevices').off();
+            showNormalLogin();
         }
     });
 
@@ -758,7 +1010,21 @@
     }
     function logoutSystem() { auth.signOut(); }
 
-    function forceDataSync() { db.ref('orders').off(); db.ref('restock').off(); db.ref('quotations').off(); db.ref('enquiries').off(); loadDatabaseData(); loadRestockData(); loadQuoteData(); loadEnquireData(); }
+    function forceDataSync(skipOfflineSync = false) {
+        db.ref('orders').off();
+        db.ref('restock').off();
+        db.ref('quotations').off();
+        db.ref('enquiries').off();
+
+        loadDatabaseData();
+        loadRestockData();
+        loadQuoteData();
+        loadEnquireData();
+
+        if (!skipOfflineSync && navigator.onLine && typeof checkOfflineQueue === 'function') {
+            checkOfflineQueue();
+        }
+    }
     
     function loadStaffConfig() { db.ref('settings/staff').on('value', snap => { if(snap.val()) staffList = snap.val(); renderStaffDropdowns(); }); }
     function renderStaffDropdowns() {
@@ -770,6 +1036,132 @@
     function manageStaff() {
         if(!isAdmin) return; let input = prompt("👥 Manage Staff List (separate names by comma):", staffList.join(', '));
         if(input !== null) { db.ref('settings/staff').set(input.split(',').map(s => s.trim()).filter(s => s)); alert("✅ Staff list updated instantly across all devices!"); }
+    }
+
+
+    async function manageDeviceApprovals() {
+        if (!isAdmin) return alert('Admin only.');
+        document.getElementById('historyModal').style.display = 'flex';
+        document.getElementById('historyContent').innerHTML = '<h3>🛡️ Device Approval</h3><p>Loading device list...</p>';
+
+        try {
+            const [reqSnap, approvedSnap] = await Promise.all([
+                db.ref('deviceRequests').once('value'),
+                db.ref('approvedDevices').once('value')
+            ]);
+            const requests = reqSnap.val() || {};
+            const approved = approvedSnap.val() || {};
+            const pendingIds = Object.keys(requests).filter(id => !approved[id] || approved[id].approved !== true || approved[id].blocked === true);
+            const approvedIds = Object.keys(approved);
+
+            let html = `<h3>🛡️ Device Approval</h3>
+                <p style="font-size:12px;color:#64748b;line-height:1.5;">Approve each computer/iPad for a specific staff email. Staff cannot use the system from unapproved devices.</p>
+                <button onclick="manageDeviceApprovals()" style="background:#2563eb;color:white;border:none;padding:8px 12px;border-radius:6px;font-weight:bold;margin-bottom:10px;cursor:pointer;">🔄 Refresh</button>
+                <button onclick="document.getElementById('historyModal').style.display='none'" style="background:#64748b;color:white;border:none;padding:8px 12px;border-radius:6px;font-weight:bold;margin-bottom:10px;margin-left:6px;cursor:pointer;">Close</button>`;
+
+            html += `<h4 style="color:#b45309;border-top:1px solid #e2e8f0;padding-top:12px;">Pending / Blocked Devices</h4>`;
+            if (pendingIds.length === 0) {
+                html += `<p style="font-size:13px;color:#64748b;">No pending devices.</p>`;
+            } else {
+                pendingIds.forEach(id => {
+                    const r = requests[id] || {};
+                    const a = approved[id] || {};
+                    html += `<div style="border:1px solid #fde68a;background:#fffbeb;border-radius:8px;padding:10px;margin-bottom:10px;font-size:12px;line-height:1.5;word-break:break-word;">
+                        <strong>${escapeHTML(r.deviceName || a.deviceName || 'Unknown Device')}</strong><br>
+                        Email Request: <b>${escapeHTML(r.requestedEmail || '-')}</b><br>
+                        Device ID: ${escapeHTML(id)}<br>
+                        Status: <b>${escapeHTML(a.blocked ? 'Blocked' : (r.status || 'pending'))}</b><br>
+                        <button onclick="approveDeviceFromPanel('${id}')" style="background:#10b981;color:white;border:none;padding:7px 10px;border-radius:5px;font-weight:bold;margin-top:8px;cursor:pointer;">✅ Approve</button>
+                        <button onclick="blockDeviceFromPanel('${id}')" style="background:#ef4444;color:white;border:none;padding:7px 10px;border-radius:5px;font-weight:bold;margin-top:8px;margin-left:5px;cursor:pointer;">🚫 Block</button>
+                        <button onclick="removeDeviceFromPanel('${id}')" style="background:#64748b;color:white;border:none;padding:7px 10px;border-radius:5px;font-weight:bold;margin-top:8px;margin-left:5px;cursor:pointer;">🗑 Remove</button>
+                    </div>`;
+                });
+            }
+
+            html += `<h4 style="color:#047857;border-top:1px solid #e2e8f0;padding-top:12px;">Approved Devices</h4>`;
+            if (approvedIds.length === 0) {
+                html += `<p style="font-size:13px;color:#64748b;">No approved devices yet.</p>`;
+            } else {
+                approvedIds.forEach(id => {
+                    const a = approved[id] || {};
+                    html += `<div style="border:1px solid #bbf7d0;background:#f0fdf4;border-radius:8px;padding:10px;margin-bottom:10px;font-size:12px;line-height:1.5;word-break:break-word;opacity:${a.blocked ? '0.6' : '1'};">
+                        <strong>${escapeHTML(a.deviceName || 'Unknown Device')}</strong> ${a.blocked ? '<span style="color:#ef4444;font-weight:bold;">(Blocked)</span>' : ''}<br>
+                        Allowed Email: <b>${escapeHTML(a.allowedEmail || '-')}</b><br>
+                        Device ID: ${escapeHTML(id)}<br>
+                        Last Login: ${escapeHTML(a.lastLoginEmail || '-')}<br>
+                        <button onclick="renameDeviceFromPanel('${id}')" style="background:#2563eb;color:white;border:none;padding:7px 10px;border-radius:5px;font-weight:bold;margin-top:8px;cursor:pointer;">✏️ Rename</button>
+                        <button onclick="changeDeviceEmailFromPanel('${id}')" style="background:#7c3aed;color:white;border:none;padding:7px 10px;border-radius:5px;font-weight:bold;margin-top:8px;margin-left:5px;cursor:pointer;">👤 Change Email</button>
+                        <button onclick="blockDeviceFromPanel('${id}')" style="background:#ef4444;color:white;border:none;padding:7px 10px;border-radius:5px;font-weight:bold;margin-top:8px;margin-left:5px;cursor:pointer;">🚫 Block</button>
+                        <button onclick="removeDeviceFromPanel('${id}')" style="background:#64748b;color:white;border:none;padding:7px 10px;border-radius:5px;font-weight:bold;margin-top:8px;margin-left:5px;cursor:pointer;">🗑 Remove</button>
+                    </div>`;
+                });
+            }
+
+            document.getElementById('historyContent').innerHTML = html;
+        } catch (err) {
+            document.getElementById('historyContent').innerHTML = `<h3>🛡️ Device Approval</h3><p style="color:#ef4444;font-weight:bold;">Unable to load devices: ${err && err.message ? err.message : err}</p><button onclick="document.getElementById('historyModal').style.display='none'" style="padding:10px;width:100%;">Close</button>`;
+        }
+    }
+
+    async function approveDeviceFromPanel(deviceId) {
+        if (!isAdmin) return alert('Admin only.');
+        const reqSnap = await db.ref('deviceRequests/' + deviceId).once('value');
+        const req = reqSnap.val() || {};
+        const defaultEmail = req.requestedEmail || '';
+        const allowedEmail = prompt('Approve this device for which staff email?\nUse exact login email, e.g. nana@mmc.com', defaultEmail);
+        if (!allowedEmail) return;
+        const deviceName = prompt('Device name for Boss reference:', req.deviceName || 'Company Device') || (req.deviceName || 'Company Device');
+        await db.ref('approvedDevices/' + deviceId).set({
+            deviceId: deviceId,
+            deviceName: deviceName,
+            allowedEmail: allowedEmail.trim().toLowerCase(),
+            approved: true,
+            blocked: false,
+            requestedEmail: defaultEmail,
+            approvedBy: auth.currentUser.email,
+            approvedAt: firebase.database.ServerValue.TIMESTAMP,
+            lastSeen: firebase.database.ServerValue.TIMESTAMP
+        });
+        await db.ref('deviceRequests/' + deviceId).update({ status: 'approved', approvedBy: auth.currentUser.email, approvedAt: firebase.database.ServerValue.TIMESTAMP });
+        alert('✅ Device approved for ' + allowedEmail);
+        manageDeviceApprovals();
+    }
+
+    async function blockDeviceFromPanel(deviceId) {
+        if (!isAdmin) return alert('Admin only.');
+        if (!confirm('Block this device? It will not be able to use the system.')) return;
+        await db.ref('approvedDevices/' + deviceId).update({ blocked: true, approved: false, blockedBy: auth.currentUser.email, blockedAt: firebase.database.ServerValue.TIMESTAMP });
+        await db.ref('deviceRequests/' + deviceId).update({ status: 'blocked', blockedBy: auth.currentUser.email, blockedAt: firebase.database.ServerValue.TIMESTAMP });
+        manageDeviceApprovals();
+    }
+
+    async function removeDeviceFromPanel(deviceId) {
+        if (!isAdmin) return alert('Admin only.');
+        if (!confirm('Remove this device record? If the staff opens again, it will request approval again.')) return;
+        await db.ref('approvedDevices/' + deviceId).remove();
+        await db.ref('deviceRequests/' + deviceId).remove();
+        manageDeviceApprovals();
+    }
+
+    async function renameDeviceFromPanel(deviceId) {
+        if (!isAdmin) return alert('Admin only.');
+        const snap = await db.ref('approvedDevices/' + deviceId).once('value');
+        const device = snap.val() || {};
+        const name = prompt('New device name:', device.deviceName || 'Company Device');
+        if (!name) return;
+        await db.ref('approvedDevices/' + deviceId).update({ deviceName: name.trim() });
+        await db.ref('deviceRequests/' + deviceId).update({ deviceName: name.trim() });
+        manageDeviceApprovals();
+    }
+
+    async function changeDeviceEmailFromPanel(deviceId) {
+        if (!isAdmin) return alert('Admin only.');
+        const snap = await db.ref('approvedDevices/' + deviceId).once('value');
+        const device = snap.val() || {};
+        const email = prompt('Allowed staff email for this device:', device.allowedEmail || '');
+        if (!email) return;
+        await db.ref('approvedDevices/' + deviceId).update({ allowedEmail: email.trim().toLowerCase(), updatedBy: auth.currentUser.email, updatedAt: firebase.database.ServerValue.TIMESTAMP });
+        manageDeviceApprovals();
     }
 
     function calculateDailyCash() {
@@ -819,7 +1211,7 @@
         Array.from(sSet).sort().forEach(s => { let opt = document.createElement('option'); opt.value = s; sList.appendChild(opt); filterSelect.innerHTML += `<option value="${s}">${s}</option>`; }); filterSelect.value = currentFilterVal || 'all';
     }
 
-    // V68 UPDATE: Cloud loading stays standard; offline pending records are merged inside render functions
+    // V70 UPDATE: Cloud loading stays standard; offline pending records are merged inside render functions
     function loadDatabaseData() { db.ref('orders').orderByChild('timestamp').limitToLast(orderLimit).on('value', (snapshot) => { orders = []; snapshot.forEach(child => { orders.push({ id: child.key, ...child.val() }); }); orders.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0)); buildDictionaries(); renderTable(); calculateDailyCash(); }); }
     function loadQuoteData() { db.ref('quotations').orderByChild('timestamp').limitToLast(quoteLimit).on('value', (snapshot) => { quotes = []; snapshot.forEach(child => { quotes.push({ id: child.key, ...child.val() }); }); quotes.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0)); buildDictionaries(); renderQTable(); }); }
     function loadEnquireData() { db.ref('enquiries').orderByChild('timestamp').limitToLast(enquireLimit).on('value', (snapshot) => { enquiries = []; snapshot.forEach(child => { enquiries.push({ id: child.key, ...child.val() }); }); enquiries.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0)); buildDictionaries(); renderETable(); }); }
@@ -841,6 +1233,78 @@
         reader.onload = async function(e) {
             try { const jsonData = JSON.parse(e.target.result); if(jsonData && (jsonData.orders || jsonData.restock || jsonData.orderCounter || jsonData.quotations)) { await db.ref('/').set(jsonData); alert("✅ Database successfully restored!"); } else { alert("Invalid backup file format."); } } catch(err) { alert("Error reading file: " + err.message); } event.target.value = ''; 
         }; reader.readAsText(file);
+    }
+
+    async function checkPendingCount() {
+        if (!isAdmin) return alert("Admin only.");
+        try {
+            const items = await getOfflineQueueItems();
+            const counts = items.reduce((acc, item) => {
+                const type = item.dataType || 'unknown';
+                acc[type] = (acc[type] || 0) + 1;
+                return acc;
+            }, {});
+            const details = Object.keys(counts).length
+                ? Object.keys(counts).sort().map(k => `${k}: ${counts[k]}`).join('\n')
+                : 'No pending offline records on this device.';
+            alert(`📌 Local Offline Pending Count\n\nTotal: ${items.length}\n${details}`);
+        } catch (err) {
+            alert("Unable to check pending queue: " + err.message);
+        }
+    }
+
+    async function clearLocalOfflineQueue() {
+        if (!isAdmin) return alert("Admin only.");
+        try {
+            const items = await getOfflineQueueItems();
+            if (items.length === 0) return alert("✅ No local offline pending records on this device.");
+            const confirmText = prompt(`⚠️ This will delete ${items.length} LOCAL offline pending record(s) from THIS DEVICE only.\n\nOnly continue if you are sure they already synced to Cloud or are no longer needed.\n\nType CLEAR to continue:`);
+            if (confirmText !== 'CLEAR') return alert("Cancelled. Local offline queue was not cleared.");
+            await clearOfflineQueueStore();
+            offlineRecords = [];
+            refreshOfflineRecords();
+            alert("✅ Local offline queue cleared on this device.");
+        } catch (err) {
+            alert("Unable to clear local offline queue: " + err.message);
+        }
+    }
+
+    async function backupAndResetRecords() {
+        if (!isAdmin) return alert("Admin only.");
+        if (!navigator.onLine) return alert("Requires internet.");
+        try {
+            const localPending = await getOfflineQueueItems();
+            if (localPending.length > 0) {
+                return alert(`⚠️ This device still has ${localPending.length} offline pending record(s). Sync or clear them before resetting cloud records.`);
+            }
+
+            if (!confirm("Step 1: The system will download a full backup first. Continue?")) return;
+            await backupDatabase();
+
+            const confirmText = prompt("⚠️ DANGER ZONE\n\nThis will clear cloud records from:\n- orders\n- quotations\n- enquiries\n- restock\n\nIt will keep staff settings and counters unless you choose to reset counters next.\n\nType RESET to continue:");
+            if (confirmText !== 'RESET') return alert("Cancelled. Cloud records were not reset.");
+
+            const resetCounters = confirm("Do you also want to reset counters to 1000?\n\nOK = reset counters, next numbers become MMC-1001 / QT-1001 / ENQ-1001.\nCancel = keep current running numbers.");
+
+            const updates = {
+                orders: null,
+                quotations: null,
+                enquiries: null,
+                restock: null
+            };
+
+            if (resetCounters) {
+                updates.orderCounter = 1000;
+                updates.quoteCounter = 1000;
+                updates.enquireCounter = 1000;
+            }
+
+            await db.ref('/').update(updates);
+            forceDataSync(true);
+            alert("✅ Backup downloaded and cloud records reset completed.");
+        } catch (err) {
+            alert("Reset failed: " + err.message);
+        }
     }
 
     // ==========================================
@@ -1304,7 +1768,7 @@
     async function returnToNotYet(id) { if(!navigator.onLine) return; await db.ref('restock/' + id).update({ status: 'Not Yet Order' }); }
     async function deleteRestock(id) { if(!navigator.onLine) return; if(isAdmin && confirm("Delete this record permanently?")) { await db.ref('restock/' + id).remove(); } }
     
-    async function markFilteredOrdered() { if(!isAdmin) return alert("Admin only."); if(!navigator.onLine) return alert("Requires internet."); let toUpdate = currentRestockView.filter(i => i.status !== 'Ordered'); if(toUpdate.length === 0) return alert('No pending items found in your current view.'); if(!confirm(`Mark all ${toUpdate.length} items on this screen as ORDERED?`)) return; let updates = {}; toUpdate.forEach(i => { updates[i.id + '/status'] = 'Ordered'; }); await db.ref('restock').update(updates); }
+    async function markFilteredOrdered() { if(!isAdmin) return alert("Admin only."); if(!navigator.onLine) return alert("Requires internet."); let toUpdate = currentRestockView.filter(i => i.status !== 'Ordered' && !i.offlinePending); if(toUpdate.length === 0) return alert('No cloud pending items found in your current view. Offline pending items must sync first.'); if(!confirm(`Mark all ${toUpdate.length} cloud item(s) on this screen as ORDERED?`)) return; let updates = {}; toUpdate.forEach(i => { updates[i.id + '/status'] = 'Ordered'; }); await db.ref('restock').update(updates); }
 
     function renderRestockTable() {
         let theadHTML = `<tr><th style="width:100px;">Date Added</th><th>Part Description</th><th>Item Code / OEM</th><th>Brand</th><th>Supplier ${isAdmin ? '<span style="font-size:10px; color:#b45309;">(Boss Edit)</span>' : ''}</th><th style="text-align:center; width: 60px;">On Hand</th><th style="text-align:center; width: 60px;">Order Qty</th>`;
@@ -1334,7 +1798,7 @@
                 if (status !== 'Ordered') { actionHtml += `<button class="complete-btn" onclick="markRestockOrdered('${item.id}')" style="width:100%; margin-bottom:4px;">✔️ Done</button>`; } else { actionHtml += `<button class="edit-btn" onclick="returnToNotYet('${item.id}')" style="width:100%; margin-bottom:4px;">⏪ Return</button>`; } 
                 if (isAdmin) { actionHtml += `<button class="delete-btn" onclick="deleteRestock('${item.id}')" style="width:100%;">✖ Del</button>`; } 
             }
-            let suppHtml = isAdmin ? `<input type="text" class="pos-input" value="${item.supp||''}" placeholder="Type..." style="width:100px; font-size:12px; background:#fffbeb; color:#b45309; font-weight:bold;" list="supplierList" onchange="updateRestockSupplier('${item.id}', this.value)">` : (item.supp || '-');
+            let suppHtml = (isAdmin && !item.offlinePending) ? `<input type="text" class="pos-input" value="${item.supp||''}" placeholder="Type..." style="width:100px; font-size:12px; background:#fffbeb; color:#b45309; font-weight:bold;" list="supplierList" onchange="updateRestockSupplier('${item.id}', this.value)">` : (item.supp || '-');
             let costHtml = isAdmin ? `<td style="text-align:center; font-weight:bold; color:#059669;">RM ${parseFloat(item.unitCost||0).toFixed(2)}</td><td style="text-align:center; font-weight:bold; color:#059669;">RM ${parseFloat(item.totalCost||0).toFixed(2)}</td>` : ``;
             let photoHtml = ''; if (item.photos && item.photos.length > 0) { photoHtml = `<div style="display:flex; gap:4px; flex-wrap:wrap; justify-content:center;">`; item.photos.forEach(p => { photoHtml += `<img src="${p}" class="photo-thumbnail" onclick="showPhoto('${p}')" style="width:35px;height:35px;border:1px solid #cbd5e1; cursor:pointer;">`; }); photoHtml += `</div>`; } else { photoHtml = `<span style="color:#94a3b8; font-size:11px;">No Photo</span>`; }
             const tr = document.createElement('tr'); tr.style.opacity = status === 'Ordered' ? '0.6' : '1';
@@ -1343,7 +1807,7 @@
     }
 
     function getRestockHTML() {
-        let rows = ''; currentRestockView.forEach((i, idx) => { const status = i.status || 'Not Yet Order'; let costHtml = isAdmin ? `<td style="text-align:center; padding:8px; border:1px solid #ccc;">RM ${parseFloat(i.unitCost||0).toFixed(2)}</td><td style="text-align:center; padding:8px; border:1px solid #ccc;">RM ${parseFloat(i.totalCost||0).toFixed(2)}</td>` : ''; rows += `<tr><td style="text-align:center; padding:8px; border:1px solid #ccc;">${idx+1}</td><td style="padding:8px; border:1px solid #ccc;">${i.date}</td><td style="padding:8px; border:1px solid #ccc;"><strong>${i.part||'-'}</strong></td><td style="padding:8px; border:1px solid #ccc;">${i.code||'-'}</td><td style="padding:8px; border:1px solid #ccc;">${i.brand||'-'}</td><td style="padding:8px; border:1px solid #ccc;">${i.supp||'-'}</td><td style="text-align:center; padding:8px; border:1px solid #ccc;">${i.onHandQty||'0'}</td><td style="text-align:center; color:red; font-weight:bold; padding:8px; border:1px solid #ccc;">${i.needOrderQty||'1'}</td>${costHtml}<td style="text-align:center; padding:8px; border:1px solid #ccc;">${status}</td></tr>`; });
+        let rows = ''; currentRestockView.filter(i => !i.offlinePending).forEach((i, idx) => { const status = i.status || 'Not Yet Order'; let costHtml = isAdmin ? `<td style="text-align:center; padding:8px; border:1px solid #ccc;">RM ${parseFloat(i.unitCost||0).toFixed(2)}</td><td style="text-align:center; padding:8px; border:1px solid #ccc;">RM ${parseFloat(i.totalCost||0).toFixed(2)}</td>` : ''; rows += `<tr><td style="text-align:center; padding:8px; border:1px solid #ccc;">${idx+1}</td><td style="padding:8px; border:1px solid #ccc;">${i.date}</td><td style="padding:8px; border:1px solid #ccc;"><strong>${i.part||'-'}</strong></td><td style="padding:8px; border:1px solid #ccc;">${i.code||'-'}</td><td style="padding:8px; border:1px solid #ccc;">${i.brand||'-'}</td><td style="padding:8px; border:1px solid #ccc;">${i.supp||'-'}</td><td style="text-align:center; padding:8px; border:1px solid #ccc;">${i.onHandQty||'0'}</td><td style="text-align:center; color:red; font-weight:bold; padding:8px; border:1px solid #ccc;">${i.needOrderQty||'1'}</td>${costHtml}<td style="text-align:center; padding:8px; border:1px solid #ccc;">${status}</td></tr>`; });
         let filterTitle = "RESTOCK SUMMARY REPORT"; const suppFilter = document.getElementById('rSuppFilter').value; if(suppFilter && suppFilter !== 'all') { filterTitle = `ORDER LIST FOR: ${suppFilter.toUpperCase()}`; }
         let headerCost = isAdmin ? `<th style="width:8%; text-align:center;">Unit Cost</th><th style="width:8%; text-align:center;">Total Cost</th>` : '';
         return `<style>*, *::before, *::after { box-sizing: border-box; } body{font-family:sans-serif;padding:30px;} table{width:100%;border-collapse:collapse;margin-top:20px;font-size:12px;table-layout:fixed;} th,td{border:1px solid #ccc;padding:8px;word-wrap:break-word;} th{background:#f1f5f9;}</style><div id="rInvoiceBody"><h2 style="text-align:center; margin-bottom:5px;">${filterTitle}</h2><table><thead><tr><th style="width:4%; text-align:center;">No</th><th style="width:10%;">Date</th><th style="width:20%; text-align:left;">Part Description</th><th style="width:15%; text-align:left;">Item Code</th><th style="width:10%; text-align:left;">Brand</th><th style="width:10%; text-align:left;">Supplier</th><th style="width:6%; text-align:center;">On Hand</th><th style="width:6%; text-align:center;">Need</th>${headerCost}<th style="width:10%; text-align:center;">Status</th></tr></thead><tbody>${rows}</tbody></table></div>`;
@@ -1353,9 +1817,29 @@
 
     function sendRestockWA(phone, bossName) {
         if (currentRestockView.length === 0) { alert("No items found for this view/date."); return; }
-        let dateText = document.getElementById('rDateFilter').value ? getFormattedDateForFilter(document.getElementById('rDateFilter').value) : "All Dates"; let text = `📦 *MMC RESTOCK SUMMARY*\nTo: Boss ${bossName}\nDate Filter: ${dateText}\n\n`; let notYetCount = 0;
-        currentRestockView.forEach(i => { const status = i.status || 'Not Yet Order'; if(status !== 'Ordered') { const codeWA = i.code && i.code.trim() !== '' ? `[${i.code.trim()}] ` : ''; const brandWA = i.brand && i.brand.trim() !== '' ? `(Brd: ${i.brand.trim()}) ` : ''; const suppWA = i.supp && i.supp.trim() !== '' ? `(Sup: ${i.supp.trim()}) ` : ''; text += `• ${i.part||''} ${codeWA}${brandWA}${suppWA}(Need: ${i.needOrderQty||'1'})\n`; notYetCount++; } });
-        text += `\n*Total Pending Order:* ${notYetCount}`; window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank');
+        let dateText = document.getElementById('rDateFilter').value ? getFormattedDateForFilter(document.getElementById('rDateFilter').value) : "All Dates";
+        let text = `📦 *MMC RESTOCK SUMMARY*
+To: Boss ${bossName}
+Date Filter: ${dateText}
+
+`;
+        let notYetCount = 0;
+        currentRestockView.forEach(i => {
+            const status = i.status || 'Not Yet Order';
+            if (i.offlinePending) return;
+            if (status !== 'Ordered') {
+                const codeWA = i.code && i.code.trim() !== '' ? `[${i.code.trim()}] ` : '';
+                const brandWA = i.brand && i.brand.trim() !== '' ? `(Brd: ${i.brand.trim()}) ` : '';
+                const suppWA = i.supp && i.supp.trim() !== '' ? `(Sup: ${i.supp.trim()}) ` : '';
+                text += `• ${i.part||''} ${codeWA}${brandWA}${suppWA}(Need: ${i.needOrderQty||'1'})
+`;
+                notYetCount++;
+            }
+        });
+        if (notYetCount === 0) { alert("No cloud pending items found. Offline pending items must sync first."); return; }
+        text += `
+*Total Pending Order:* ${notYetCount}`;
+        window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank');
     }
 </script>
 </body>
