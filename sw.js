@@ -1,4 +1,4 @@
-const CACHE_NAME = "mmc-portal-V62"; // UPDATE THIS EVERY TIME YOU CHANGE THE APP
+const CACHE_NAME = "mmc-portal-V63"; // UPDATE THIS EVERY TIME YOU CHANGE THE APP
 
 self.addEventListener("install", (e) => {
     e.waitUntil(
