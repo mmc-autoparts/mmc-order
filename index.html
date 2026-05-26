@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="MMC Portal">
     <link rel="apple-touch-icon" href="logo.png">
-    <title>Malaysia Motor Company - Secure Portal V66</title>
+    <title>Malaysia Motor Company - Secure Portal V67</title>
     <link rel="manifest" href="manifest.json">
     <script>
         if ('serviceWorker' in navigator) {
@@ -16,12 +16,12 @@
             navigator.serviceWorker.addEventListener('controllerchange', () => { if (!refreshing) { window.location.reload(); refreshing = true; }});
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js').then(reg => {
-                    setInterval(() => { console.log("Checking server for V66 updates..."); reg.update(); }, 5 * 60 * 1000);
+                    setInterval(() => { console.log("Checking server for V67 updates..."); reg.update(); }, 5 * 60 * 1000);
                     reg.onupdatefound = () => {
                         const installingWorker = reg.installing;
                         installingWorker.onstatechange = () => {
                             if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                if (confirm("🔄 New system version (V66) available! Click OK to apply.")) { installingWorker.postMessage('SKIP_WAITING'); }
+                                if (confirm("🔄 New system version (V67) available! Click OK to apply.")) { installingWorker.postMessage('SKIP_WAITING'); }
                             }
                         };
                     };
@@ -195,7 +195,7 @@
 <div id="mainApp" class="container">
     <div class="header-flex">
         <div>
-            <h2>Malaysia Motor Company <span class="version-badge">V66 Enterprise</span> <span id="adminBadge">👑 Boss View</span></h2>
+            <h2>Malaysia Motor Company <span class="version-badge">V67 Enterprise</span> <span id="adminBadge">👑 Boss View</span></h2>
             <div style="margin-top:8px;">
                 <span id="networkBadge" class="net-online">🟢 Online (Live Cloud Sync)</span>
             </div>
@@ -485,60 +485,206 @@
     }
 
     // ==========================================
-    // V66 UPDATE: Reverting Offline Engine to stable V51 version
+    // V67 OFFLINE ENGINE - Pending Sync UI + Auto Cloud Upload
     // ==========================================
     const netBadge = document.getElementById('networkBadge');
+
+    let offlineDB = null;
+    let offlineRecords = [];
+    let isSyncingOffline = false;
+
     function updateNetworkStatus() {
-        if(navigator.onLine) { netBadge.innerText = '🟢 Online (Live Cloud Sync)'; netBadge.className = 'net-online'; checkOfflineQueue(); } 
-        else { netBadge.innerText = '🔴 Offline (Saving Local)'; netBadge.className = 'net-offline'; }
+        if (navigator.onLine) {
+            netBadge.innerText = '🟢 Online (Live Cloud Sync)';
+            netBadge.className = 'net-online';
+            checkOfflineQueue();
+        } else {
+            netBadge.innerText = '🔴 Offline (Saving Local)';
+            netBadge.className = 'net-offline';
+        }
     }
-    window.addEventListener('online', updateNetworkStatus); window.addEventListener('offline', updateNetworkStatus);
 
-    let offlineDB; const dbReq = indexedDB.open("MMC_OfflineDB", 1);
-    dbReq.onupgradeneeded = (e) => { offlineDB = e.target.result; if(!offlineDB.objectStoreNames.contains('offlineData')) offlineDB.createObjectStore('offlineData', { keyPath: 'tempId' }); };
-    dbReq.onsuccess = (e) => { offlineDB = e.target.result; updateNetworkStatus(); };
+    window.addEventListener('online', updateNetworkStatus);
+    window.addEventListener('offline', updateNetworkStatus);
 
-    function saveToOfflineQueue(type, payload) {
-        payload.tempId = Date.now().toString(); payload.dataType = type; const tx = offlineDB.transaction('offlineData', 'readwrite'); tx.objectStore('offlineData').put(payload);
-        tx.oncomplete = () => {
-            alert("⚠️ No Internet Connection!\n\nDon't worry, your data has been saved safely to this iPad/PC's Offline Memory.\nIt will upload to the cloud automatically the second WiFi connects again.");
-            if(type === 'order') cancelEdit(); 
-            else if(type === 'quote') cancelQEdit(); 
-            else if(type === 'enquire') cancelEEdit(); 
+    const dbReq = indexedDB.open("MMC_OfflineDB", 1);
+
+    dbReq.onupgradeneeded = function(e) {
+        offlineDB = e.target.result;
+        if (!offlineDB.objectStoreNames.contains('offlineData')) {
+            offlineDB.createObjectStore('offlineData', { keyPath: 'tempId' });
+        }
+    };
+
+    dbReq.onsuccess = function(e) {
+        offlineDB = e.target.result;
+        refreshOfflineRecords();
+        updateNetworkStatus();
+    };
+
+    dbReq.onerror = function() {
+        alert("⚠️ Offline database failed to open. Offline saving may not work on this device.");
+    };
+
+    function refreshOfflineRecords() {
+        if (!offlineDB) return;
+
+        const tx = offlineDB.transaction('offlineData', 'readonly');
+        const req = tx.objectStore('offlineData').getAll();
+
+        req.onsuccess = function() {
+            offlineRecords = req.result || [];
+            if (typeof renderTable === 'function') renderTable();
+            if (typeof renderQTable === 'function') renderQTable();
+            if (typeof renderETable === 'function') renderETable();
+            if (typeof renderRestockTable === 'function') renderRestockTable();
+        };
+
+        req.onerror = function() {
+            console.warn("Unable to read offline records.");
         };
     }
 
-    let isSyncingOffline = false;
+    function saveToOfflineQueue(type, payload) {
+        if (!offlineDB) {
+            alert("⚠️ Offline memory is still loading. Please try again in a few seconds.");
+            return;
+        }
+
+        const tempId = 'off_' + Date.now().toString() + '_' + Math.floor(Math.random() * 1000);
+
+        payload.tempId = tempId;
+        payload.dataType = type;
+        payload.offlinePending = true;
+
+        if (!payload.date) payload.date = getStandardDateStr();
+        if (!payload.timestamp) payload.timestamp = Date.now();
+
+        if (type === 'order') payload.status = 'offline';
+        if (type === 'restock' && !payload.status) payload.status = 'Not Yet Order';
+
+        const tx = offlineDB.transaction('offlineData', 'readwrite');
+        tx.objectStore('offlineData').put(payload);
+
+        tx.oncomplete = function() {
+            refreshOfflineRecords();
+
+            alert("⚠️ No Internet Connection!\n\nSaved to this device as OFFLINE PENDING.\nIt will upload to cloud automatically when internet reconnects.");
+
+            if (type === 'order') {
+                cancelEdit();
+            } else if (type === 'quote') {
+                cancelQEdit();
+            } else if (type === 'enquire') {
+                cancelEEdit();
+            } else if (type === 'restock') {
+                ['r_part','r_code','r_brand','r_supp','r_onHand','r_needOrder','r_unitCost','r_totalCost'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.value = '';
+                });
+                currentRestockPhotos = [];
+                renderRestockGalleryUI();
+            }
+        };
+
+        tx.onerror = function() {
+            alert("❌ Offline save failed. Please try again.");
+        };
+    }
+
     async function checkOfflineQueue() {
-        if(!navigator.onLine || !offlineDB || isSyncingOffline) return; isSyncingOffline = true; 
-        const tx = offlineDB.transaction('offlineData', 'readonly'); const req = tx.objectStore('offlineData').getAll();
-        req.onsuccess = async () => {
-            const items = req.result;
-            if(items.length > 0) {
-                alert(`🔄 Internet Restored!\nUploading ${items.length} offline items to Cloud...`);
-                try {
-                    for(let item of items) {
-                        const type = item.dataType; delete item.dataType; delete item.tempId; delete item.id;
-                        if (item.items) { for(let i=0; i<item.items.length; i++) { if(item.items[i].photos && item.items[i].photos.length > 0) item.items[i].photos = await uploadBase64ToStorage(item.items[i].photos); } }
-                        if (type === 'restock' && item.photos && item.photos.length > 0) { item.photos = await uploadBase64ToStorage(item.photos); }
-                        if(item.editId) { 
-                            let targetId = item.editId; delete item.editId;
-                            if(type === 'order') await db.ref('orders/' + targetId).update(item);
-                            else if(type === 'quote') await db.ref('quotations/' + targetId).update(item);
-                            else if(type === 'enquire') await db.ref('enquiries/' + targetId).update(item);
-                        } else { 
-                            if(type === 'order') { const snap = await db.ref('orderCounter').transaction(cv => (cv || 1000) + 1); item.refNo = 'MMC-' + snap.snapshot.val(); item.status = 'waiting'; await db.ref('orders').push(item); } 
-                            else if(type === 'quote') { const snap = await db.ref('quoteCounter').transaction(cv => (cv || 1000) + 1); item.refNo = 'QT-' + snap.snapshot.val(); await db.ref('quotations').push(item); } 
-                            else if(type === 'enquire') { const snap = await db.ref('enquireCounter').transaction(cv => (cv || 1000) + 1); item.refNo = 'ENQ-' + snap.snapshot.val(); await db.ref('enquiries').push(item); } 
-                            else if (type === 'restock') { await db.ref('restock').push(item); }
+        if (!navigator.onLine || !offlineDB || isSyncingOffline) return;
+
+        isSyncingOffline = true;
+
+        const tx = offlineDB.transaction('offlineData', 'readonly');
+        const req = tx.objectStore('offlineData').getAll();
+
+        req.onsuccess = async function() {
+            const items = req.result || [];
+
+            if (items.length === 0) {
+                isSyncingOffline = false;
+                return;
+            }
+
+            alert(`🔄 Internet Restored!\nUploading ${items.length} offline item(s) to Cloud...`);
+
+            try {
+                for (let rawItem of items) {
+                    let item = JSON.parse(JSON.stringify(rawItem));
+                    const type = item.dataType;
+
+                    delete item.dataType;
+                    delete item.tempId;
+                    delete item.id;
+                    delete item.offlinePending;
+
+                    if (item.items) {
+                        for (let i = 0; i < item.items.length; i++) {
+                            if (item.items[i].photos && item.items[i].photos.length > 0) {
+                                item.items[i].photos = await uploadBase64ToStorage(item.items[i].photos);
+                            }
                         }
                     }
-                    const txDel = offlineDB.transaction('offlineData', 'readwrite'); 
-                    txDel.objectStore('offlineData').clear(); 
+
+                    if (type === 'restock' && item.photos && item.photos.length > 0) {
+                        item.photos = await uploadBase64ToStorage(item.photos);
+                    }
+
+                    // V67 safety: new offline records are supported. Existing-record offline edits are blocked in save functions.
+                    if (item.editId) {
+                        const targetId = item.editId;
+                        delete item.editId;
+                        if (type === 'order') await db.ref('orders/' + targetId).update(item);
+                        else if (type === 'quote') await db.ref('quotations/' + targetId).update(item);
+                        else if (type === 'enquire') await db.ref('enquiries/' + targetId).update(item);
+                    } else {
+                        if (type === 'order') {
+                            const snap = await db.ref('orderCounter').transaction(cv => (cv || 1000) + 1);
+                            item.refNo = 'MMC-' + snap.snapshot.val();
+                            item.status = 'waiting';
+                            await db.ref('orders').push(item);
+                        } else if (type === 'quote') {
+                            const snap = await db.ref('quoteCounter').transaction(cv => (cv || 1000) + 1);
+                            item.refNo = 'QT-' + snap.snapshot.val();
+                            await db.ref('quotations').push(item);
+                        } else if (type === 'enquire') {
+                            const snap = await db.ref('enquireCounter').transaction(cv => (cv || 1000) + 1);
+                            item.refNo = 'ENQ-' + snap.snapshot.val();
+                            await db.ref('enquiries').push(item);
+                        } else if (type === 'restock') {
+                            await db.ref('restock').push(item);
+                        }
+                    }
+                }
+
+                const txDel = offlineDB.transaction('offlineData', 'readwrite');
+                txDel.objectStore('offlineData').clear();
+
+                txDel.oncomplete = function() {
+                    offlineRecords = [];
+                    refreshOfflineRecords();
+                    forceDataSync();
                     alert("✅ All offline data successfully synced to Cloud!");
-                } catch (error) { console.error("Sync Error:", error); }
-            } isSyncingOffline = false; 
-        }; req.onerror = () => { isSyncingOffline = false; };
+                    isSyncingOffline = false;
+                };
+
+                txDel.onerror = function() {
+                    alert("⚠️ Data uploaded, but offline queue could not be cleared. Please check before saving again.");
+                    isSyncingOffline = false;
+                };
+
+            } catch (error) {
+                console.error("Sync Error:", error);
+                alert("❌ Offline sync failed.\n\nYour data is still safely kept in this device and will retry when online.");
+                isSyncingOffline = false;
+            }
+        };
+
+        req.onerror = function() {
+            isSyncingOffline = false;
+        };
     }
 
     function getStandardDateStr(dateObj = new Date()) {
@@ -552,7 +698,7 @@
         else { document.getElementById('normalLoginBox').style.display = 'none'; document.getElementById('deviceLockBox').style.display = 'block'; }
     }
     function authorizeDevice() { let pin = prompt("Enter Master PIN to authorize this device:"); if (pin && btoa(pin) === "TU1DODg4") { localStorage.setItem(DEVICE_AUTH_KEY, "true"); alert("✅ Device Authorized Successfully!"); checkDeviceAuthorization(); } else if (pin !== null) { alert("❌ Incorrect PIN!"); } }
-    window.onload = function() { checkDeviceAuthorization(); };
+    window.addEventListener('load', checkDeviceAuthorization);
 
     function switchTab(tabId, btnElement) {
         document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active')); document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -642,7 +788,7 @@
         Array.from(sSet).sort().forEach(s => { let opt = document.createElement('option'); opt.value = s; sList.appendChild(opt); filterSelect.innerHTML += `<option value="${s}">${s}</option>`; }); filterSelect.value = currentFilterVal || 'all';
     }
 
-    // V66 UPDATE: Reverting back to V51 standard loading (no local 'off_' merging to prevent UI glitches)
+    // V67 UPDATE: Cloud loading stays standard; offline pending records are merged inside render functions
     function loadDatabaseData() { db.ref('orders').orderByChild('timestamp').limitToLast(orderLimit).on('value', (snapshot) => { orders = []; snapshot.forEach(child => { orders.push({ id: child.key, ...child.val() }); }); orders.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0)); buildDictionaries(); renderTable(); calculateDailyCash(); }); }
     function loadQuoteData() { db.ref('quotations').orderByChild('timestamp').limitToLast(quoteLimit).on('value', (snapshot) => { quotes = []; snapshot.forEach(child => { quotes.push({ id: child.key, ...child.val() }); }); quotes.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0)); buildDictionaries(); renderQTable(); }); }
     function loadEnquireData() { db.ref('enquiries').orderByChild('timestamp').limitToLast(enquireLimit).on('value', (snapshot) => { enquiries = []; snapshot.forEach(child => { enquiries.push({ id: child.key, ...child.val() }); }); enquiries.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0)); buildDictionaries(); renderETable(); }); }
@@ -740,7 +886,17 @@
         document.querySelectorAll('#ordersTab .pos-table-row').forEach(card => { const id = card.id; const p = { part: card.querySelector('.i-part').value, partNo: card.querySelector('.i-partNo').value.trim().toUpperCase(), brand: card.querySelector('.i-brand').value, supplier: card.querySelector('.i-supplier').value, qty: card.querySelector('.i-qty').value || "1", unitPrice: card.querySelector('.i-unitPrice').value || "0", subTotal: card.querySelector('.i-subTotal').value || "0", eta: card.querySelector('.i-eta').value, photos: itemPhotosMap[id] || [] }; if (p.part || p.partNo) payload.items.push(p); });
         if(!payload.name) return alert("Please fill Customer Name."); if(payload.items.length === 0) return alert("Enter at least 1 Part.");
 
-        if (!navigator.onLine) { if(editingId) payload.editId = editingId; else { payload.date = getStandardDateStr(); payload.status = 'waiting'; payload.timestamp = Date.now(); } saveToOfflineQueue('order', payload); return; }
+        if (!navigator.onLine) {
+            if (editingId) {
+                alert("⚠️ You are offline. Editing existing cloud orders is disabled until internet reconnects.");
+                return;
+            }
+            payload.date = getStandardDateStr();
+            payload.status = 'offline';
+            payload.timestamp = Date.now();
+            saveToOfflineQueue('order', payload);
+            return;
+        }
 
         const originalText = mainBtn.innerText; mainBtn.innerText = "⏳ Processing Photos & Data..."; mainBtn.disabled = true;
         try {
@@ -767,7 +923,18 @@
     function renderTable() {
         const tbody = document.getElementById('orderTableBody'); tbody.innerHTML = '';
         const search = document.getElementById('searchInput').value.toLowerCase(); const viewFilter = document.getElementById('viewFilter').value; const dateVal = document.getElementById('orderDateFilter').value; const filterDateStr = getFormattedDateForFilter(dateVal);
-        let filteredOrders = orders.filter(o => { 
+        const offlineOrders = offlineRecords
+            .filter(x => x.dataType === 'order')
+            .map(x => ({
+                ...x,
+                id: x.tempId,
+                refNo: 'OFFLINE-PENDING',
+                status: 'offline',
+                offlinePending: true
+            }));
+        const displayOrders = [...offlineOrders, ...orders];
+
+        let filteredOrders = displayOrders.filter(o => { 
             if (viewFilter === 'active' && o.status === 'completed') return false; if (viewFilter === 'history' && o.status !== 'completed') return false; if (filterDateStr && o.date !== filterDateStr) return false;
             const itemMatch = (o.items||[]).some(i => (i.part&&i.part.toLowerCase().includes(search)) || (i.partNo&&i.partNo.toLowerCase().includes(search))); 
             return (o.name||'').toLowerCase().includes(search) || (o.car&&o.car.toLowerCase().includes(search)) || (o.refNo&&o.refNo.toLowerCase().includes(search)) || (o.plate&&o.plate.toLowerCase().includes(search)) || (o.remarks&&o.remarks.toLowerCase().includes(search)) || (o.staff&&o.staff.toLowerCase().includes(search)) || itemMatch; 
@@ -794,18 +961,26 @@
             const plateHtml = order.plate ? `<span style="background:#fef08a; color:#b45309; padding:2px 6px; border-radius:4px; font-weight:bold; font-size:12px; letter-spacing:1px;">${order.plate}</span><br>` : '';
 
             let waActionButtons = '';
-            if (order.phone && order.status !== 'completed') { waActionButtons += `<a href="https://wa.me/${order.phone}?text=${encodeURIComponent(msgR)}" target="_blank" class="wa-btn wa-btn-receipt">📄 WA Receipt</a><a href="https://wa.me/${order.phone}?text=${encodeURIComponent(msgA)}" target="_blank" class="wa-btn wa-btn-arrived">💬 Inform Arrived</a><a href="https://wa.me/${order.phone}?text=${encodeURIComponent(msgN)}" target="_blank" class="wa-btn wa-btn-cancel">❌ Item Not Found</a>`; }
-            if(order.status === 'arrived' && order.phone) { waActionButtons = `<a href="https://wa.me/${order.phone}?text=${encodeURIComponent(msgRemind)}" target="_blank" class="wa-btn wa-btn-remind">🔔 Remind Collection</a>` + waActionButtons; }
+            if (order.offlinePending) {
+                waActionButtons = `<div style="font-size:12px; color:#ef4444; font-weight:bold; text-align:center;">Waiting cloud sync</div>`;
+            } else {
+                if (order.phone && order.status !== 'completed') { waActionButtons += `<a href="https://wa.me/${order.phone}?text=${encodeURIComponent(msgR)}" target="_blank" class="wa-btn wa-btn-receipt">📄 WA Receipt</a><a href="https://wa.me/${order.phone}?text=${encodeURIComponent(msgA)}" target="_blank" class="wa-btn wa-btn-arrived">💬 Inform Arrived</a><a href="https://wa.me/${order.phone}?text=${encodeURIComponent(msgN)}" target="_blank" class="wa-btn wa-btn-cancel">❌ Item Not Found</a>`; }
+                if(order.status === 'arrived' && order.phone) { waActionButtons = `<a href="https://wa.me/${order.phone}?text=${encodeURIComponent(msgRemind)}" target="_blank" class="wa-btn wa-btn-remind">🔔 Remind Collection</a>` + waActionButtons; }
+            }
 
             let mainActions = '';
-            mainActions += `<div class="action-btns" style="margin-bottom:6px;"><button class="copy-btn" onclick="duplicateOrder('${order.id}')">📋 Copy</button></div><div class="action-btns">`;
-            if (order.status !== 'completed') { mainActions += `<button class="complete-btn" onclick="markCompleted('${order.id}')">✔️ Done</button>`; } else { mainActions += `<button class="edit-btn" onclick="restoreOrder('${order.id}')">⏪ Return</button>`; }
-            mainActions += `<button class="edit-btn" onclick="editOrder('${order.id}')">✏️ Edit</button>`;
-            if (isAdmin) { mainActions += `<button class="delete-btn" onclick="deleteOrder('${order.id}')">✖ Del</button>`; }
-            mainActions += `</div><button class="print-btn" onclick="printChecklist('${order.id}', 'order')" style="width:100%; margin-top:5px; margin-bottom:5px;">🖨️ Print Checklist</button>`;
+            if (order.offlinePending) {
+                mainActions = `<div style="font-size:12px; color:#ef4444; font-weight:bold; text-align:center; line-height:1.4;">🔴 Saved Offline<br>Waiting Cloud Sync</div>`;
+            } else {
+                mainActions += `<div class="action-btns" style="margin-bottom:6px;"><button class="copy-btn" onclick="duplicateOrder('${order.id}')">📋 Copy</button></div><div class="action-btns">`;
+                if (order.status !== 'completed') { mainActions += `<button class="complete-btn" onclick="markCompleted('${order.id}')">✔️ Done</button>`; } else { mainActions += `<button class="edit-btn" onclick="restoreOrder('${order.id}')">⏪ Return</button>`; }
+                mainActions += `<button class="edit-btn" onclick="editOrder('${order.id}')">✏️ Edit</button>`;
+                if (isAdmin) { mainActions += `<button class="delete-btn" onclick="deleteOrder('${order.id}')">✖ Del</button>`; }
+                mainActions += `</div><button class="print-btn" onclick="printChecklist('${order.id}', 'order')" style="width:100%; margin-top:5px; margin-bottom:5px;">🖨️ Print Checklist</button>`;
+            }
 
-            const statusVisual = order.status==='waiting'?'⏳ Wait':(order.status==='arrived'?'✅ Arrived':'📦 Done');
-            const statusClass = order.status==='completed'?'status-completed':(order.status==='waiting'?'status-waiting':'status-arrived');
+            const statusVisual = order.status === 'offline' ? '🔴 Pending Sync' : (order.status==='waiting'?'⏳ Wait':(order.status==='arrived'?'✅ Arrived':'📦 Done'));
+            const statusClass = order.status === 'offline' ? 'status-offline' : (order.status==='completed'?'status-completed':(order.status==='waiting'?'status-waiting':'status-arrived'));
 
             tr.innerHTML = `<td><input type="checkbox" class="order-check" value="${order.id}"></td><td><span class="ref-badge">${order.refNo}</span><br><small style="color:#64748b;margin-top:6px;display:inline-block;font-weight:700;">${order.date}</small><br>${order.staff?`<span class="staff-badge">👤 ${order.staff}</span>`:''}</td><td><strong style="color:#0f172a;">${order.name}</strong><br><small style="color:#3b82f6;font-weight:bold;">${order.phone}</small><br><div style="margin-top:8px;padding-top:8px;border-top:1px dashed #e2e8f0;">${plateHtml}<strong style="color:#334155; font-size:13px; display:inline-block; margin-top:4px;">${order.car||'-'}</strong> <span class="mono-text" style="color:#64748b;font-size:11px;">${order.chassis?'('+order.chassis+')':''}</span></div></td><td>${partsHtml}<div class="notes-text" style="margin-top:8px;color:#059669;font-weight:600;">${order.remarks?'📝 Remarks: '+order.remarks:''}</div></td><td><small style="color:#64748b;">Total: RM${order.total}</small><br><small style="color:#64748b;">Paid: RM${order.deposit}</small><br><strong style="font-size:15px;margin-top:6px;display:inline-block;color:#0f172a;">Bal: RM${order.balance}</strong></td><td><button class="status-btn ${statusClass}" onclick="toggleStatus('${order.id}')">${statusVisual}</button></td><td><div class="action-btns" style="flex-direction:column;align-items:stretch;">${waActionButtons}</div></td><td>${mainActions}</td>`;
             tbody.appendChild(tr);
@@ -862,7 +1037,16 @@
         document.querySelectorAll('#quoteTab .pos-table-row').forEach(card => { const id = card.id; const p = { part: card.querySelector('.i-part').value, partNo: card.querySelector('.i-partNo').value.trim().toUpperCase(), brand: card.querySelector('.i-brand').value, supplier: card.querySelector('.i-supplier').value, qty: card.querySelector('.i-qty').value || "1", unitPrice: card.querySelector('.i-unitPrice').value || "0", subTotal: card.querySelector('.i-subTotal').value || "0", eta: card.querySelector('.i-eta').value, photos: qItemPhotosMap[id] || [] }; if (p.part || p.partNo) payload.items.push(p); });
         if(payload.items.length === 0) return alert("Enter at least 1 Part.");
 
-        if (!navigator.onLine) { if(qEditingId) payload.editId = qEditingId; else { payload.date = getStandardDateStr(); payload.timestamp = Date.now(); } saveToOfflineQueue('quote', payload); return; }
+        if (!navigator.onLine) {
+            if (qEditingId) {
+                alert("⚠️ You are offline. Editing existing quotation is disabled until internet reconnects.");
+                return;
+            }
+            payload.date = getStandardDateStr();
+            payload.timestamp = Date.now();
+            saveToOfflineQueue('quote', payload);
+            return;
+        }
 
         const originalText = qMainBtn.innerText; qMainBtn.innerText = "⏳ Processing Photos & Data..."; qMainBtn.disabled = true;
         try {
@@ -884,7 +1068,17 @@
     function renderQTable() {
         const tbody = document.getElementById('quoteTableBody'); tbody.innerHTML = '';
         const search = document.getElementById('qSearchInput').value.toLowerCase(); const dateVal = document.getElementById('quoteDateFilter').value; const filterDateStr = getFormattedDateForFilter(dateVal);
-        let filteredQuotes = quotes.filter(q => { 
+        const offlineQuotes = offlineRecords
+            .filter(x => x.dataType === 'quote')
+            .map(x => ({
+                ...x,
+                id: x.tempId,
+                refNo: 'OFFLINE-QT',
+                offlinePending: true
+            }));
+        const displayQuotes = [...offlineQuotes, ...quotes];
+
+        let filteredQuotes = displayQuotes.filter(q => { 
             if (filterDateStr && q.date !== filterDateStr) return false;
             const itemMatch = (q.items||[]).some(i => (i.part&&i.part.toLowerCase().includes(search)) || (i.partNo&&i.partNo.toLowerCase().includes(search))); 
             return (q.name||'').toLowerCase().includes(search) || (q.car&&q.car.toLowerCase().includes(search)) || (q.refNo&&q.refNo.toLowerCase().includes(search)) || (q.plate&&q.plate.toLowerCase().includes(search)) || (q.remarks&&q.remarks.toLowerCase().includes(search)) || (q.staff&&q.staff.toLowerCase().includes(search)) || itemMatch; 
@@ -906,11 +1100,15 @@
             const tr = document.createElement('tr'); const plateHtml = quote.plate ? `<span style="background:#fef08a; color:#b45309; padding:2px 6px; border-radius:4px; font-weight:bold; font-size:12px; letter-spacing:1px;">${quote.plate}</span><br>` : '';
             
             let mainActions = '';
-            mainActions += `<div class="action-btns"><button class="convert-btn" onclick="convertToPreorder('${quote.id}')">➡️ Convert to Order</button></div><div class="action-btns"><button class="edit-btn" onclick="editQuote('${quote.id}')">✏️ Edit</button>`;
-            if (isAdmin) { mainActions += `<button class="delete-btn" onclick="deleteQuote('${quote.id}')">✖ Del</button>`; }
-            mainActions += `</div><button class="print-btn" onclick="printChecklist('${quote.id}', 'quote')" style="width:100%; margin-top:5px; margin-bottom:5px;">🖨️ Print Checklist</button>`;
+            if (quote.offlinePending) {
+                mainActions = `<div style="font-size:12px; color:#ef4444; font-weight:bold; text-align:center; line-height:1.4;">🔴 Saved Offline<br>Waiting Cloud Sync</div>`;
+            } else {
+                mainActions += `<div class="action-btns"><button class="convert-btn" onclick="convertToPreorder('${quote.id}')">➡️ Convert to Order</button></div><div class="action-btns"><button class="edit-btn" onclick="editQuote('${quote.id}')">✏️ Edit</button>`;
+                if (isAdmin) { mainActions += `<button class="delete-btn" onclick="deleteQuote('${quote.id}')">✖ Del</button>`; }
+                mainActions += `</div><button class="print-btn" onclick="printChecklist('${quote.id}', 'quote')" style="width:100%; margin-top:5px; margin-bottom:5px;">🖨️ Print Checklist</button>`;
+            }
 
-            tr.innerHTML = `<td><span class="ref-badge">${quote.refNo}</span><br><small style="color:#64748b;margin-top:6px;display:inline-block;font-weight:700;">${quote.date}</small><br>${quote.staff?`<span class="staff-badge">👤 ${quote.staff}</span>`:''}</td><td><strong style="color:#0f172a;">${quote.name}</strong><br><small style="color:#3b82f6;font-weight:bold;">${quote.phone}</small><br><div style="margin-top:8px;padding-top:8px;border-top:1px dashed #e2e8f0;">${plateHtml}<strong style="color:#334155; font-size:13px; display:inline-block; margin-top:4px;">${quote.car||'-'}</strong> <span class="mono-text" style="color:#64748b;font-size:12px;">${quote.chassis||''}</span></div></td><td>${partsHtml}<div class="notes-text" style="margin-top:8px;color:#059669;font-weight:600;">${quote.remarks?'📝 Remarks: '+quote.remarks:''}</div></td><td><strong style="font-size:18px;color:#0f172a;">RM${quote.total}</strong></td><td><div class="action-btns"><a href="https://wa.me/${quote.phone}?text=${encodeURIComponent(msgQ)}" target="_blank" class="wa-btn wa-btn-quote" style="width:100%;">💬 Send Quotation</a></div></td><td>${mainActions}</td>`;
+            tr.innerHTML = `<td><span class="ref-badge">${quote.refNo}</span><br><small style="color:#64748b;margin-top:6px;display:inline-block;font-weight:700;">${quote.date}</small><br>${quote.staff?`<span class="staff-badge">👤 ${quote.staff}</span>`:''}</td><td><strong style="color:#0f172a;">${quote.name}</strong><br><small style="color:#3b82f6;font-weight:bold;">${quote.phone}</small><br><div style="margin-top:8px;padding-top:8px;border-top:1px dashed #e2e8f0;">${plateHtml}<strong style="color:#334155; font-size:13px; display:inline-block; margin-top:4px;">${quote.car||'-'}</strong> <span class="mono-text" style="color:#64748b;font-size:12px;">${quote.chassis||''}</span></div></td><td>${partsHtml}<div class="notes-text" style="margin-top:8px;color:#059669;font-weight:600;">${quote.remarks?'📝 Remarks: '+quote.remarks:''}</div></td><td><strong style="font-size:18px;color:#0f172a;">RM${quote.total}</strong></td><td><div class="action-btns">${quote.offlinePending ? '<div style="font-size:12px; color:#ef4444; font-weight:bold;">Waiting Sync</div>' : (quote.phone ? `<a href="https://wa.me/${quote.phone}?text=${encodeURIComponent(msgQ)}" target="_blank" class="wa-btn wa-btn-quote" style="width:100%;">💬 Send Quotation</a>` : '<div style="font-size:12px; color:#94a3b8; font-weight:bold;">No Phone</div>')}</div></td><td>${mainActions}</td>`;
             tbody.appendChild(tr);
         });
     }
@@ -954,7 +1152,16 @@
         document.querySelectorAll('#enquireTab .pos-table-row').forEach(card => { const id = card.id; const p = { part: card.querySelector('.i-part').value, partNo: card.querySelector('.i-partNo').value.trim().toUpperCase(), brand: card.querySelector('.i-brand').value, supplier: card.querySelector('.i-supplier').value, qty: card.querySelector('.i-qty').value || "1", unitPrice: card.querySelector('.i-unitPrice').value || "0", subTotal: card.querySelector('.i-subTotal').value || "0", eta: card.querySelector('.i-eta').value, photos: eItemPhotosMap[id] || [] }; if (p.part || p.partNo) payload.items.push(p); });
         if(payload.items.length === 0) return alert("Enter at least 1 Part.");
 
-        if (!navigator.onLine) { if(eEditingId) payload.editId = eEditingId; else { payload.date = getStandardDateStr(); payload.timestamp = Date.now(); } saveToOfflineQueue('enquire', payload); return; }
+        if (!navigator.onLine) {
+            if (eEditingId) {
+                alert("⚠️ You are offline. Editing existing enquiry is disabled until internet reconnects.");
+                return;
+            }
+            payload.date = getStandardDateStr();
+            payload.timestamp = Date.now();
+            saveToOfflineQueue('enquire', payload);
+            return;
+        }
 
         const originalText = eMainBtn.innerText; eMainBtn.innerText = "⏳ Processing Photos & Data..."; eMainBtn.disabled = true;
         try {
@@ -976,7 +1183,17 @@
     function renderETable() {
         const tbody = document.getElementById('enquireTableBody'); tbody.innerHTML = '';
         const search = document.getElementById('eSearchInput').value.toLowerCase(); const dateVal = document.getElementById('enquireDateFilter').value; const filterDateStr = getFormattedDateForFilter(dateVal);
-        let filteredEnquiries = enquiries.filter(e => { 
+        const offlineEnquiries = offlineRecords
+            .filter(x => x.dataType === 'enquire')
+            .map(x => ({
+                ...x,
+                id: x.tempId,
+                refNo: 'OFFLINE-ENQ',
+                offlinePending: true
+            }));
+        const displayEnquiries = [...offlineEnquiries, ...enquiries];
+
+        let filteredEnquiries = displayEnquiries.filter(e => { 
             if (filterDateStr && e.date !== filterDateStr) return false;
             const itemMatch = (e.items||[]).some(i => (i.part&&i.part.toLowerCase().includes(search)) || (i.partNo&&i.partNo.toLowerCase().includes(search))); 
             return (e.name||'').toLowerCase().includes(search) || (e.car&&e.car.toLowerCase().includes(search)) || (e.refNo&&e.refNo.toLowerCase().includes(search)) || (e.plate&&e.plate.toLowerCase().includes(search)) || (e.remarks&&e.remarks.toLowerCase().includes(search)) || (e.staff&&e.staff.toLowerCase().includes(search)) || itemMatch; 
@@ -998,11 +1215,15 @@
             const tr = document.createElement('tr'); const plateHtml = enq.plate ? `<span style="background:#fef08a; color:#b45309; padding:2px 6px; border-radius:4px; font-weight:bold; font-size:12px; letter-spacing:1px;">${enq.plate}</span><br>` : '';
             
             let mainActions = '';
-            mainActions += `<div class="action-btns"><button class="convert-btn-alt" onclick="convertEnqToQuote('${enq.id}')">➡️ Convert to Quote</button></div><div class="action-btns"><button class="edit-btn" onclick="editEnquire('${enq.id}')">✏️ Edit</button>`;
-            if (isAdmin) { mainActions += `<button class="delete-btn" onclick="deleteEnquire('${enq.id}')">✖ Del</button>`; }
-            mainActions += `</div><button class="print-btn" onclick="printChecklist('${enq.id}', 'enquire')" style="width:100%; margin-top:5px; margin-bottom:5px;">🖨️ Print Enquiry</button>`;
+            if (enq.offlinePending) {
+                mainActions = `<div style="font-size:12px; color:#ef4444; font-weight:bold; text-align:center; line-height:1.4;">🔴 Saved Offline<br>Waiting Cloud Sync</div>`;
+            } else {
+                mainActions += `<div class="action-btns"><button class="convert-btn-alt" onclick="convertEnqToQuote('${enq.id}')">➡️ Convert to Quote</button></div><div class="action-btns"><button class="edit-btn" onclick="editEnquire('${enq.id}')">✏️ Edit</button>`;
+                if (isAdmin) { mainActions += `<button class="delete-btn" onclick="deleteEnquire('${enq.id}')">✖ Del</button>`; }
+                mainActions += `</div><button class="print-btn" onclick="printChecklist('${enq.id}', 'enquire')" style="width:100%; margin-top:5px; margin-bottom:5px;">🖨️ Print Enquiry</button>`;
+            }
 
-            tr.innerHTML = `<td><span class="ref-badge">${enq.refNo}</span><br><small style="color:#64748b;margin-top:6px;display:inline-block;font-weight:700;">${enq.date}</small><br>${enq.staff?`<span class="staff-badge">👤 ${enq.staff}</span>`:''}</td><td><strong style="color:#0f172a;">${enq.name}</strong><br><small style="color:#3b82f6;font-weight:bold;">${enq.phone}</small><br><div style="margin-top:8px;padding-top:8px;border-top:1px dashed #e2e8f0;">${plateHtml}<strong style="color:#334155; font-size:13px; display:inline-block; margin-top:4px;">${enq.car||'-'}</strong> <span class="mono-text" style="color:#64748b;font-size:12px;">${enq.chassis||''}</span></div></td><td>${partsHtml}<div class="notes-text" style="margin-top:8px;color:#059669;font-weight:600;">${enq.remarks?'📝 Remarks: '+enq.remarks:''}</div></td><td><strong style="font-size:18px;color:#0f172a;">RM${enq.total}</strong></td><td><div class="action-btns"><a href="https://wa.me/${enq.phone}?text=${encodeURIComponent(msgE)}" target="_blank" class="wa-btn wa-btn-enq" style="width:100%;">💬 Send Enquiry</a></div></td><td>${mainActions}</td>`;
+            tr.innerHTML = `<td><span class="ref-badge">${enq.refNo}</span><br><small style="color:#64748b;margin-top:6px;display:inline-block;font-weight:700;">${enq.date}</small><br>${enq.staff?`<span class="staff-badge">👤 ${enq.staff}</span>`:''}</td><td><strong style="color:#0f172a;">${enq.name}</strong><br><small style="color:#3b82f6;font-weight:bold;">${enq.phone}</small><br><div style="margin-top:8px;padding-top:8px;border-top:1px dashed #e2e8f0;">${plateHtml}<strong style="color:#334155; font-size:13px; display:inline-block; margin-top:4px;">${enq.car||'-'}</strong> <span class="mono-text" style="color:#64748b;font-size:12px;">${enq.chassis||''}</span></div></td><td>${partsHtml}<div class="notes-text" style="margin-top:8px;color:#059669;font-weight:600;">${enq.remarks?'📝 Remarks: '+enq.remarks:''}</div></td><td><strong style="font-size:18px;color:#0f172a;">RM${enq.total}</strong></td><td><div class="action-btns">${enq.offlinePending ? '<div style="font-size:12px; color:#ef4444; font-weight:bold;">Waiting Sync</div>' : (enq.phone ? `<a href="https://wa.me/${enq.phone}?text=${encodeURIComponent(msgE)}" target="_blank" class="wa-btn wa-btn-enq" style="width:100%;">💬 Send Enquiry</a>` : '<div style="font-size:12px; color:#94a3b8; font-weight:bold;">No Phone</div>')}</div></td><td>${mainActions}</td>`;
             tbody.appendChild(tr);
         });
     }
@@ -1024,7 +1245,27 @@
         if(!part && !code) return alert("Please enter at least a part description or item code.");
         const payload = { part, code, brand, supp, onHandQty, needOrderQty, unitCost, totalCost, date: getStandardDateStr(), timestamp: Date.now(), status: 'Not Yet Order', photos: [...currentRestockPhotos] };
         const btn = document.getElementById('addRestockBtn'); const origText = btn.innerText; btn.innerText = "⏳ Uploading..."; btn.disabled = true;
-        try { if (!navigator.onLine) { saveToOfflineQueue('restock', payload); } else { if (payload.photos && payload.photos.length > 0) { payload.photos = await uploadBase64ToStorage(payload.photos); } await db.ref('restock').push(payload); } ['r_part','r_code','r_brand','r_supp','r_onHand','r_needOrder','r_unitCost','r_totalCost'].forEach(id => document.getElementById(id).value = ''); currentRestockPhotos = []; renderRestockGalleryUI(); } catch (e) { alert("Error: " + e.message); } finally { btn.innerText = origText; btn.disabled = false; }
+        try {
+            if (!navigator.onLine) {
+                saveToOfflineQueue('restock', payload);
+                return;
+            }
+
+            if (payload.photos && payload.photos.length > 0) {
+                payload.photos = await uploadBase64ToStorage(payload.photos);
+            }
+
+            await db.ref('restock').push(payload);
+
+            ['r_part','r_code','r_brand','r_supp','r_onHand','r_needOrder','r_unitCost','r_totalCost'].forEach(id => document.getElementById(id).value = '');
+            currentRestockPhotos = [];
+            renderRestockGalleryUI();
+        } catch (e) {
+            alert("Error: " + e.message);
+        } finally {
+            btn.innerText = origText;
+            btn.disabled = false;
+        }
     }
 
     function updateRestockSupplier(id, newValue) { if(!isAdmin) return; if(navigator.onLine) db.ref('restock/' + id).update({ supp: newValue }); }
@@ -1041,13 +1282,27 @@
         document.getElementById('restockThead').innerHTML = theadHTML;
         const tbody = document.getElementById('restockTableBody'); tbody.innerHTML = '';
         const view = document.getElementById('rViewFilter').value; const dateVal = document.getElementById('rDateFilter').value; const filterDateStr = getFormattedDateForFilter(dateVal); const suppFilter = document.getElementById('rSuppFilter').value;
-        currentRestockView = restockItems.filter(item => { const status = item.status || 'Not Yet Order'; if (view === 'active' && status === 'Ordered') return false; if (view === 'history' && status !== 'Ordered') return false; if (filterDateStr && item.date !== filterDateStr) return false; if (suppFilter !== 'all' && (item.supp||'').trim() !== suppFilter) return false; return true; });
+        const offlineRestockItems = offlineRecords
+            .filter(x => x.dataType === 'restock')
+            .map(x => ({
+                ...x,
+                id: x.tempId,
+                offlinePending: true,
+                status: x.status || 'Not Yet Order'
+            }));
+        const displayRestockItems = [...offlineRestockItems, ...restockItems];
+
+        currentRestockView = displayRestockItems.filter(item => { const status = item.status || 'Not Yet Order'; if (view === 'active' && status === 'Ordered') return false; if (view === 'history' && status !== 'Ordered') return false; if (filterDateStr && item.date !== filterDateStr) return false; if (suppFilter !== 'all' && (item.supp||'').trim() !== suppFilter) return false; return true; });
         currentRestockView.forEach(item => {
             const status = item.status || 'Not Yet Order';
             const statusHtml = status === 'Ordered' ? `<span style="padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; background:#d1fae5; color:#047857;">Ordered</span>` : `<span style="padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; background:#fef3c7; color:#b45309;">Not Yet Order</span>`;
-            let actionHtml = ''; 
-            if (status !== 'Ordered') { actionHtml += `<button class="complete-btn" onclick="markRestockOrdered('${item.id}')" style="width:100%; margin-bottom:4px;">✔️ Done</button>`; } else { actionHtml += `<button class="edit-btn" onclick="returnToNotYet('${item.id}')" style="width:100%; margin-bottom:4px;">⏪ Return</button>`; } 
-            if (isAdmin) { actionHtml += `<button class="delete-btn" onclick="deleteRestock('${item.id}')" style="width:100%;">✖ Del</button>`; } 
+            let actionHtml = '';
+            if (item.offlinePending) {
+                actionHtml = `<div style="font-size:11px; color:#ef4444; font-weight:bold; text-align:center;">🔴 Pending Sync</div>`;
+            } else {
+                if (status !== 'Ordered') { actionHtml += `<button class="complete-btn" onclick="markRestockOrdered('${item.id}')" style="width:100%; margin-bottom:4px;">✔️ Done</button>`; } else { actionHtml += `<button class="edit-btn" onclick="returnToNotYet('${item.id}')" style="width:100%; margin-bottom:4px;">⏪ Return</button>`; } 
+                if (isAdmin) { actionHtml += `<button class="delete-btn" onclick="deleteRestock('${item.id}')" style="width:100%;">✖ Del</button>`; } 
+            }
             let suppHtml = isAdmin ? `<input type="text" class="pos-input" value="${item.supp||''}" placeholder="Type..." style="width:100px; font-size:12px; background:#fffbeb; color:#b45309; font-weight:bold;" list="supplierList" onchange="updateRestockSupplier('${item.id}', this.value)">` : (item.supp || '-');
             let costHtml = isAdmin ? `<td style="text-align:center; font-weight:bold; color:#059669;">RM ${parseFloat(item.unitCost||0).toFixed(2)}</td><td style="text-align:center; font-weight:bold; color:#059669;">RM ${parseFloat(item.totalCost||0).toFixed(2)}</td>` : ``;
             let photoHtml = ''; if (item.photos && item.photos.length > 0) { photoHtml = `<div style="display:flex; gap:4px; flex-wrap:wrap; justify-content:center;">`; item.photos.forEach(p => { photoHtml += `<img src="${p}" class="photo-thumbnail" onclick="showPhoto('${p}')" style="width:35px;height:35px;border:1px solid #cbd5e1; cursor:pointer;">`; }); photoHtml += `</div>`; } else { photoHtml = `<span style="color:#94a3b8; font-size:11px;">No Photo</span>`; }
