@@ -10,7 +10,7 @@
     <meta name="apple-mobile-web-app-title" content="MMC Portal">
     <link rel="apple-touch-icon" href="logo.png">
 
-    <title>Malaysia Motor Company - Secure Portal V61</title>
+    <title>Malaysia Motor Company - Secure Portal V62</title>
     
     <link rel="manifest" href="manifest.json">
 
@@ -23,7 +23,7 @@
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js').then(reg => {
                     setInterval(() => {
-                        console.log("Checking server for V61 updates...");
+                        console.log("Checking server for V62 updates...");
                         reg.update();
                     }, 5 * 60 * 1000);
 
@@ -31,7 +31,7 @@
                         const installingWorker = reg.installing;
                         installingWorker.onstatechange = () => {
                             if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                if (confirm("🔄 New system version (V61) available! Click OK to apply.")) {
+                                if (confirm("🔄 New system version (V62) available! Click OK to apply.")) {
                                     installingWorker.postMessage('SKIP_WAITING');
                                 }
                             }
@@ -181,7 +181,9 @@
         .table-item-list { margin: 0; padding-left: 15px; }
         .table-item-list li { margin-bottom: 8px; border-bottom: 1px dashed #e2e8f0; padding-bottom: 8px;}
 
-        .restock-row { display: grid; grid-template-columns: 2fr 1.5fr 1fr 1fr 80px 80px 100px; gap: 10px; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 15px; align-items: end;}
+        /* V62 UPDATE: Flex layout for better Restock Row */
+        .restock-grid { display: flex; flex-wrap: wrap; gap: 12px; }
+        .restock-grid > div { flex: 1 1 130px; }
 
         #photoModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.9); z-index: 1000; text-align: center; cursor: pointer; backdrop-filter: blur(5px); }
         #modalImg { max-width: 90%; max-height: 90%; margin-top: 5vh; border-radius: 8px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);}
@@ -204,7 +206,6 @@
             .mobile-grid-3 { display: grid; grid-template-columns: 1fr 1.5fr 1.5fr; gap: 10px; }
             .mobile-grid-3 > div { display: flex; flex-direction: column; }
             .top-controls { flex-direction: column; align-items: stretch;}
-            .restock-row { display: flex; flex-direction: column; }
         }
     </style>
 </head>
@@ -231,7 +232,7 @@
 <div id="mainApp" class="container">
     <div class="header-flex">
         <div>
-            <h2>Malaysia Motor Company <span class="version-badge">V61 Enterprise</span> <span id="adminBadge">👑 Boss View</span></h2>
+            <h2>Malaysia Motor Company <span class="version-badge">V62 Enterprise</span> <span id="adminBadge">👑 Boss View</span></h2>
             <div style="margin-top:8px;">
                 <span id="networkBadge" class="net-online">🟢 Online (Live Cloud Sync)</span>
             </div>
@@ -398,10 +399,10 @@
     </div>
 
     <div id="restockTab" class="tab-content">
-        <div style="background: #eef2ff; padding: 20px; border-radius: 8px; border: 1px solid #c7d2fe; margin-bottom: 25px;">
-            <h3 style="margin-top:0; color:#3730a3;">Manual Input (Low Stock)</h3>
-            <p style="font-size:13px; color:#4f46e5; margin-top:-5px; margin-bottom:15px;">Leave supplier blank if unsure. Boss can fill it later.</p>
-            <div class="restock-row">
+        <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 25px;">
+            <h3 style="margin-top:0; color:#3730a3; margin-bottom:15px;">Manual Input (Low Stock / Order Request)</h3>
+            
+            <div class="restock-grid" style="margin-bottom: 15px;">
                 <div><span class="label-text">Part Description</span>
                     <div class="input-wrapper">
                         <input type="text" id="r_part" placeholder="e.g. Brake Pad" autocomplete="off" oninput="handleRestockInput(this)" onfocus="handleRestockInput(this)">
@@ -416,8 +417,16 @@
                 
                 <div class="boss-restock" style="display:none;"><span class="label-text">Unit Cost (RM)</span><input type="number" id="r_unitCost" placeholder="0.00" oninput="calcRestockCost()"></div>
                 <div class="boss-restock" style="display:none;"><span class="label-text">Total Cost (RM)</span><input type="number" id="r_totalCost" placeholder="0.00" readonly class="readonly-input"></div>
+            </div>
 
-                <button class="add-item-btn" onclick="addRestockItem()" style="height:42px; width:100%;">➕ Add</button>
+            <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px dashed #cbd5e1; padding-top:15px; flex-wrap:wrap; gap:10px;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <label class="photo-upload-btn" style="width: auto; padding: 0 15px; height:42px; background:white;">📷 Snap/Upload <span id="r_count">0</span>/5
+                        <input type="file" accept="image/*" multiple onchange="processRestockPhotos(event)" style="display:none;">
+                    </label>
+                    <div id="r_gallery" class="row-gallery" style="padding:0; grid-column:unset;"></div>
+                </div>
+                <button class="add-item-btn" id="addRestockBtn" onclick="addRestockItem()" style="height:42px; width:180px; font-size:14px; background-color:#2563eb;">➕ Add to Restock</button>
             </div>
         </div>
 
@@ -486,6 +495,7 @@
     let isDataLoaded = false; let isAdmin = false; 
     let itemMapIdCounter = 0; let itemPhotosMap = {}; 
     let qItemMapIdCounter = 0; let qItemPhotosMap = {}; 
+    let currentRestockPhotos = []; // V62 UPDATE: Restock Photos Array
     
     let staffList = ['Hock', 'Kelvin', 'Nana', 'Adi', 'Khairul', 'Sani', 'Lun']; 
     let orderLimit = 200; let quoteLimit = 200; let restockLimit = 200;
@@ -503,15 +513,12 @@
         const val = inputEl.value.toLowerCase().trim();
         const listEl = document.getElementById('autocomplete_' + rowId);
         listEl.innerHTML = '';
-        
         if (val.length < 2) { listEl.style.display = 'none'; return; }
         
         let matches = [];
-        
         smartSearchDefaults.forEach(def => {
             if (def.toLowerCase().includes(val)) { matches.push({ part: def, partNo: '', brand: '', supplier: '', price: '' }); }
         });
-        
         productDictionary.forEach(p => {
             if (!matches.find(m => m.part === p.part && m.partNo === p.partNo) && 
                (p.part.toLowerCase().includes(val) || (p.partNo && p.partNo.toLowerCase().includes(val)))) {
@@ -520,18 +527,15 @@
         });
         
         matches = matches.slice(0, 10); 
-        
         if (matches.length === 0) { listEl.style.display = 'none'; return; }
         
         matches.forEach(m => {
             const div = document.createElement('div');
             div.className = 'autocomplete-item';
             div.innerHTML = `<strong style="color:#0f172a;">${m.part}</strong> <span style="color:#64748b; font-size:11px;">${m.partNo ? `[${m.partNo}]` : ''} ${m.brand ? `Brd:${m.brand}` : ''}</span> <strong style="color:#10b981; float:right;">${m.price ? `RM${m.price}` : ''}</strong>`;
-            
             div.onclick = () => {
                 inputEl.value = m.part;
                 listEl.style.display = 'none';
-                
                 const row = document.getElementById(rowId);
                 if(row) {
                     if(m.partNo) row.querySelector('.i-partNo').value = m.partNo;
@@ -550,18 +554,15 @@
         const val = inputEl.value.toLowerCase().trim();
         const listEl = document.getElementById('r_autocomplete');
         listEl.innerHTML = '';
-        
         if (val.length < 2) { listEl.style.display = 'none'; return; }
         
         let matches = productDictionary.filter(p => p.part.toLowerCase().includes(val) || (p.partNo && p.partNo.toLowerCase().includes(val))).slice(0, 10);
-        
         if (matches.length === 0) { listEl.style.display = 'none'; return; }
         
         matches.forEach(m => {
             const div = document.createElement('div');
             div.className = 'autocomplete-item';
             div.innerHTML = `<strong style="color:#0f172a;">${m.part}</strong> <span style="color:#64748b; font-size:11px;">${m.partNo ? `[${m.partNo}]` : ''} ${m.brand ? `Brd:${m.brand}` : ''}</span>`;
-            
             div.onclick = () => {
                 inputEl.value = m.part;
                 listEl.style.display = 'none';
@@ -686,6 +687,11 @@
                                 if(item.items[i].photos && item.items[i].photos.length > 0) item.items[i].photos = await uploadBase64ToStorage(item.items[i].photos);
                             }
                         }
+                        // V62 UPDATE: Handle offline restock photo uploading
+                        if (type === 'restock' && item.photos && item.photos.length > 0) {
+                            item.photos = await uploadBase64ToStorage(item.photos);
+                        }
+
                         if(item.editId) { 
                             let targetId = item.editId; delete item.editId;
                             if(type === 'order') await db.ref('orders/' + targetId).update(item);
@@ -934,7 +940,7 @@
     }
 
     // ==========================================
-    // V61 UPDATE: EXACT MATCH PRINT CHECKLIST
+    // EXACT MATCH PRINT CHECKLIST
     // ==========================================
     function printChecklist(id, isQuote) {
         const dataList = isQuote ? quotes : orders;
@@ -1646,7 +1652,7 @@
     }
 
     // ==========================================
-    // RESTOCK SYSTEM
+    // RESTOCK SYSTEM (WITH V62 PHOTO UPGRADE)
     // ==========================================
     function calcRestockCost() {
         const qty = parseFloat(document.getElementById('r_needOrder').value) || 1;
@@ -1654,6 +1660,43 @@
         document.getElementById('r_totalCost').value = (qty * uCost).toFixed(2);
     }
     document.getElementById('r_needOrder').addEventListener('input', calcRestockCost);
+
+    function processRestockPhotos(event) {
+        const files = event.target.files; if (!files || files.length === 0) return;
+        if (currentRestockPhotos.length + files.length > 5) { alert("⚠️ Max 5 photos!"); event.target.value = ''; return; }
+        Array.from(files).forEach(file => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image(); img.onload = function() {
+                    const canvas = document.createElement('canvas'); let width = img.width; let height = img.height;
+                    if (width > height) { if(width > 800) { height *= 800/width; width = 800; } } else { if(height > 800) { width *= 800/height; height = 800; } }
+                    canvas.width = width; canvas.height = height; canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+                    currentRestockPhotos.push(canvas.toDataURL('image/jpeg', 0.8)); renderRestockGalleryUI(); 
+                }; img.src = e.target.result;
+            }; reader.readAsDataURL(file);
+        }); event.target.value = ''; 
+    }
+
+    function renderRestockGalleryUI() {
+        const gallery = document.getElementById('r_gallery'); document.getElementById('r_count').innerText = currentRestockPhotos.length;
+        gallery.innerHTML = ''; currentRestockPhotos.forEach((b64Data, index) => { 
+            gallery.innerHTML += `
+            <div class="photo-wrapper">
+                <img src="${b64Data}" class="photo-thumbnail" onclick="showPhoto('${b64Data}')">
+                <button type="button" class="rotate-single-btn" onclick="rotateRestockImage(${index})">↻</button>
+                <button type="button" class="remove-single-btn" onclick="removeRestockSinglePhoto(${index})">✖</button>
+            </div>`; 
+        });
+    }
+
+    function removeRestockSinglePhoto(index) { currentRestockPhotos.splice(index, 1); renderRestockGalleryUI(); }
+
+    function rotateRestockImage(index) {
+        rotatePhotoBase64(currentRestockPhotos[index], (newBase64) => {
+            currentRestockPhotos[index] = newBase64;
+            renderRestockGalleryUI();
+        });
+    }
 
     async function addRestockItem() {
         const part = document.getElementById('r_part').value; 
@@ -1667,12 +1710,32 @@
         const totalCost = document.getElementById('r_totalCost').value || "0";
 
         if(!part && !code) return alert("Please enter at least a part description or item code.");
-        const payload = { part, code, brand, supp, onHandQty, needOrderQty, unitCost, totalCost, date: getStandardDateStr(), timestamp: Date.now(), status: 'Not Yet Order' };
+        const payload = { part, code, brand, supp, onHandQty, needOrderQty, unitCost, totalCost, date: getStandardDateStr(), timestamp: Date.now(), status: 'Not Yet Order', photos: [...currentRestockPhotos] };
         
-        if (!navigator.onLine) { saveToOfflineQueue('restock', payload); } 
-        else { await db.ref('restock').push(payload); }
-        
-        ['r_part','r_code','r_brand','r_supp','r_onHand','r_needOrder','r_unitCost','r_totalCost'].forEach(id => document.getElementById(id).value = '');
+        const btn = document.getElementById('addRestockBtn');
+        const origText = btn.innerText;
+        btn.innerText = "⏳ Uploading...";
+        btn.disabled = true;
+
+        try {
+            if (!navigator.onLine) { 
+                saveToOfflineQueue('restock', payload); 
+            } else { 
+                if (payload.photos && payload.photos.length > 0) {
+                    payload.photos = await uploadBase64ToStorage(payload.photos);
+                }
+                await db.ref('restock').push(payload); 
+            }
+            
+            ['r_part','r_code','r_brand','r_supp','r_onHand','r_needOrder','r_unitCost','r_totalCost'].forEach(id => document.getElementById(id).value = '');
+            currentRestockPhotos = [];
+            renderRestockGalleryUI();
+        } catch (e) {
+            alert("Error: " + e.message);
+        } finally {
+            btn.innerText = origText;
+            btn.disabled = false;
+        }
     }
 
     function updateRestockSupplier(id, newValue) { if(!isAdmin) return; if(navigator.onLine && !id.startsWith('off_')) db.ref('restock/' + id).update({ supp: newValue }); }
@@ -1697,14 +1760,14 @@
             <th>Item Code / OEM</th>
             <th>Brand</th>
             <th>Supplier ${isAdmin ? '<span style="font-size:10px; color:#b45309;">(Boss Edit)</span>' : ''}</th>
-            <th style="text-align:center; width: 80px;">On Hand</th>
-            <th style="text-align:center; width: 90px;">Order Qty</th>
+            <th style="text-align:center; width: 60px;">On Hand</th>
+            <th style="text-align:center; width: 60px;">Order Qty</th>
         `;
         
         if (isAdmin) { 
             theadHTML += `<th style="text-align:center;">Unit Cost</th><th style="text-align:center;">Total Cost</th>`; 
         }
-        theadHTML += `<th style="text-align:center; width: 100px;">Status</th><th style="text-align:center; width: 80px;">Actions</th></tr>`;
+        theadHTML += `<th style="text-align:center; width: 100px;">Photos</th><th style="text-align:center; width: 100px;">Status</th><th style="text-align:center; width: 80px;">Actions</th></tr>`;
         document.getElementById('restockThead').innerHTML = theadHTML;
 
         const tbody = document.getElementById('restockTableBody'); tbody.innerHTML = '';
@@ -1748,6 +1811,18 @@
             let suppHtml = (isAdmin && !isOffline) ? `<input type="text" class="pos-input" value="${item.supp||''}" placeholder="Type..." style="width:100px; font-size:12px; background:#fffbeb; color:#b45309; font-weight:bold;" list="supplierList" onchange="updateRestockSupplier('${item.id}', this.value)">` : (item.supp || '-');
             let costHtml = isAdmin ? `<td style="text-align:center; font-weight:bold; color:#059669;">RM ${parseFloat(item.unitCost||0).toFixed(2)}</td><td style="text-align:center; font-weight:bold; color:#059669;">RM ${parseFloat(item.totalCost||0).toFixed(2)}</td>` : ``;
 
+            // V62 UPDATE: Render Restock Photos in Table
+            let photoHtml = '';
+            if (item.photos && item.photos.length > 0) {
+                photoHtml = `<div style="display:flex; gap:4px; flex-wrap:wrap; justify-content:center;">`;
+                item.photos.forEach(p => {
+                    photoHtml += `<img src="${p}" class="photo-thumbnail" onclick="showPhoto('${p}')" style="width:35px;height:35px;border:1px solid #cbd5e1; cursor:pointer;">`;
+                });
+                photoHtml += `</div>`;
+            } else {
+                photoHtml = `<span style="color:#94a3b8; font-size:11px;">No Photo</span>`;
+            }
+
             const tr = document.createElement('tr'); tr.style.opacity = status === 'Ordered' ? '0.6' : '1';
             tr.innerHTML = `
             <td><small style="color:#64748b; font-weight:bold;">${item.date}</small></td>
@@ -1758,6 +1833,7 @@
             <td style="text-align:center; font-weight:bold;">${item.onHandQty || '0'}</td>
             <td style="text-align:center; color:#ef4444; font-weight:bold;">${item.needOrderQty || '1'}</td>
             ${costHtml}
+            <td style="text-align:center;">${photoHtml}</td>
             <td style="text-align:center;">${statusHtml}</td>
             <td><div class="action-btns" style="flex-direction:column;">${actionHtml}</div></td>`;
             tbody.appendChild(tr);
