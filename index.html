@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="MMC Portal">
     <link rel="apple-touch-icon" href="logo.png">
-    <title>Malaysia Motor Company - Secure Portal V71</title>
+    <title>Malaysia Motor Company - Secure Portal V72</title>
     <link rel="manifest" href="manifest.json">
     <script>
         if ('serviceWorker' in navigator) {
@@ -16,12 +16,12 @@
             navigator.serviceWorker.addEventListener('controllerchange', () => { if (!refreshing) { window.location.reload(); refreshing = true; }});
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js').then(reg => {
-                    setInterval(() => { console.log("Checking server for V71 updates..."); reg.update(); }, 5 * 60 * 1000);
+                    setInterval(() => { console.log("Checking server for V72 updates..."); reg.update(); }, 5 * 60 * 1000);
                     reg.onupdatefound = () => {
                         const installingWorker = reg.installing;
                         installingWorker.onstatechange = () => {
                             if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                if (confirm("🔄 New system version (V71) available! Click OK to apply.")) { installingWorker.postMessage('SKIP_WAITING'); }
+                                if (confirm("🔄 New system version (V72.1) available! Click OK to apply.")) { installingWorker.postMessage('SKIP_WAITING'); }
                             }
                         };
                     };
@@ -195,7 +195,7 @@
 <div id="mainApp" class="container">
     <div class="header-flex">
         <div>
-            <h2>Malaysia Motor Company <span class="version-badge">V71 Enterprise</span> <span id="adminBadge">👑 Boss View</span></h2>
+            <h2>Malaysia Motor Company <span class="version-badge">V72.1 Enterprise</span> <span id="adminBadge">👑 Boss View</span></h2>
             <div style="margin-top:8px;">
                 <span id="networkBadge" class="net-online">🟢 Online (Live Cloud Sync)</span>
             </div>
@@ -217,6 +217,7 @@
             <button onclick="backupAndResetRecords()" style="background:#7f1d1d; color:white; border:none; padding:10px 15px; border-radius:6px; font-weight:bold; cursor:pointer; box-shadow: 0 2px 4px rgba(127,29,29,0.25);">⚠️ Backup & Reset Records</button>
             <button onclick="manageDeviceApprovals()" style="background:#312e81; color:white; border:none; padding:10px 15px; border-radius:6px; font-weight:bold; cursor:pointer; box-shadow: 0 2px 4px rgba(49,46,129,0.25);">🛡️ Device Approval</button>
             <button onclick="viewAuditLog()" style="background:#111827; color:white; border:none; padding:10px 15px; border-radius:6px; font-weight:bold; cursor:pointer; box-shadow: 0 2px 4px rgba(17,24,39,0.25);">📜 Audit Log</button>
+            <button onclick="viewDeleteRequests()" style="background:#991b1b; color:white; border:none; padding:10px 15px; border-radius:6px; font-weight:bold; cursor:pointer; box-shadow: 0 2px 4px rgba(153,27,27,0.25);">🗑️ Delete Requests</button>
         </div>
     </div>
 
@@ -264,7 +265,7 @@
         </div>
 
         <div class="top-controls">
-            <input type="text" id="searchInput" class="search-bar" placeholder="🔍 Search Name, Plate, Code, Remark, Staff..." oninput="renderTable()">
+            <button onclick="refreshTabData('order')" class="sync-btn" style="border-radius:20px;">🔄 Refresh Orders</button><input type="text" id="searchInput" class="search-bar" placeholder="🔍 Search Name, Plate, Code, Remark, Staff..." oninput="renderTable()">
             <select id="viewFilter" onchange="renderTable()" style="font-weight: bold; color: #2563eb; padding: 12px; border-radius: 20px;"><option value="active">Active Orders Only</option><option value="history">Completed History</option><option value="all">All Records</option></select>
             <div style="display:flex; align-items:center; gap:8px;"><span style="font-size:13px; font-weight:bold; color:#475569;">Date:</span><input type="date" id="orderDateFilter" onchange="renderTable()" style="padding:12px; border-radius:20px; width:140px; border:1px solid #cbd5e1;"><button onclick="clearDateFilter('order')" style="padding:12px; border-radius:20px; cursor:pointer; border:1px solid #cbd5e1; background:white; font-weight:bold;">Clear</button></div>
             <button onclick="markSelectedArrived()" class="complete-btn" style="padding:12px 18px; border-radius:20px; cursor:pointer; border:none; font-weight:bold;">✅ Mark Selected Arrived</button>
@@ -307,7 +308,7 @@
         </div>
 
         <div class="top-controls">
-            <input type="text" id="qSearchInput" class="search-bar" placeholder="🔍 Search Name, Plate, Code, Remark, Staff..." oninput="renderQTable()">
+            <button onclick="refreshTabData('quote')" class="sync-btn" style="border-radius:20px;">🔄 Refresh Quotes</button><input type="text" id="qSearchInput" class="search-bar" placeholder="🔍 Search Name, Plate, Code, Remark, Staff..." oninput="renderQTable()">
             <div style="display:flex; align-items:center; gap:8px;"><span style="font-size:13px; font-weight:bold; color:#475569;">Date:</span><input type="date" id="quoteDateFilter" onchange="renderQTable()" style="padding:12px; border-radius:20px; width:160px; border:1px solid #cbd5e1;"><button onclick="clearDateFilter('quote')" style="padding:12px 18px; border-radius:20px; cursor:pointer; border:1px solid #cbd5e1; background:white; font-weight:bold;">Clear</button></div>
         </div>
 
@@ -347,7 +348,7 @@
         </div>
 
         <div class="top-controls">
-            <input type="text" id="eSearchInput" class="search-bar" placeholder="🔍 Search Name, Plate, Code, Remark, Staff..." oninput="renderETable()">
+            <button onclick="refreshTabData('enquire')" class="sync-btn" style="border-radius:20px;">🔄 Refresh Enquiries</button><input type="text" id="eSearchInput" class="search-bar" placeholder="🔍 Search Name, Plate, Code, Remark, Staff..." oninput="renderETable()">
             <div style="display:flex; align-items:center; gap:8px;"><span style="font-size:13px; font-weight:bold; color:#475569;">Date:</span><input type="date" id="enquireDateFilter" onchange="renderETable()" style="padding:12px; border-radius:20px; width:160px; border:1px solid #cbd5e1;"><button onclick="clearDateFilter('enquire')" style="padding:12px 18px; border-radius:20px; cursor:pointer; border:1px solid #cbd5e1; background:white; font-weight:bold;">Clear</button></div>
         </div>
 
@@ -368,6 +369,7 @@
                 <div><span class="label-text">Item Code / OEM No</span><input type="text" id="r_code" placeholder="OEM Code" oninput="this.value = this.value.toUpperCase().replace(/\s/g, '')" onkeypress="if(event.key==='Enter') addRestockItem()"></div>
                 <div><span class="label-text">Brand</span><input type="text" id="r_brand" placeholder="e.g. TRW"></div>
                 <div><span class="label-text">Supplier</span><input type="text" id="r_supp" placeholder="e.g. Emerald" list="supplierList"></div>
+                <div><span class="label-text">Car Model</span><input type="text" id="r_car" placeholder="e.g. Axia"></div>
                 <div><span class="label-text">On Hand Qty</span><input type="number" id="r_onHand" placeholder="0"></div>
                 <div><span class="label-text">Order Qty</span><input type="number" id="r_needOrder" placeholder="1"></div>
                 <div class="boss-restock" style="display:none;"><span class="label-text">Unit Cost (RM)</span><input type="number" id="r_unitCost" placeholder="0.00" oninput="calcRestockCost()"></div>
@@ -375,7 +377,7 @@
             </div>
             <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px dashed #cbd5e1; padding-top:15px; flex-wrap:wrap; gap:10px;">
                 <div style="display:flex; align-items:center; gap:10px;">
-                    <label class="photo-upload-btn" style="width: auto; padding: 0 15px; height:42px; background:white;">📷 Snap/Upload <span id="r_count">0</span>/5<input type="file" accept="image/*" multiple onchange="processRestockPhotos(event)" style="display:none;"></label>
+                    <label class="photo-upload-btn" style="width: auto; padding: 0 15px; height:42px; background:white;">📷 Take/Upload <span id="r_count">0</span>/5<input type="file" accept="image/*" multiple capture="environment" onchange="processRestockPhotos(event)" style="display:none;"></label>
                     <div id="r_gallery" class="row-gallery" style="padding:0; grid-column:unset;"></div>
                 </div>
                 <button class="add-item-btn" id="addRestockBtn" onclick="addRestockItem()" style="height:42px; width:180px; font-size:14px; background-color:#2563eb;">➕ Add to Restock</button>
@@ -383,7 +385,7 @@
         </div>
 
         <div class="top-controls" style="background:#f8fafc; padding:15px; border-radius:8px; border:1px solid #e2e8f0; align-items:center;">
-            <select id="rViewFilter" onchange="renderRestockTable()" style="padding:10px; border-radius:6px; font-weight:bold; color:#2563eb; border:1px solid #cbd5e1;"><option value="active">Active List (Not Yet Order)</option><option value="history">History (Ordered)</option><option value="all">All Items</option></select>
+            <button onclick="refreshTabData('restock')" class="sync-btn" style="border-radius:6px;">🔄 Refresh Restock</button><select id="rViewFilter" onchange="renderRestockTable()" style="padding:10px; border-radius:6px; font-weight:bold; color:#2563eb; border:1px solid #cbd5e1;"><option value="active">Active List (Not Yet Order)</option><option value="history">History (Ordered)</option><option value="all">All Items</option></select>
             <select id="rSuppFilter" onchange="renderRestockTable()" style="padding:10px; border-radius:6px; font-weight:bold; border:1px solid #cbd5e1; background: #fffbeb; color: #b45309;"><option value="all">🔍 All Suppliers</option></select>
             <div style="display:flex; align-items:center; gap:8px;"><span style="font-size:13px; font-weight:bold; color:#475569;">Search Date:</span><input type="date" id="rDateFilter" onchange="renderRestockTable()" style="padding:10px; border-radius:6px; width:160px; border:1px solid #cbd5e1;"><button onclick="clearDateFilter('restock')" style="padding:10px; border-radius:6px; cursor:pointer; border:1px solid #cbd5e1; background:white; font-weight:bold;">Clear</button></div>
             <div style="margin-left:auto; display:flex; gap:10px; flex-wrap:wrap;"><button class="print-btn" onclick="printRestock()" style="padding:10px 15px; border-radius:6px; font-weight:bold; cursor:pointer;">🖨️ Print PO List</button><button class="wa-btn" style="background:#25D366; margin:0; padding:10px 15px; border-radius:6px; font-size:13px;" onclick="sendRestockWA('60194482580', 'Hock')">📲 WA Hock</button><button class="wa-btn" style="background:#25D366; margin:0; padding:10px 15px; border-radius:6px; font-size:13px;" onclick="sendRestockWA('60164401970', 'Kelvin')">📲 WA Kelvin</button><button class="complete-btn" onclick="markFilteredOrdered()" style="margin:0; padding:10px 15px; border-radius:6px; font-size:13px;">📦 Mark View as Ordered</button></div>
@@ -436,7 +438,7 @@
         if (matches.length === 0) { listEl.style.display = 'none'; return; }
         matches.forEach(m => {
             const div = document.createElement('div'); div.className = 'autocomplete-item';
-            div.innerHTML = `<strong style="color:#0f172a;">${m.part}</strong> <span style="color:#64748b; font-size:11px;">${m.partNo ? `[${m.partNo}]` : ''} ${m.brand ? `Brd:${m.brand}` : ''}</span> <strong style="color:#10b981; float:right;">${m.price ? `RM${m.price}` : ''}</strong>`;
+            div.innerHTML = `<strong style="color:#0f172a;">${escapeHTML(m.part)}</strong> <span style="color:#64748b; font-size:11px;">${m.partNo ? `[${escapeHTML(m.partNo)}]` : ''} ${m.brand ? `Brd:${escapeHTML(m.brand)}` : ''}</span> <strong style="color:#10b981; float:right;">${m.price ? `RM${escapeHTML(m.price)}` : ''}</strong>`;
             div.onclick = () => {
                 inputEl.value = m.part; listEl.style.display = 'none'; const row = document.getElementById(rowId);
                 if(row) {
@@ -455,7 +457,7 @@
         if (matches.length === 0) { listEl.style.display = 'none'; return; }
         matches.forEach(m => {
             const div = document.createElement('div'); div.className = 'autocomplete-item';
-            div.innerHTML = `<strong style="color:#0f172a;">${m.part}</strong> <span style="color:#64748b; font-size:11px;">${m.partNo ? `[${m.partNo}]` : ''} ${m.brand ? `Brd:${m.brand}` : ''}</span>`;
+            div.innerHTML = `<strong style="color:#0f172a;">${escapeHTML(m.part)}</strong> <span style="color:#64748b; font-size:11px;">${m.partNo ? `[${escapeHTML(m.partNo)}]` : ''} ${m.brand ? `Brd:${escapeHTML(m.brand)}` : ''}</span>`;
             div.onclick = () => {
                 inputEl.value = m.part; listEl.style.display = 'none';
                 if(m.partNo && !document.getElementById('r_code').value) document.getElementById('r_code').value = m.partNo;
@@ -469,10 +471,10 @@
 
     async function uploadBase64ToStorage(base64Array) {
         let uploadedUrls = [];
-
         if (!Array.isArray(base64Array)) return uploadedUrls;
 
-        for (let b64 of base64Array) {
+        for (let idx = 0; idx < base64Array.length; idx++) {
+            const b64 = base64Array[idx];
             if (!b64) continue;
 
             if (typeof b64 === 'string' && b64.startsWith('http')) {
@@ -481,15 +483,28 @@
             }
 
             if (typeof b64 !== 'string' || !b64.startsWith('data:image')) {
-                console.warn('Skipped invalid photo data during sync:', b64);
+                console.warn('Skipped invalid photo data:', b64);
                 continue;
             }
 
             const fileRef = storage.ref('order_photos/' + Date.now() + '_' + Math.floor(Math.random() * 100000) + '.jpg');
-            await fileRef.putString(b64, 'data_url');
-            uploadedUrls.push(await fileRef.getDownloadURL());
+            try {
+                await withTimeout(
+                    fileRef.putString(b64, 'data_url'),
+                    30000,
+                    `Photo ${idx + 1} upload timeout. Please check internet/Firebase Storage and try again.`
+                );
+                const url = await withTimeout(
+                    fileRef.getDownloadURL(),
+                    15000,
+                    `Photo ${idx + 1} URL timeout. Please try again.`
+                );
+                uploadedUrls.push(url);
+            } catch (err) {
+                console.error('Photo upload failed:', err);
+                throw new Error(err && err.message ? err.message : 'Photo upload failed.');
+            }
         }
-
         return uploadedUrls;
     }
 
@@ -507,7 +522,7 @@
     }
 
     // ==========================================
-    // V71 OFFLINE ENGINE - Auth Ready + Better Error + Safer Photo Sync
+    // V72.1 OFFLINE ENGINE - Auth Ready + Better Error + Safer Photo Sync
     // ==========================================
     const netBadge = document.getElementById('networkBadge');
 
@@ -602,7 +617,7 @@
             } else if (type === 'enquire') {
                 cancelEEdit();
             } else if (type === 'restock') {
-                ['r_part','r_code','r_brand','r_supp','r_onHand','r_needOrder','r_unitCost','r_totalCost'].forEach(id => {
+                ['r_part','r_code','r_brand','r_supp','r_car','r_onHand','r_needOrder','r_unitCost','r_totalCost'].forEach(id => {
                     const el = document.getElementById(id);
                     if (el) el.value = '';
                 });
@@ -760,7 +775,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
     }
 
     // ==========================================
-    // V71 DEVICE APPROVAL SYSTEM - Plan B
+    // V72.1 DEVICE APPROVAL SYSTEM - Plan B
     // Device must be approved AND linked to the correct staff email.
     // ==========================================
     const DEVICE_AUTH_KEY = "mmc_authorized_device_v1"; // Old MMC888 local key kept for admin migration/emergency only.
@@ -779,9 +794,19 @@ Uploaded ${successCount} item(s) to Cloud.`);
             .replace(/'/g, '&#39;');
     }
 
+    function escapeAttr(value) {
+        return escapeHTML(value).replace(/`/g, '&#96;');
+    }
+
+    function safePhotoSrc(src) {
+        const s = String(src || '');
+        if (s.startsWith('http://') || s.startsWith('https://') || s.startsWith('data:image/')) return escapeAttr(s);
+        return '';
+    }
+
 
     // ==========================================
-    // V71 SAFETY HELPERS - Non-negative numbers + Audit Log
+    // V72.1 SAFETY HELPERS - Non-negative numbers + Audit Log
     // ==========================================
     function toNonNegativeNumber(value, fallback = 0) {
         const n = parseFloat(value);
@@ -993,6 +1018,15 @@ Uploaded ${successCount} item(s) to Cloud.`);
         return true;
     }
 
+    async function authorizeDevice() {
+        // Legacy MMC888 button kept so old Register Device button does not throw ReferenceError.
+        // For V72.1 security, only Boss/Admin can emergency-approve the current device after login.
+        if (auth && auth.currentUser && auth.currentUser.email && auth.currentUser.email.toLowerCase() === BOSS_EMAIL.toLowerCase()) {
+            return bossEmergencyApproveDevice();
+        }
+        alert('Please login as Boss/Admin first, then use emergency device approval.');
+    }
+
     async function bossEmergencyApproveDevice() {
         const user = auth.currentUser;
         if (!user || user.email.toLowerCase() !== BOSS_EMAIL.toLowerCase()) {
@@ -1133,10 +1167,45 @@ Uploaded ${successCount} item(s) to Cloud.`);
             checkOfflineQueue();
         }
     }
+
+
+    // ==========================================
+    // V72.1 STABILITY HELPERS - Refresh + Recover + Timeout
+    // ==========================================
+    function resetProcessingButtons() {
+        const buttonMap = [
+            ['mainBtn', '💾 Save & Sync'],
+            ['qMainBtn', '💾 Save Quotation'],
+            ['eMainBtn', '💾 Save Enquiry'],
+            ['addRestockBtn', '➕ Add to Restock']
+        ];
+        buttonMap.forEach(([id, text]) => {
+            const btn = document.getElementById(id);
+            if (btn) { btn.disabled = false; if ((btn.innerText || '').includes('Processing') || (btn.innerText || '').includes('Uploading') || (btn.innerText || '').includes('⏳')) btn.innerText = text; }
+        });
+    }
+
+    function refreshTabData(type) {
+        resetProcessingButtons();
+        if (type === 'order') { db.ref('orders').off(); loadDatabaseData(); renderTable(); }
+        else if (type === 'quote') { db.ref('quotations').off(); loadQuoteData(); renderQTable(); }
+        else if (type === 'enquire') { db.ref('enquiries').off(); loadEnquireData(); renderETable(); }
+        else if (type === 'restock') { db.ref('restock').off(); loadRestockData(); renderRestockTable(); }
+        else { forceDataSync(); }
+        if (navigator.onLine && typeof checkOfflineQueue === 'function') checkOfflineQueue();
+        alert('✅ Data refreshed. If any button was stuck, it has been recovered.');
+    }
+
+    function withTimeout(promise, ms, errorMessage) {
+        return Promise.race([
+            promise,
+            new Promise((_, reject) => setTimeout(() => reject(new Error(errorMessage)), ms))
+        ]);
+    }
     
     function loadStaffConfig() { db.ref('settings/staff').on('value', snap => { if(snap.val()) staffList = snap.val(); renderStaffDropdowns(); }); }
     function renderStaffDropdowns() {
-        let html = '<option value="">-- Select --</option>'; staffList.forEach(s => { html += `<option value="${s}">${s}</option>`; });
+        let html = '<option value="">-- Select --</option>'; staffList.forEach(s => { html += `<option value="${escapeAttr(s)}">${escapeHTML(s)}</option>`; });
         let oVal = document.getElementById('orderByStaff').value; let qVal = document.getElementById('qOrderByStaff').value; let eVal = document.getElementById('eOrderByStaff').value;
         document.getElementById('orderByStaff').innerHTML = html; document.getElementById('qOrderByStaff').innerHTML = html; document.getElementById('eOrderByStaff').innerHTML = html;
         if(staffList.includes(oVal)) document.getElementById('orderByStaff').value = oVal; if(staffList.includes(qVal)) document.getElementById('qOrderByStaff').value = qVal; if(staffList.includes(eVal)) document.getElementById('eOrderByStaff').value = eVal;
@@ -1208,7 +1277,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
 
             document.getElementById('historyContent').innerHTML = html;
         } catch (err) {
-            document.getElementById('historyContent').innerHTML = `<h3>🛡️ Device Approval</h3><p style="color:#ef4444;font-weight:bold;">Unable to load devices: ${err && err.message ? err.message : err}</p><button onclick="document.getElementById('historyModal').style.display='none'" style="padding:10px;width:100%;">Close</button>`;
+            document.getElementById('historyContent').innerHTML = `<h3>🛡️ Device Approval</h3><p style="color:#ef4444;font-weight:bold;">Unable to load devices: ${escapeHTML(err && err.message ? err.message : err)}</p><button onclick="document.getElementById('historyModal').style.display='none'" style="padding:10px;width:100%;">Close</button>`;
         }
     }
 
@@ -1286,11 +1355,11 @@ Uploaded ${successCount} item(s) to Cloud.`);
 
     async function showPlateHistory(inputId) {
         let plate = document.getElementById(inputId).value.trim().toUpperCase().replace(/\s/g, ''); if(!plate) return alert("Please enter a Car Plate Number first.");
-        document.getElementById('historyContent').innerHTML = `<h3 style="color:#b45309; text-align:center;">🔍 Deep Searching Cloud for ${plate}...</h3><p style="text-align:center;">Please wait while we check all historical records.</p>`; document.getElementById('historyModal').style.display = 'flex';
-        let historyHtml = `<h3>📖 Digital Service Book: <span style="color:#b45309">${plate}</span></h3><ul style="text-align:left; padding-left:15px; margin-bottom:20px;">`; let foundAny = false;
+        document.getElementById('historyContent').innerHTML = `<h3 style="color:#b45309; text-align:center;">🔍 Deep Searching Cloud for ${escapeHTML(plate)}...</h3><p style="text-align:center;">Please wait while we check all historical records.</p>`; document.getElementById('historyModal').style.display = 'flex';
+        let historyHtml = `<h3>📖 Digital Service Book: <span style="color:#b45309">${escapeHTML(plate)}</span></h3><ul style="text-align:left; padding-left:15px; margin-bottom:20px;">`; let foundAny = false;
         try {
             const snapshot = await db.ref('orders').orderByChild('plate').equalTo(plate).once('value'); const historyOrders = []; snapshot.forEach(child => { historyOrders.push({ id: child.key, ...child.val() }); }); historyOrders.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
-            historyOrders.forEach(o => { foundAny = true; (o.items||[]).forEach(i => { historyHtml += `<li style="margin-bottom:10px; border-bottom:1px dashed #e2e8f0; padding-bottom:10px;"><b style="color:#475569; display:inline-block; width:110px;">${o.date}</b> <strong style="color:#0f172a;">${i.part}</strong> ${i.partNo ? `[${i.partNo}]` : ''} <span style="color:#10b981; font-weight:bold;">(RM${parseFloat(i.unitPrice||0).toFixed(2)})</span> <br><span style="color:#64748b; font-size:11px; margin-left:110px;">Ref: ${o.refNo} | Qty: ${i.qty||1} | ${o.status==='completed'?'✅ Done':'⏳ Pending'}</span></li>`; }); });
+            historyOrders.forEach(o => { foundAny = true; (o.items||[]).forEach(i => { historyHtml += `<li style="margin-bottom:10px; border-bottom:1px dashed #e2e8f0; padding-bottom:10px;"><b style="color:#475569; display:inline-block; width:110px;">${escapeHTML(o.date)}</b> <strong style="color:#0f172a;">${escapeHTML(i.part)}</strong> ${i.partNo ? `[${escapeHTML(i.partNo)}]` : ''} <span style="color:#10b981; font-weight:bold;">(RM${parseFloat(i.unitPrice||0).toFixed(2)})</span> <br><span style="color:#64748b; font-size:11px; margin-left:110px;">Ref: ${escapeHTML(o.refNo)} | Qty: ${escapeHTML(i.qty||1)} | ${o.status==='completed'?'✅ Done':'⏳ Pending'}</span></li>`; }); });
         } catch (error) {}
         if(!foundAny) historyHtml += '<li style="color:#ef4444; font-weight:bold;">No purchase history found for this car plate.</li>';
         historyHtml += `</ul><button onclick="document.getElementById('historyModal').style.display='none'" style="padding:12px; width:100%; background:#ef4444; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer; font-size:15px;">Close History</button>`; document.getElementById('historyContent').innerHTML = historyHtml;
@@ -1322,7 +1391,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
 
         let sList = document.getElementById('supplierList'); sList.innerHTML = ''; let filterSelect = document.getElementById('rSuppFilter'); let currentFilterVal = filterSelect.value;
         filterSelect.innerHTML = '<option value="all">🔍 All Suppliers</option>';
-        Array.from(sSet).sort().forEach(s => { let opt = document.createElement('option'); opt.value = s; sList.appendChild(opt); filterSelect.innerHTML += `<option value="${s}">${s}</option>`; }); filterSelect.value = currentFilterVal || 'all';
+        Array.from(sSet).sort().forEach(s => { let opt = document.createElement('option'); opt.value = s; sList.appendChild(opt); filterSelect.innerHTML += `<option value="${escapeAttr(s)}">${escapeHTML(s)}</option>`; }); filterSelect.value = currentFilterVal || 'all';
     }
 
     // V71 UPDATE: Cloud loading stays standard; offline pending records are merged inside render functions
@@ -1436,14 +1505,14 @@ Uploaded ${successCount} item(s) to Cloud.`);
 
         let rows = '';
         (data.items || []).forEach((i, idx) => {
-            rows += `<tr><td style="text-align:center; padding:10px; border:1px solid #e2e8f0; font-size:13px;">${idx+1}</td><td style="text-align:center; padding:10px; border:1px solid #e2e8f0;"><div style="width:16px;height:16px;border:2px solid #94a3b8;border-radius:3px;margin:auto;"></div></td><td style="padding:10px; border:1px solid #e2e8f0; font-size:13px;"><strong>${i.part||'-'}</strong></td><td style="padding:10px; border:1px solid #e2e8f0; font-size:13px;">${i.partNo || '-'}</td><td style="text-align:center; padding:10px; border:1px solid #e2e8f0; font-size:13px;">${i.qty||'1'}</td><td style="text-align:right; padding:10px; border:1px solid #e2e8f0; font-size:13px;">RM ${parseFloat(i.unitPrice||0).toFixed(2)}</td><td style="text-align:right; padding:10px; border:1px solid #e2e8f0; font-size:13px;"><strong>RM ${parseFloat(i.subTotal||0).toFixed(2)}</strong></td></tr>`;
+            rows += `<tr><td style="text-align:center; padding:10px; border:1px solid #e2e8f0; font-size:13px;">${idx+1}</td><td style="text-align:center; padding:10px; border:1px solid #e2e8f0;"><div style="width:16px;height:16px;border:2px solid #94a3b8;border-radius:3px;margin:auto;"></div></td><td style="padding:10px; border:1px solid #e2e8f0; font-size:13px;"><strong>${escapeHTML(i.part||'-')}</strong></td><td style="padding:10px; border:1px solid #e2e8f0; font-size:13px;">${escapeHTML(i.partNo || '-')}</td><td style="text-align:center; padding:10px; border:1px solid #e2e8f0; font-size:13px;">${escapeHTML(i.qty||'1')}</td><td style="text-align:right; padding:10px; border:1px solid #e2e8f0; font-size:13px;">RM ${parseFloat(i.unitPrice||0).toFixed(2)}</td><td style="text-align:right; padding:10px; border:1px solid #e2e8f0; font-size:13px;"><strong>RM ${parseFloat(i.subTotal||0).toFixed(2)}</strong></td></tr>`;
         });
         
         let footerFinance = '';
         if (docType === 'quote' || docType === 'enquire') { footerFinance = `Total Amount: <strong style="font-size:16px;">RM ${parseFloat(data.total||0).toFixed(2)}</strong>`; } 
         else { footerFinance = `Total Amount: <strong>RM ${parseFloat(data.total||0).toFixed(2)}</strong><br>Deposit Paid: RM ${parseFloat(data.deposit||0).toFixed(2)}<br><div style="margin-top:8px; font-size:16px;">Balance Due: <strong style="color:#ef4444;">RM ${parseFloat(data.balance||0).toFixed(2)}</strong></div>`; }
         
-        const html = `<html><head><title>${title} - ${data.refNo}</title><style>@media print { @page { margin: 15mm; } body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } } body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 20px; color: #333; } table { width: 100%; border-collapse: collapse; margin-top: 20px; } th { background: #f8fafc !important; font-size: 12px; text-transform: uppercase; color: #475569; padding: 12px 10px; border: 1px solid #e2e8f0; }</style></head><body><h2 style="text-align:center; margin-bottom:10px; text-transform:uppercase; letter-spacing:1px; font-weight:800; font-size:22px;">Malaysia Motor Company</h2><hr style="border: 0; border-bottom: 2px solid #1e293b; margin-bottom: 20px;"><h3 style="text-align:center; margin-bottom:25px; font-size:18px; letter-spacing:1px;">${title}</h3><div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; display: flex; justify-content: space-between; margin-bottom: 25px; font-size: 13px; line-height: 1.6; border: 1px solid #e2e8f0;"><div style="width: 48%;"><strong>Customer Name:</strong> ${data.name || 'N/A'}<br><strong>Contact:</strong> <span style="color:#2563eb; font-weight:bold;">${data.phone || 'N/A'}</span><br><strong>Car Details:</strong> ${data.car || ''} ${data.plate ? '['+data.plate+']' : ''}</div><div style="width: 48%;"><strong>Ref No:</strong> ${data.refNo || 'N/A'}<br><strong>Date:</strong> ${data.date || 'N/A'}<br><strong>Served By:</strong> ${data.staff || 'N/A'}<br><strong>Status:</strong> ${statusText}</div></div><table><thead><tr><th style="width:5%; text-align:center;">No.</th><th style="width:5%; text-align:center;">Pack</th><th style="width:40%; text-align:left;">Part Description</th><th style="width:15%; text-align:left;">Item Code</th><th style="width:5%; text-align:center;">QTY</th><th style="width:15%; text-align:right;">U.Price</th><th style="width:15%; text-align:right;">Total</th></tr></thead><tbody>${rows}</tbody></table><div style="text-align:right; margin-top:25px; font-size:14px; line-height:1.8;">${footerFinance}</div><div style="text-align:center; margin-top:60px; font-size:11px; color:#94a3b8;">Thank you for choosing Malaysia Motor Company. Please retain this list for your records.</div></body></html>`;
+        const html = `<html><head><title>${title} - ${data.refNo}</title><style>@media print { @page { margin: 15mm; } body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } } body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 20px; color: #333; } table { width: 100%; border-collapse: collapse; margin-top: 20px; } th { background: #f8fafc !important; font-size: 12px; text-transform: uppercase; color: #475569; padding: 12px 10px; border: 1px solid #e2e8f0; }</style></head><body><h2 style="text-align:center; margin-bottom:10px; text-transform:uppercase; letter-spacing:1px; font-weight:800; font-size:22px;">Malaysia Motor Company</h2><hr style="border: 0; border-bottom: 2px solid #1e293b; margin-bottom: 20px;"><h3 style="text-align:center; margin-bottom:25px; font-size:18px; letter-spacing:1px;">${title}</h3><div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; display: flex; justify-content: space-between; margin-bottom: 25px; font-size: 13px; line-height: 1.6; border: 1px solid #e2e8f0;"><div style="width: 48%;"><strong>Customer Name:</strong> ${escapeHTML(data.name || 'N/A')}<br><strong>Contact:</strong> <span style="color:#2563eb; font-weight:bold;">${escapeHTML(data.phone || 'N/A')}</span><br><strong>Car Details:</strong> ${escapeHTML(data.car || '')} ${data.plate ? '['+escapeHTML(data.plate)+']' : ''}</div><div style="width: 48%;"><strong>Ref No:</strong> ${escapeHTML(data.refNo || 'N/A')}<br><strong>Date:</strong> ${escapeHTML(data.date || 'N/A')}<br><strong>Served By:</strong> ${escapeHTML(data.staff || 'N/A')}<br><strong>Status:</strong> ${escapeHTML(statusText)}</div></div><table><thead><tr><th style="width:5%; text-align:center;">No.</th><th style="width:5%; text-align:center;">Pack</th><th style="width:40%; text-align:left;">Part Description</th><th style="width:15%; text-align:left;">Item Code</th><th style="width:5%; text-align:center;">QTY</th><th style="width:15%; text-align:right;">U.Price</th><th style="width:15%; text-align:right;">Total</th></tr></thead><tbody>${rows}</tbody></table><div style="text-align:right; margin-top:25px; font-size:14px; line-height:1.8;">${footerFinance}</div><div style="text-align:center; margin-top:60px; font-size:11px; color:#94a3b8;">Thank you for choosing Malaysia Motor Company. Please retain this list for your records.</div></body></html>`;
         const p = window.open('', '_blank'); p.document.write(html); p.document.close(); p.focus(); setTimeout(() => { p.print(); p.close(); }, 350);
     }
 
@@ -1476,20 +1545,70 @@ Uploaded ${successCount} item(s) to Cloud.`);
     function addNewItemBlock(data = null) {
         itemMapIdCounter++; const currentId = 'item_row_' + itemMapIdCounter; itemPhotosMap[currentId] = data && data.photos ? [...data.photos] : [];
         const container = document.getElementById('dynamicItemsContainer'); const isFirst = container.children.length === 0;
-        const html = `<div class="pos-table-row" id="${currentId}"><div class="row-num">0</div><div><span class="mobile-label">Part Needed</span><div class="input-wrapper"><input type="text" class="i-part pos-input" placeholder="Part Desc" value="${data ? data.part : ''}" autocomplete="off" oninput="handlePartInput(this, '${currentId}')" onfocus="handlePartInput(this, '${currentId}')"><div id="autocomplete_${currentId}" class="autocomplete-list" style="display:none;"></div></div></div><div><span class="mobile-label">Item Code / OEM No</span><input type="text" class="i-partNo pos-input" placeholder="OEM Code" value="${data && data.partNo ? data.partNo : ''}" oninput="this.value = this.value.toUpperCase().replace(/\\s/g, '')"></div><div><span class="mobile-label">Brand</span><input type="text" class="i-brand pos-input" placeholder="Brand" value="${data && data.brand ? data.brand : ''}"></div><div><span class="mobile-label">Supplier</span><input type="text" class="i-supplier pos-input" placeholder="Supplier" value="${data && data.supplier ? data.supplier : ''}" list="supplierList"></div><div class="mobile-grid-3"><div><span class="mobile-label">Qty</span><input type="number" class="i-qty pos-input" placeholder="1" value="${data && data.qty ? data.qty : '1'}" oninput="calcRowTotal('${currentId}')" style="text-align:center;"></div><div><span class="mobile-label">U.Price (RM)</span><input type="number" class="i-unitPrice pos-input" placeholder="0.00" value="${data && data.unitPrice ? data.unitPrice : ''}" oninput="calcRowTotal('${currentId}')"></div><div><span class="mobile-label">Total (RM)</span><input type="number" class="i-subTotal pos-input readonly-input" placeholder="0.00" value="${data && data.subTotal ? data.subTotal : ''}" readonly></div></div><div><span class="mobile-label">ETA Date</span><input type="date" class="i-eta pos-input" value="${data && data.eta ? data.eta : ''}"></div><div style="display:flex; justify-content:center; align-items:center;"><label class="photo-upload-btn">📷 <span id="count_${currentId}">${itemPhotosMap[currentId].length}</span>/5<input type="file" accept="image/*" multiple onchange="processItemPhotos(event, '${currentId}')" style="display:none;"></label></div><div>${!isFirst || data !== null ? `<button type="button" class="remove-row-btn" onclick="removeItemBlock('${currentId}')">✖</button>` : `<div style="height:35px;"></div>`}</div><div id="gallery_${currentId}" class="row-gallery"></div></div>`;
+        const html = `<div class="pos-table-row" id="${currentId}"><div class="row-num">0</div><div><span class="mobile-label">Part Needed</span><div class="input-wrapper"><input type="text" class="i-part pos-input" placeholder="Part Desc" value="${escapeAttr(data ? data.part : '')}" autocomplete="off" oninput="handlePartInput(this, '${currentId}')" onfocus="handlePartInput(this, '${currentId}')"><div id="autocomplete_${currentId}" class="autocomplete-list" style="display:none;"></div></div></div><div><span class="mobile-label">Item Code / OEM No</span><input type="text" class="i-partNo pos-input" placeholder="OEM Code" value="${escapeAttr(data && data.partNo ? data.partNo : '')}" oninput="this.value = this.value.toUpperCase().replace(/\\s/g, '')"></div><div><span class="mobile-label">Brand</span><input type="text" class="i-brand pos-input" placeholder="Brand" value="${escapeAttr(data && data.brand ? data.brand : '')}"></div><div><span class="mobile-label">Supplier</span><input type="text" class="i-supplier pos-input" placeholder="Supplier" value="${escapeAttr(data && data.supplier ? data.supplier : '')}" list="supplierList"></div><div class="mobile-grid-3"><div><span class="mobile-label">Qty</span><input type="number" class="i-qty pos-input" placeholder="1" value="${escapeAttr(data && data.qty ? data.qty : '1')}" oninput="calcRowTotal('${currentId}')" style="text-align:center;"></div><div><span class="mobile-label">U.Price (RM)</span><input type="number" class="i-unitPrice pos-input" placeholder="0.00" value="${escapeAttr(data && data.unitPrice ? data.unitPrice : '')}" oninput="calcRowTotal('${currentId}')"></div><div><span class="mobile-label">Total (RM)</span><input type="number" class="i-subTotal pos-input readonly-input" placeholder="0.00" value="${escapeAttr(data && data.subTotal ? data.subTotal : '')}" readonly></div></div><div><span class="mobile-label">ETA Date</span><input type="date" class="i-eta pos-input" value="${escapeAttr(data && data.eta ? data.eta : '')}"></div><div style="display:flex; justify-content:center; align-items:center;"><label class="photo-upload-btn">📷 <span id="count_${currentId}">${itemPhotosMap[currentId].length}</span>/5<input type="file" accept="image/*" multiple capture="environment" onchange="processItemPhotos(event, '${currentId}')" style="display:none;"></label></div><div>${!isFirst || data !== null ? `<button type="button" class="remove-row-btn" onclick="removeItemBlock('${currentId}')">✖</button>` : `<div style="height:35px;"></div>`}</div><div id="gallery_${currentId}" class="row-gallery"></div></div>`;
         container.insertAdjacentHTML('beforeend', html); renderGalleryUI(currentId); updateRowNumbers(); if(data) calcRowTotal(currentId); 
     }
 
     function removeItemBlock(id) { document.getElementById(id).remove(); delete itemPhotosMap[id]; updateRowNumbers(); calcGrandTotal(); if (document.getElementById('dynamicItemsContainer').children.length === 0) addNewItemBlock(); }
-    function processItemPhotos(event, itemId) { const files = event.target.files; if (!files || files.length === 0) return; if (itemPhotosMap[itemId].length + files.length > 5) { alert("⚠️ Max 5 photos!"); event.target.value = ''; return; } Array.from(files).forEach(file => { const reader = new FileReader(); reader.onload = function(e) { const img = new Image(); img.onload = function() { const canvas = document.createElement('canvas'); let width = img.width; let height = img.height; if (width > height) { if(width > 800) { height *= 800/width; width = 800; } } else { if(height > 800) { width *= 800/height; height = 800; } } canvas.width = width; canvas.height = height; canvas.getContext('2d').drawImage(img, 0, 0, width, height); itemPhotosMap[itemId].push(canvas.toDataURL('image/jpeg', 0.8)); renderGalleryUI(itemId); }; img.src = e.target.result; }; reader.readAsDataURL(file); }); event.target.value = ''; }
+    function compressPhotoFile(file, callback, errorCallback) {
+        const reader = new FileReader();
+        reader.onerror = () => errorCallback && errorCallback(new Error('Photo read failed.'));
+        reader.onload = function(e) {
+            const img = new Image();
+            img.onerror = () => errorCallback && errorCallback(new Error('Photo image load failed.'));
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+                const maxSize = 1024;
+                if (width > height) {
+                    if (width > maxSize) { height *= maxSize / width; width = maxSize; }
+                } else {
+                    if (height > maxSize) { width *= maxSize / height; height = maxSize; }
+                }
+                canvas.width = Math.round(width);
+                canvas.height = Math.round(height);
+                canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+                callback(canvas.toDataURL('image/jpeg', 0.65));
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function processPhotoFiles(event, targetArray, renderFn, maxCount = 5) {
+        const files = event.target.files;
+        if (!files || files.length === 0) return;
+        if (targetArray.length + files.length > maxCount) {
+            alert(`⚠️ Max ${maxCount} photos!`);
+            event.target.value = '';
+            return;
+        }
+        Array.from(files).forEach(file => {
+            compressPhotoFile(file, (dataUrl) => {
+                targetArray.push(dataUrl);
+                renderFn();
+            }, (err) => alert(err.message || 'Photo processing failed.'));
+        });
+        event.target.value = '';
+    }
+
+    function processItemPhotos(event, itemId) { processPhotoFiles(event, itemPhotosMap[itemId], () => renderGalleryUI(itemId), 5); }
     function renderGalleryUI(itemId) { const gallery = document.getElementById('gallery_' + itemId); document.getElementById('count_' + itemId).innerText = itemPhotosMap[itemId].length; gallery.innerHTML = ''; itemPhotosMap[itemId].forEach((b64Data, index) => { gallery.innerHTML += `<div class="photo-wrapper"><img src="${b64Data}" class="photo-thumbnail" onclick="showPhoto('${b64Data}')"><button type="button" class="rotate-single-btn" onclick="rotateImage('${itemId}', ${index}, 'order')">↻</button><button type="button" class="remove-single-btn" onclick="removeSinglePhoto('${itemId}', ${index})">✖</button></div>`; }); }
     function removeSinglePhoto(itemId, index) { itemPhotosMap[itemId].splice(index, 1); renderGalleryUI(itemId); }
     function showPhoto(src) { document.getElementById('modalImg').src = src; document.getElementById('photoModal').style.display = 'block'; }
     function closePhoto() { document.getElementById('photoModal').style.display = 'none'; }
 
     function duplicateOrder(id) {
-        const order = orders.find(o => o.id === id); if(!confirm(`Copy exactly the same parts and prices into a NEW document?`)) return;
-        ['carModel','totalPrice','deposit','balance','orderByStaff','remarks'].forEach(f => { let val = order[f.replace('orderByStaff','staff').replace('totalPrice','total')] || ''; document.getElementById(f).value = val; });
+        const order = orders.find(o => o.id === id);
+        if (!order) return alert('Record not found or already deleted. Please refresh the order list.');
+        if(!confirm(`Copy exactly the same parts and prices into a NEW document?`)) return;
+        document.getElementById('carModel').value = order.car || '';
+        document.getElementById('totalPrice').value = order.total || '';
+        document.getElementById('deposit').value = order.deposit || '';
+        document.getElementById('balance').value = order.balance || '';
+        document.getElementById('orderByStaff').value = order.staff || '';
+        document.getElementById('remarks').value = order.remarks || '';
         document.getElementById('custName').value = ''; document.getElementById('custPhone').value = ''; document.getElementById('carPlate').value = ''; document.getElementById('chassisNumber').value = '';
         document.getElementById('dynamicItemsContainer').innerHTML = ''; itemPhotosMap = {}; itemMapIdCounter = 0; const itemsToLoad = order.items || []; if(itemsToLoad.length === 0) addNewItemBlock(); itemsToLoad.forEach(data => addNewItemBlock(data));
         editingId = null; document.getElementById('mainBtn').innerText = "💾 Save Document & Sync"; document.getElementById('mainBtn').style.backgroundColor = "#2563eb"; document.getElementById('cancelBtn').style.display = "none"; window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1497,6 +1616,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
 
     function editOrder(id) {
         const order = orders.find(o => o.id === id);
+        if (!order) return alert('Record not found or already deleted. Please refresh the order list.');
         if (order && order.status === 'completed' && !isAdmin) {
             alert('Completed orders are locked. Please ask Boss/Admin to edit or return this order.');
             return;
@@ -1558,7 +1678,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
     async function toggleStatus(id) { if(!navigator.onLine) return alert("Requires internet."); const order = orders.find(o => o.id === id); if(!order || order.status === 'completed' || order.status === 'offline') return; let newStatus = order.status === 'waiting' ? 'arrived' : 'waiting'; await db.ref('orders/' + id).update({ status: newStatus }); await writeAuditLog('TOGGLE_ORDER_STATUS', 'orders', order.refNo || '', id, { from: order.status, to: newStatus }); }
     async function markCompleted(id) { if(!navigator.onLine) return alert("Offline!"); const order = orders.find(o => o.id === id) || {}; if(confirm("Confirm item collected?")) { await db.ref('orders/' + id).update({ status: 'completed', completedDate: getStandardDateStr() }); await writeAuditLog('MARK_ORDER_COMPLETED', 'orders', order.refNo || '', id, { completedDate: getStandardDateStr() }); } }
     async function restoreOrder(id) { if(!navigator.onLine) return; if(!isAdmin) return alert('Only Boss/Admin can return completed orders.'); const order = orders.find(o => o.id === id) || {}; await db.ref('orders/' + id).update({ status: 'arrived', completedDate: null }); await writeAuditLog('RETURN_COMPLETED_ORDER', 'orders', order.refNo || '', id, { to: 'arrived' }); }
-    async function deleteOrder(id) { if(!navigator.onLine) return; const order = orders.find(o => o.id === id) || {}; if(isAdmin && confirm("Delete order?")) { await db.ref('orders/' + id).remove(); await writeAuditLog('DELETE_ORDER', 'orders', order.refNo || '', id, { name: order.name || '', plate: order.plate || '' }); } else if(!isAdmin) alert("Admin only."); }
+    async function deleteOrder(id) { if(!navigator.onLine) return alert('Requires internet.'); const order = orders.find(o => o.id === id) || {}; if(isAdmin && confirm('Delete order?')) { await db.ref('orders/' + id).remove(); await writeAuditLog('DELETE_ORDER', 'orders', order.refNo || '', id, { name: order.name || '', plate: order.plate || '' }); } else if(!isAdmin) { await submitDeleteRequest('orders', id, order.refNo || '', { name: order.name || '', plate: order.plate || '', car: order.car || '' }); } }
     function toggleAllOrderChecks(source) { document.querySelectorAll('.order-check').forEach(cb => cb.checked = source.checked); }
     async function markSelectedArrived() {
         if(!navigator.onLine) return alert("Requires internet."); let checkboxes = document.querySelectorAll('.order-check:checked'); if(checkboxes.length === 0) return alert("Please check at least one pending order.");
@@ -1593,28 +1713,28 @@ Uploaded ${successCount} item(s) to Cloud.`);
             let partsHtml = `<ul class="table-item-list">`; let waList = [];
             (order.items||[]).forEach(item => {
                 const priceDetails = parseFloat(item.subTotal) > 0 ? `<span style="float:right;font-size:13px;color:#64748b;">${item.qty||1} x RM${parseFloat(item.unitPrice||0).toFixed(2)} = <b style="color:#0f172a;">RM${parseFloat(item.subTotal||0).toFixed(2)}</b></span>` : `<span style="float:right;font-size:13px;color:#64748b;font-weight:bold;">Qty: ${item.qty||1}</span>`;
-                let photoHtml = ''; if (item.photos && item.photos.length > 0) { photoHtml = `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;">`; item.photos.forEach(p => { photoHtml += `<img src="${p}" class="photo-thumbnail" onclick="showPhoto('${p}')" style="width:40px;height:40px;border:1px solid #cbd5e1;">`; }); photoHtml += `</div>`; }
-                const pNo = item.partNo && item.partNo.trim() !== '' ? item.partNo.trim() : null; const partNoHTML = pNo ? ` <small class="mono-text" style="color:#64748b; font-weight:bold;">[${pNo}]</small>` : '';
-                partsHtml += `<li><div style="margin-bottom:4px;"><strong style="font-size:14px;color:#0f172a;">${item.part||'-'}</strong>${partNoHTML}${priceDetails}</div><small style="color:#64748b;">Brd: ${item.brand||'-'} • Sup: ${item.supplier||'-'}</small>${photoHtml}</li>`;
+                let photoHtml = ''; if (item.photos && item.photos.length > 0) { photoHtml = `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;">`; item.photos.forEach(p => { photoHtml += `<img src="${safePhotoSrc(p)}" class="photo-thumbnail" onclick="showPhoto('${safePhotoSrc(p)}')" style="width:40px;height:40px;border:1px solid #cbd5e1;">`; }); photoHtml += `</div>`; }
+                const pNo = item.partNo && item.partNo.trim() !== '' ? item.partNo.trim() : null; const partNoHTML = pNo ? ` <small class="mono-text" style="color:#64748b; font-weight:bold;">[${escapeHTML(pNo)}]</small>` : '';
+                partsHtml += `<li><div style="margin-bottom:4px;"><strong style="font-size:14px;color:#0f172a;">${escapeHTML(item.part||'-')}</strong>${partNoHTML}${priceDetails}</div><small style="color:#64748b;">Brd: ${escapeHTML(item.brand||'-')} • Sup: ${escapeHTML(item.supplier||'-')}</small>${photoHtml}</li>`;
                 const partNoWA = pNo ? `[${pNo}] ` : ''; const brandWA = item.brand && item.brand.trim() !== '' ? `(Brand: ${item.brand.trim()}) ` : '';
                 const priceWA = parseFloat(item.subTotal) > 0 ? ` -> ${item.qty||1} x RM${parseFloat(item.unitPrice||0).toFixed(2)} = RM${parseFloat(item.subTotal||0).toFixed(2)}` : ` -> Qty: ${item.qty||1}`;
                 waList.push(`• ${item.part||'-'} ${partNoWA}${brandWA}${priceWA}`);
             }); partsHtml += `</ul>`;
             
-            const msgR = `🧾 *MALAYSIA MOTOR COMPANY - RESIT / RECEIPT*\n\nPelanggan yang dihormati ${order.name},\nTerima kasih. Pesanan anda disahkan!\n\n*Order ID:* ${order.refNo}\n*Car Plate:* ${order.plate||'-'}\n*Car Model:* ${order.car||''}\n*Items:*\n${waList.join('\n')}\n\n*Total:* RM${order.total}\n*Deposit:* RM${order.deposit}\n*Balance Due:* RM${order.balance}`;
-            const msgA = `*MALAYSIA MOTOR COMPANY*\n\nPelanggan yang dihormati ${order.name},\nBerita baik! Pesanan anda (${order.refNo}) telah tiba. Baki bayaran: RM${order.balance}. Dialu-alukan untuk mengambilnya.\n\nDear ${order.name},\nGood news! Your order (${order.refNo}) has arrived. Balance due: RM${order.balance}. You are welcome to collect it.`;
-            const msgN = `*MALAYSIA MOTOR COMPANY*\n\nPelanggan yang dihormati ${order.name},\nKami memohon maaf, pesanan anda (${order.refNo}) kehabisan stok. Sila hubungi kami untuk pemulangan deposit (RM${order.deposit}).\n\nDear ${order.name},\nApologies, your order (${order.refNo}) is out of stock. Contact us for a refund (RM${order.deposit}).`;
-            const msgRemind = `🔔 *MALAYSIA MOTOR COMPANY - COLLECTION REMINDER*\n\nHello ${order.name}!\nThis is a friendly reminder that your parts for ${order.plate||order.car||'your car'} are ready for collection at MMC.\n\nPlease drop by to collect them and clear the RM${order.balance} balance.\nThank you!`;
+            const msgR = `🧾 *MALAYSIA MOTOR COMPANY - RESIT / RECEIPT*\n\nPelanggan yang dihormati ${escapeHTML(order.name)},\nTerima kasih. Pesanan anda disahkan!\n\n*Order ID:* ${escapeHTML(order.refNo)}\n*Car Plate:* ${order.plate||'-'}\n*Car Model:* ${order.car||''}\n*Items:*\n${waList.join('\n')}\n\n*Total:* RM${escapeHTML(order.total)}\n*Deposit:* RM${escapeHTML(order.deposit)}\n*Balance Due:* RM${escapeHTML(order.balance)}`;
+            const msgA = `*MALAYSIA MOTOR COMPANY*\n\nPelanggan yang dihormati ${escapeHTML(order.name)},\nBerita baik! Pesanan anda (${escapeHTML(order.refNo)}) telah tiba. Baki bayaran: RM${escapeHTML(order.balance)}. Dialu-alukan untuk mengambilnya.\n\nDear ${escapeHTML(order.name)},\nGood news! Your order (${escapeHTML(order.refNo)}) has arrived. Balance due: RM${escapeHTML(order.balance)}. You are welcome to collect it.`;
+            const msgN = `*MALAYSIA MOTOR COMPANY*\n\nPelanggan yang dihormati ${escapeHTML(order.name)},\nKami memohon maaf, pesanan anda (${escapeHTML(order.refNo)}) kehabisan stok. Sila hubungi kami untuk pemulangan deposit (RM${escapeHTML(order.deposit)}).\n\nDear ${escapeHTML(order.name)},\nApologies, your order (${escapeHTML(order.refNo)}) is out of stock. Contact us for a refund (RM${escapeHTML(order.deposit)}).`;
+            const msgRemind = `🔔 *MALAYSIA MOTOR COMPANY - COLLECTION REMINDER*\n\nHello ${escapeHTML(order.name)}!\nThis is a friendly reminder that your parts for ${order.plate||order.car||'your car'} are ready for collection at MMC.\n\nPlease drop by to collect them and clear the RM${escapeHTML(order.balance)} balance.\nThank you!`;
 
             const tr = document.createElement('tr'); tr.style.opacity = order.status === 'completed' ? '0.6' : '1';
-            const plateHtml = order.plate ? `<span style="background:#fef08a; color:#b45309; padding:2px 6px; border-radius:4px; font-weight:bold; font-size:12px; letter-spacing:1px;">${order.plate}</span><br>` : '';
+            const plateHtml = order.plate ? `<span style="background:#fef08a; color:#b45309; padding:2px 6px; border-radius:4px; font-weight:bold; font-size:12px; letter-spacing:1px;">${escapeHTML(order.plate)}</span><br>` : '';
 
             let waActionButtons = '';
             if (order.offlinePending) {
                 waActionButtons = `<div style="font-size:12px; color:#ef4444; font-weight:bold; text-align:center;">Waiting cloud sync</div>`;
             } else {
-                if (order.phone && order.status !== 'completed') { waActionButtons += `<a href="https://wa.me/${order.phone}?text=${encodeURIComponent(msgR)}" target="_blank" class="wa-btn wa-btn-receipt">📄 WA Receipt</a><a href="https://wa.me/${order.phone}?text=${encodeURIComponent(msgA)}" target="_blank" class="wa-btn wa-btn-arrived">💬 Inform Arrived</a><a href="https://wa.me/${order.phone}?text=${encodeURIComponent(msgN)}" target="_blank" class="wa-btn wa-btn-cancel">❌ Item Not Found</a>`; }
-                if(order.status === 'arrived' && order.phone) { waActionButtons = `<a href="https://wa.me/${order.phone}?text=${encodeURIComponent(msgRemind)}" target="_blank" class="wa-btn wa-btn-remind">🔔 Remind Collection</a>` + waActionButtons; }
+                if (order.phone && order.status !== 'completed') { waActionButtons += `<a href="https://wa.me/${escapeHTML(order.phone)}?text=${encodeURIComponent(msgR)}" target="_blank" class="wa-btn wa-btn-receipt">📄 WA Receipt</a><a href="https://wa.me/${escapeHTML(order.phone)}?text=${encodeURIComponent(msgA)}" target="_blank" class="wa-btn wa-btn-arrived">💬 Inform Arrived</a><a href="https://wa.me/${escapeHTML(order.phone)}?text=${encodeURIComponent(msgN)}" target="_blank" class="wa-btn wa-btn-cancel">❌ Item Not Found</a>`; }
+                if(order.status === 'arrived' && order.phone) { waActionButtons = `<a href="https://wa.me/${escapeHTML(order.phone)}?text=${encodeURIComponent(msgRemind)}" target="_blank" class="wa-btn wa-btn-remind">🔔 Remind Collection</a>` + waActionButtons; }
             }
 
             let mainActions = '';
@@ -1638,7 +1758,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
             const statusVisual = order.status === 'offline' ? '🔴 Pending Sync' : (order.status==='waiting'?'⏳ Wait':(order.status==='arrived'?'✅ Arrived':'📦 Done'));
             const statusClass = order.status === 'offline' ? 'status-offline' : (order.status==='completed'?'status-completed':(order.status==='waiting'?'status-waiting':'status-arrived'));
 
-            tr.innerHTML = `<td><input type="checkbox" class="order-check" value="${order.id}"></td><td><span class="ref-badge">${order.refNo}</span><br><small style="color:#64748b;margin-top:6px;display:inline-block;font-weight:700;">${order.date}</small><br>${order.staff?`<span class="staff-badge">👤 ${order.staff}</span>`:''}</td><td><strong style="color:#0f172a;">${order.name}</strong><br><small style="color:#3b82f6;font-weight:bold;">${order.phone}</small><br><div style="margin-top:8px;padding-top:8px;border-top:1px dashed #e2e8f0;">${plateHtml}<strong style="color:#334155; font-size:13px; display:inline-block; margin-top:4px;">${order.car||'-'}</strong> <span class="mono-text" style="color:#64748b;font-size:11px;">${order.chassis?'('+order.chassis+')':''}</span></div></td><td>${partsHtml}<div class="notes-text" style="margin-top:8px;color:#059669;font-weight:600;">${order.remarks?'📝 Remarks: '+order.remarks:''}</div></td><td><small style="color:#64748b;">Total: RM${order.total}</small><br><small style="color:#64748b;">Paid: RM${order.deposit}</small><br><strong style="font-size:15px;margin-top:6px;display:inline-block;color:#0f172a;">Bal: RM${order.balance}</strong></td><td><button class="status-btn ${statusClass}" onclick="toggleStatus('${order.id}')">${statusVisual}</button></td><td><div class="action-btns" style="flex-direction:column;align-items:stretch;">${waActionButtons}</div></td><td>${mainActions}</td>`;
+            tr.innerHTML = `<td><input type="checkbox" class="order-check" value="${order.id}"></td><td><span class="ref-badge">${escapeHTML(order.refNo)}</span><br><small style="color:#64748b;margin-top:6px;display:inline-block;font-weight:700;">${escapeHTML(order.date)}</small><br>${order.staff?`<span class="staff-badge">👤 ${escapeHTML(order.staff)}</span>`:''}</td><td><strong style="color:#0f172a;">${escapeHTML(order.name)}</strong><br><small style="color:#3b82f6;font-weight:bold;">${escapeHTML(order.phone)}</small><br><div style="margin-top:8px;padding-top:8px;border-top:1px dashed #e2e8f0;">${plateHtml}<strong style="color:#334155; font-size:13px; display:inline-block; margin-top:4px;">${escapeHTML(order.car||'-')}</strong> <span class="mono-text" style="color:#64748b;font-size:11px;">${order.chassis ? '(' + escapeHTML(order.chassis) + ')' : ''}</span></div></td><td>${partsHtml}<div class="notes-text" style="margin-top:8px;color:#059669;font-weight:600;">${order.remarks ? '📝 Remarks: ' + escapeHTML(order.remarks) : ''}</div></td><td><small style="color:#64748b;">Total: RM${escapeHTML(order.total)}</small><br><small style="color:#64748b;">Paid: RM${escapeHTML(order.deposit)}</small><br><strong style="font-size:15px;margin-top:6px;display:inline-block;color:#0f172a;">Bal: RM${escapeHTML(order.balance)}</strong></td><td><button class="status-btn ${statusClass}" onclick="toggleStatus('${order.id}')">${statusVisual}</button></td><td><div class="action-btns" style="flex-direction:column;align-items:stretch;">${waActionButtons}</div></td><td>${mainActions}</td>`;
             tbody.appendChild(tr);
         });
     }
@@ -1675,17 +1795,18 @@ Uploaded ${successCount} item(s) to Cloud.`);
     function addQItemBlock(data = null) {
         qItemMapIdCounter++; const currentId = 'q_item_row_' + qItemMapIdCounter; qItemPhotosMap[currentId] = data && data.photos ? [...data.photos] : [];
         const container = document.getElementById('qDynamicItemsContainer'); const isFirst = container.children.length === 0;
-        const html = `<div class="pos-table-row" id="${currentId}"><div class="row-num">0</div><div><span class="mobile-label">Part Needed</span><div class="input-wrapper"><input type="text" class="i-part pos-input" placeholder="Part Desc" value="${data ? data.part : ''}" autocomplete="off" oninput="handlePartInput(this, '${currentId}')" onfocus="handlePartInput(this, '${currentId}')"><div id="autocomplete_${currentId}" class="autocomplete-list" style="display:none;"></div></div></div><div><span class="mobile-label">Item Code / OEM No</span><input type="text" class="i-partNo pos-input" placeholder="OEM Code" value="${data && data.partNo ? data.partNo : ''}" oninput="this.value = this.value.toUpperCase().replace(/\\s/g, '')"></div><div><span class="mobile-label">Brand</span><input type="text" class="i-brand pos-input" placeholder="Brand" value="${data && data.brand ? data.brand : ''}"></div><div><span class="mobile-label">Supplier</span><input type="text" class="i-supplier pos-input" placeholder="Supplier" value="${data && data.supplier ? data.supplier : ''}" list="supplierList"></div><div class="mobile-grid-3"><div><span class="mobile-label">Qty</span><input type="number" class="i-qty pos-input" placeholder="1" value="${data && data.qty ? data.qty : '1'}" oninput="calcQRowTotal('${currentId}')" style="text-align:center;"></div><div><span class="mobile-label">U.Price (RM)</span><input type="number" class="i-unitPrice pos-input" placeholder="0.00" value="${data && data.unitPrice ? data.unitPrice : ''}" oninput="calcQRowTotal('${currentId}')"></div><div><span class="mobile-label">Total (RM)</span><input type="number" class="i-subTotal pos-input readonly-input" placeholder="0.00" value="${data && data.subTotal ? data.subTotal : ''}" readonly></div></div><div><span class="mobile-label">ETA Date</span><input type="date" class="i-eta pos-input" value="${data && data.eta ? data.eta : ''}"></div><div style="display:flex; justify-content:center; align-items:center;"><label class="photo-upload-btn">📷 <span id="q_count_${currentId}">${qItemPhotosMap[currentId].length}</span>/5<input type="file" accept="image/*" multiple onchange="processQItemPhotos(event, '${currentId}')" style="display:none;"></label></div><div>${!isFirst || data !== null ? `<button type="button" class="remove-row-btn" onclick="removeQItemBlock('${currentId}')">✖</button>` : `<div style="height:35px;"></div>`}</div><div id="q_gallery_${currentId}" class="row-gallery"></div></div>`;
+        const html = `<div class="pos-table-row" id="${currentId}"><div class="row-num">0</div><div><span class="mobile-label">Part Needed</span><div class="input-wrapper"><input type="text" class="i-part pos-input" placeholder="Part Desc" value="${escapeAttr(data ? data.part : '')}" autocomplete="off" oninput="handlePartInput(this, '${currentId}')" onfocus="handlePartInput(this, '${currentId}')"><div id="autocomplete_${currentId}" class="autocomplete-list" style="display:none;"></div></div></div><div><span class="mobile-label">Item Code / OEM No</span><input type="text" class="i-partNo pos-input" placeholder="OEM Code" value="${escapeAttr(data && data.partNo ? data.partNo : '')}" oninput="this.value = this.value.toUpperCase().replace(/\\s/g, '')"></div><div><span class="mobile-label">Brand</span><input type="text" class="i-brand pos-input" placeholder="Brand" value="${escapeAttr(data && data.brand ? data.brand : '')}"></div><div><span class="mobile-label">Supplier</span><input type="text" class="i-supplier pos-input" placeholder="Supplier" value="${escapeAttr(data && data.supplier ? data.supplier : '')}" list="supplierList"></div><div class="mobile-grid-3"><div><span class="mobile-label">Qty</span><input type="number" class="i-qty pos-input" placeholder="1" value="${escapeAttr(data && data.qty ? data.qty : '1')}" oninput="calcQRowTotal('${currentId}')" style="text-align:center;"></div><div><span class="mobile-label">U.Price (RM)</span><input type="number" class="i-unitPrice pos-input" placeholder="0.00" value="${escapeAttr(data && data.unitPrice ? data.unitPrice : '')}" oninput="calcQRowTotal('${currentId}')"></div><div><span class="mobile-label">Total (RM)</span><input type="number" class="i-subTotal pos-input readonly-input" placeholder="0.00" value="${escapeAttr(data && data.subTotal ? data.subTotal : '')}" readonly></div></div><div><span class="mobile-label">ETA Date</span><input type="date" class="i-eta pos-input" value="${escapeAttr(data && data.eta ? data.eta : '')}"></div><div style="display:flex; justify-content:center; align-items:center;"><label class="photo-upload-btn">📷 <span id="q_count_${currentId}">${qItemPhotosMap[currentId].length}</span>/5<input type="file" accept="image/*" multiple capture="environment" onchange="processQItemPhotos(event, '${currentId}')" style="display:none;"></label></div><div>${!isFirst || data !== null ? `<button type="button" class="remove-row-btn" onclick="removeQItemBlock('${currentId}')">✖</button>` : `<div style="height:35px;"></div>`}</div><div id="q_gallery_${currentId}" class="row-gallery"></div></div>`;
         container.insertAdjacentHTML('beforeend', html); renderQGalleryUI(currentId); updateQRowNumbers(); if(data) calcQRowTotal(currentId); 
     }
 
     function removeQItemBlock(id) { document.getElementById(id).remove(); delete qItemPhotosMap[id]; updateQRowNumbers(); calcQGrandTotal(); if (document.getElementById('qDynamicItemsContainer').children.length === 0) addQItemBlock(); }
-    function processQItemPhotos(event, itemId) { const files = event.target.files; if (!files || files.length === 0) return; if (qItemPhotosMap[itemId].length + files.length > 5) { alert("⚠️ Max 5 photos!"); event.target.value = ''; return; } Array.from(files).forEach(file => { const reader = new FileReader(); reader.onload = function(e) { const img = new Image(); img.onload = function() { const canvas = document.createElement('canvas'); let width = img.width; let height = img.height; if (width > height) { if(width > 800) { height *= 800/width; width = 800; } } else { if(height > 800) { width *= 800/height; height = 800; } } canvas.width = width; canvas.height = height; canvas.getContext('2d').drawImage(img, 0, 0, width, height); qItemPhotosMap[itemId].push(canvas.toDataURL('image/jpeg', 0.8)); renderQGalleryUI(itemId); }; img.src = e.target.result; }; reader.readAsDataURL(file); }); event.target.value = ''; }
+    function processQItemPhotos(event, itemId) { processPhotoFiles(event, qItemPhotosMap[itemId], () => renderQGalleryUI(itemId), 5); }
     function renderQGalleryUI(itemId) { const gallery = document.getElementById('q_gallery_' + itemId); document.getElementById('q_count_' + itemId).innerText = qItemPhotosMap[itemId].length; gallery.innerHTML = ''; qItemPhotosMap[itemId].forEach((b64Data, index) => { gallery.innerHTML += `<div class="photo-wrapper"><img src="${b64Data}" class="photo-thumbnail" onclick="showPhoto('${b64Data}')"><button type="button" class="rotate-single-btn" onclick="rotateImage('${itemId}', ${index}, 'quote')">↻</button><button type="button" class="remove-single-btn" onclick="removeQSinglePhoto('${itemId}', ${index})">✖</button></div>`; }); }
     function removeQSinglePhoto(itemId, index) { qItemPhotosMap[itemId].splice(index, 1); renderQGalleryUI(itemId); }
 
     function editQuote(id) {
         const quote = quotes.find(q => q.id === id);
+        if (!quote) return alert('Quotation not found or already deleted. Please refresh the quotation list.');
         ['qCustName','qCustPhone','qCarPlate','qCarModel','qChassisNumber','qTotalPrice','qOrderByStaff','qRemarks'].forEach(f => { let val = quote[f.replace('qOrderByStaff','staff').replace('qCustName','name').replace('qCustPhone','phone').replace('qCarPlate','plate').replace('qCarModel','car').replace('qChassisNumber','chassis').replace('qTotalPrice','total').replace('qRemarks','remarks')] || ''; document.getElementById(f).value = val; });
         document.getElementById('qDynamicItemsContainer').innerHTML = ''; qItemPhotosMap = {}; const itemsToLoad = quote.items || []; if(itemsToLoad.length === 0) addQItemBlock(); itemsToLoad.forEach(data => addQItemBlock(data));
         qEditingId = id; document.getElementById('qMainBtn').innerText = "Confirm Update Quotation"; document.getElementById('qMainBtn').style.backgroundColor = "#10b981"; document.getElementById('qCancelBtn').style.display = "block"; window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1734,10 +1855,10 @@ Uploaded ${successCount} item(s) to Cloud.`);
         } catch(err) { alert("Upload Error: " + err.message); } finally { qMainBtn.innerText = originalText; qMainBtn.disabled = false; }
     }
 
-    async function deleteQuote(id) { if(!navigator.onLine) return; const quote = quotes.find(q => q.id === id) || {}; if(isAdmin && confirm("Delete Quotation?")) { await db.ref('quotations/' + id).remove(); await writeAuditLog('DELETE_QUOTATION', 'quotations', quote.refNo || '', id, { name: quote.name || '', plate: quote.plate || '' }); } else if(!isAdmin) alert("Admin only."); }
+    async function deleteQuote(id) { if(!navigator.onLine) return alert('Requires internet.'); const quote = quotes.find(q => q.id === id) || {}; if(isAdmin && confirm('Delete Quotation?')) { await db.ref('quotations/' + id).remove(); await writeAuditLog('DELETE_QUOTATION', 'quotations', quote.refNo || '', id, { name: quote.name || '', plate: quote.plate || '' }); } else if(!isAdmin) { await submitDeleteRequest('quotations', id, quote.refNo || '', { name: quote.name || '', plate: quote.plate || '', car: quote.car || '' }); } }
 
     function convertToPreorder(id) {
-        const quote = quotes.find(q => q.id === id); if(!quote) return; document.getElementById('tabBtnOrder').click();
+        const quote = quotes.find(q => q.id === id); if(!quote) return alert('Quotation not found or already deleted. Please refresh the quotation list.'); document.getElementById('tabBtnOrder').click();
         document.getElementById('custName').value = quote.name || ''; document.getElementById('custPhone').value = quote.phone || ''; document.getElementById('carPlate').value = quote.plate || ''; document.getElementById('carModel').value = quote.car || ''; document.getElementById('chassisNumber').value = quote.chassis || ''; document.getElementById('orderByStaff').value = quote.staff || ''; document.getElementById('remarks').value = "From Quotation: " + quote.refNo + (quote.remarks ? " - " + quote.remarks : '');
         document.getElementById('dynamicItemsContainer').innerHTML = ''; itemPhotosMap = {}; itemMapIdCounter = 0; const itemsToLoad = quote.items || []; if(itemsToLoad.length === 0) addNewItemBlock(); itemsToLoad.forEach(data => addNewItemBlock(data));
         writeAuditLog('CONVERT_QUOTE_TO_ORDER_FORM', 'quotations', quote.refNo || '', id, { name: quote.name || '', plate: quote.plate || '' }); alert("✅ Quotation Loaded! Please enter Deposit and click 'Save Document & Sync' to create Official Order."); window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1766,16 +1887,16 @@ Uploaded ${successCount} item(s) to Cloud.`);
             let partsHtml = `<ul class="table-item-list">`; let waList = [];
             (quote.items||[]).forEach(item => {
                 const priceDetails = parseFloat(item.subTotal) > 0 ? `<span style="float:right;font-size:13px;color:#64748b;">${item.qty||1} x RM${parseFloat(item.unitPrice||0).toFixed(2)} = <b style="color:#0f172a;">RM${parseFloat(item.subTotal||0).toFixed(2)}</b></span>` : `<span style="float:right;font-size:13px;color:#64748b;font-weight:bold;">Qty: ${item.qty||1}</span>`;
-                let photoHtml = ''; if (item.photos && item.photos.length > 0) { photoHtml = `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;">`; item.photos.forEach(p => { photoHtml += `<img src="${p}" class="photo-thumbnail" onclick="showPhoto('${p}')" style="width:40px;height:40px;border:1px solid #cbd5e1;">`; }); photoHtml += `</div>`; }
-                const pNo = item.partNo && item.partNo.trim() !== '' ? item.partNo.trim() : null; const partNoHTML = pNo ? ` <small class="mono-text" style="color:#64748b; font-weight:bold;">[${pNo}]</small>` : '';
-                partsHtml += `<li><div style="margin-bottom:4px;"><strong style="font-size:14px;color:#0f172a;">${item.part||'-'}</strong>${partNoHTML}${priceDetails}</div><small style="color:#64748b;">Brd: ${item.brand||'-'} • Sup: ${item.supplier||'-'}</small>${photoHtml}</li>`;
+                let photoHtml = ''; if (item.photos && item.photos.length > 0) { photoHtml = `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;">`; item.photos.forEach(p => { photoHtml += `<img src="${safePhotoSrc(p)}" class="photo-thumbnail" onclick="showPhoto('${safePhotoSrc(p)}')" style="width:40px;height:40px;border:1px solid #cbd5e1;">`; }); photoHtml += `</div>`; }
+                const pNo = item.partNo && item.partNo.trim() !== '' ? item.partNo.trim() : null; const partNoHTML = pNo ? ` <small class="mono-text" style="color:#64748b; font-weight:bold;">[${escapeHTML(pNo)}]</small>` : '';
+                partsHtml += `<li><div style="margin-bottom:4px;"><strong style="font-size:14px;color:#0f172a;">${escapeHTML(item.part||'-')}</strong>${partNoHTML}${priceDetails}</div><small style="color:#64748b;">Brd: ${escapeHTML(item.brand||'-')} • Sup: ${escapeHTML(item.supplier||'-')}</small>${photoHtml}</li>`;
                 const partNoWA = pNo ? `[${pNo}] ` : ''; const brandWA = item.brand && item.brand.trim() !== '' ? `(Brand: ${item.brand.trim()}) ` : '';
                 const priceWA = parseFloat(item.subTotal) > 0 ? ` -> ${item.qty||1} x RM${parseFloat(item.unitPrice||0).toFixed(2)} = RM${parseFloat(item.subTotal||0).toFixed(2)}` : ` -> Qty: ${item.qty||1}`;
                 waList.push(`• ${item.part||'-'} ${partNoWA}${brandWA}${priceWA}`);
             }); partsHtml += `</ul>`;
             
-            const msgQ = `📄 *MALAYSIA MOTOR COMPANY - SEBUTHARGA / QUOTATION*\n\nPelanggan yang dihormati ${quote.name},\nBerikut adalah sebutharga untuk rujukan anda:\n\nDear ${quote.name},\nHere is the quotation for your reference:\n\n*No. Sebutharga / Quote ID:* ${quote.refNo}\n*Car Plate:* ${quote.plate||'-'}\n*Kenderaan / Car:* ${quote.car||''}\n*Senarai Barang / Items:*\n${waList.join('\n')}\n\n*Jumlah / Grand Total:* RM${quote.total}\n\nSila beritahu kami jika anda ingin meneruskan pesanan. / Please let us know if you wish to proceed with the order.\nTerima kasih! / Thank you!`;
-            const tr = document.createElement('tr'); const plateHtml = quote.plate ? `<span style="background:#fef08a; color:#b45309; padding:2px 6px; border-radius:4px; font-weight:bold; font-size:12px; letter-spacing:1px;">${quote.plate}</span><br>` : '';
+            const msgQ = `📄 *MALAYSIA MOTOR COMPANY - SEBUTHARGA / QUOTATION*\n\nPelanggan yang dihormati ${escapeHTML(quote.name)},\nBerikut adalah sebutharga untuk rujukan anda:\n\nDear ${escapeHTML(quote.name)},\nHere is the quotation for your reference:\n\n*No. Sebutharga / Quote ID:* ${escapeHTML(quote.refNo)}\n*Car Plate:* ${quote.plate||'-'}\n*Kenderaan / Car:* ${quote.car||''}\n*Senarai Barang / Items:*\n${waList.join('\n')}\n\n*Jumlah / Grand Total:* RM${escapeHTML(quote.total)}\n\nSila beritahu kami jika anda ingin meneruskan pesanan. / Please let us know if you wish to proceed with the order.\nTerima kasih! / Thank you!`;
+            const tr = document.createElement('tr'); const plateHtml = quote.plate ? `<span style="background:#fef08a; color:#b45309; padding:2px 6px; border-radius:4px; font-weight:bold; font-size:12px; letter-spacing:1px;">${escapeHTML(quote.plate)}</span><br>` : '';
             
             let mainActions = '';
             if (quote.offlinePending) {
@@ -1786,7 +1907,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
                 mainActions += `</div><button class="print-btn" onclick="printChecklist('${quote.id}', 'quote')" style="width:100%; margin-top:5px; margin-bottom:5px;">🖨️ Print Checklist</button>`;
             }
 
-            tr.innerHTML = `<td><span class="ref-badge">${quote.refNo}</span><br><small style="color:#64748b;margin-top:6px;display:inline-block;font-weight:700;">${quote.date}</small><br>${quote.staff?`<span class="staff-badge">👤 ${quote.staff}</span>`:''}</td><td><strong style="color:#0f172a;">${quote.name}</strong><br><small style="color:#3b82f6;font-weight:bold;">${quote.phone}</small><br><div style="margin-top:8px;padding-top:8px;border-top:1px dashed #e2e8f0;">${plateHtml}<strong style="color:#334155; font-size:13px; display:inline-block; margin-top:4px;">${quote.car||'-'}</strong> <span class="mono-text" style="color:#64748b;font-size:12px;">${quote.chassis||''}</span></div></td><td>${partsHtml}<div class="notes-text" style="margin-top:8px;color:#059669;font-weight:600;">${quote.remarks?'📝 Remarks: '+quote.remarks:''}</div></td><td><strong style="font-size:18px;color:#0f172a;">RM${quote.total}</strong></td><td><div class="action-btns">${quote.offlinePending ? '<div style="font-size:12px; color:#ef4444; font-weight:bold;">Waiting Sync</div>' : (quote.phone ? `<a href="https://wa.me/${quote.phone}?text=${encodeURIComponent(msgQ)}" target="_blank" class="wa-btn wa-btn-quote" style="width:100%;">💬 Send Quotation</a>` : '<div style="font-size:12px; color:#94a3b8; font-weight:bold;">No Phone</div>')}</div></td><td>${mainActions}</td>`;
+            tr.innerHTML = `<td><span class="ref-badge">${escapeHTML(quote.refNo)}</span><br><small style="color:#64748b;margin-top:6px;display:inline-block;font-weight:700;">${escapeHTML(quote.date)}</small><br>${quote.staff?`<span class="staff-badge">👤 ${escapeHTML(quote.staff)}</span>`:''}</td><td><strong style="color:#0f172a;">${escapeHTML(quote.name)}</strong><br><small style="color:#3b82f6;font-weight:bold;">${escapeHTML(quote.phone)}</small><br><div style="margin-top:8px;padding-top:8px;border-top:1px dashed #e2e8f0;">${plateHtml}<strong style="color:#334155; font-size:13px; display:inline-block; margin-top:4px;">${escapeHTML(quote.car||'-')}</strong> <span class="mono-text" style="color:#64748b;font-size:12px;">${escapeHTML(quote.chassis||'')}</span></div></td><td>${partsHtml}<div class="notes-text" style="margin-top:8px;color:#059669;font-weight:600;">${quote.remarks ? '📝 Remarks: ' + escapeHTML(quote.remarks) : ''}</div></td><td><strong style="font-size:18px;color:#0f172a;">RM${escapeHTML(quote.total)}</strong></td><td><div class="action-btns">${quote.offlinePending ? '<div style="font-size:12px; color:#ef4444; font-weight:bold;">Waiting Sync</div>' : (quote.phone ? `<a href="https://wa.me/${escapeHTML(quote.phone)}?text=${encodeURIComponent(msgQ)}" target="_blank" class="wa-btn wa-btn-quote" style="width:100%;">💬 Send Quotation</a>` : '<div style="font-size:12px; color:#94a3b8; font-weight:bold;">No Phone</div>')}</div></td><td>${mainActions}</td>`;
             tbody.appendChild(tr);
         });
     }
@@ -1812,17 +1933,18 @@ Uploaded ${successCount} item(s) to Cloud.`);
     function addEItemBlock(data = null) {
         eItemMapIdCounter++; const currentId = 'e_item_row_' + eItemMapIdCounter; eItemPhotosMap[currentId] = data && data.photos ? [...data.photos] : [];
         const container = document.getElementById('eDynamicItemsContainer'); const isFirst = container.children.length === 0;
-        const html = `<div class="pos-table-row" id="${currentId}"><div class="row-num">0</div><div><span class="mobile-label">Part Needed</span><div class="input-wrapper"><input type="text" class="i-part pos-input" placeholder="Part Desc" value="${data ? data.part : ''}" autocomplete="off" oninput="handlePartInput(this, '${currentId}')" onfocus="handlePartInput(this, '${currentId}')"><div id="autocomplete_${currentId}" class="autocomplete-list" style="display:none;"></div></div></div><div><span class="mobile-label">Item Code / OEM No</span><input type="text" class="i-partNo pos-input" placeholder="OEM Code" value="${data && data.partNo ? data.partNo : ''}" oninput="this.value = this.value.toUpperCase().replace(/\\s/g, '')"></div><div><span class="mobile-label">Brand</span><input type="text" class="i-brand pos-input" placeholder="Brand" value="${data && data.brand ? data.brand : ''}"></div><div><span class="mobile-label">Supplier</span><input type="text" class="i-supplier pos-input" placeholder="Supplier" value="${data && data.supplier ? data.supplier : ''}" list="supplierList"></div><div class="mobile-grid-3"><div><span class="mobile-label">Qty</span><input type="number" class="i-qty pos-input" placeholder="1" value="${data && data.qty ? data.qty : '1'}" oninput="calcERowTotal('${currentId}')" style="text-align:center;"></div><div><span class="mobile-label">U.Price (RM)</span><input type="number" class="i-unitPrice pos-input" placeholder="0.00" value="${data && data.unitPrice ? data.unitPrice : ''}" oninput="calcERowTotal('${currentId}')"></div><div><span class="mobile-label">Total (RM)</span><input type="number" class="i-subTotal pos-input readonly-input" placeholder="0.00" value="${data && data.subTotal ? data.subTotal : ''}" readonly></div></div><div><span class="mobile-label">ETA Date</span><input type="date" class="i-eta pos-input" value="${data && data.eta ? data.eta : ''}"></div><div style="display:flex; justify-content:center; align-items:center;"><label class="photo-upload-btn">📷 <span id="e_count_${currentId}">${eItemPhotosMap[currentId].length}</span>/5<input type="file" accept="image/*" multiple onchange="processEItemPhotos(event, '${currentId}')" style="display:none;"></label></div><div>${!isFirst || data !== null ? `<button type="button" class="remove-row-btn" onclick="removeEItemBlock('${currentId}')">✖</button>` : `<div style="height:35px;"></div>`}</div><div id="e_gallery_${currentId}" class="row-gallery"></div></div>`;
+        const html = `<div class="pos-table-row" id="${currentId}"><div class="row-num">0</div><div><span class="mobile-label">Part Needed</span><div class="input-wrapper"><input type="text" class="i-part pos-input" placeholder="Part Desc" value="${escapeAttr(data ? data.part : '')}" autocomplete="off" oninput="handlePartInput(this, '${currentId}')" onfocus="handlePartInput(this, '${currentId}')"><div id="autocomplete_${currentId}" class="autocomplete-list" style="display:none;"></div></div></div><div><span class="mobile-label">Item Code / OEM No</span><input type="text" class="i-partNo pos-input" placeholder="OEM Code" value="${escapeAttr(data && data.partNo ? data.partNo : '')}" oninput="this.value = this.value.toUpperCase().replace(/\\s/g, '')"></div><div><span class="mobile-label">Brand</span><input type="text" class="i-brand pos-input" placeholder="Brand" value="${escapeAttr(data && data.brand ? data.brand : '')}"></div><div><span class="mobile-label">Supplier</span><input type="text" class="i-supplier pos-input" placeholder="Supplier" value="${escapeAttr(data && data.supplier ? data.supplier : '')}" list="supplierList"></div><div class="mobile-grid-3"><div><span class="mobile-label">Qty</span><input type="number" class="i-qty pos-input" placeholder="1" value="${escapeAttr(data && data.qty ? data.qty : '1')}" oninput="calcERowTotal('${currentId}')" style="text-align:center;"></div><div><span class="mobile-label">U.Price (RM)</span><input type="number" class="i-unitPrice pos-input" placeholder="0.00" value="${escapeAttr(data && data.unitPrice ? data.unitPrice : '')}" oninput="calcERowTotal('${currentId}')"></div><div><span class="mobile-label">Total (RM)</span><input type="number" class="i-subTotal pos-input readonly-input" placeholder="0.00" value="${escapeAttr(data && data.subTotal ? data.subTotal : '')}" readonly></div></div><div><span class="mobile-label">ETA Date</span><input type="date" class="i-eta pos-input" value="${escapeAttr(data && data.eta ? data.eta : '')}"></div><div style="display:flex; justify-content:center; align-items:center;"><label class="photo-upload-btn">📷 <span id="e_count_${currentId}">${eItemPhotosMap[currentId].length}</span>/5<input type="file" accept="image/*" multiple capture="environment" onchange="processEItemPhotos(event, '${currentId}')" style="display:none;"></label></div><div>${!isFirst || data !== null ? `<button type="button" class="remove-row-btn" onclick="removeEItemBlock('${currentId}')">✖</button>` : `<div style="height:35px;"></div>`}</div><div id="e_gallery_${currentId}" class="row-gallery"></div></div>`;
         container.insertAdjacentHTML('beforeend', html); renderEGalleryUI(currentId); updateERowNumbers(); if(data) calcERowTotal(currentId); 
     }
 
     function removeEItemBlock(id) { document.getElementById(id).remove(); delete eItemPhotosMap[id]; updateERowNumbers(); calcEGrandTotal(); if (document.getElementById('eDynamicItemsContainer').children.length === 0) addEItemBlock(); }
-    function processEItemPhotos(event, itemId) { const files = event.target.files; if (!files || files.length === 0) return; if (eItemPhotosMap[itemId].length + files.length > 5) { alert("⚠️ Max 5 photos!"); event.target.value = ''; return; } Array.from(files).forEach(file => { const reader = new FileReader(); reader.onload = function(e) { const img = new Image(); img.onload = function() { const canvas = document.createElement('canvas'); let width = img.width; let height = img.height; if (width > height) { if(width > 800) { height *= 800/width; width = 800; } } else { if(height > 800) { width *= 800/height; height = 800; } } canvas.width = width; canvas.height = height; canvas.getContext('2d').drawImage(img, 0, 0, width, height); eItemPhotosMap[itemId].push(canvas.toDataURL('image/jpeg', 0.8)); renderEGalleryUI(itemId); }; img.src = e.target.result; }; reader.readAsDataURL(file); }); event.target.value = ''; }
+    function processEItemPhotos(event, itemId) { processPhotoFiles(event, eItemPhotosMap[itemId], () => renderEGalleryUI(itemId), 5); }
     function renderEGalleryUI(itemId) { const gallery = document.getElementById('e_gallery_' + itemId); document.getElementById('e_count_' + itemId).innerText = eItemPhotosMap[itemId].length; gallery.innerHTML = ''; eItemPhotosMap[itemId].forEach((b64Data, index) => { gallery.innerHTML += `<div class="photo-wrapper"><img src="${b64Data}" class="photo-thumbnail" onclick="showPhoto('${b64Data}')"><button type="button" class="rotate-single-btn" onclick="rotateImage('${itemId}', ${index}, 'enquire')">↻</button><button type="button" class="remove-single-btn" onclick="removeESinglePhoto('${itemId}', ${index})">✖</button></div>`; }); }
     function removeESinglePhoto(itemId, index) { eItemPhotosMap[itemId].splice(index, 1); renderEGalleryUI(itemId); }
 
     function editEnquire(id) {
         const enq = enquiries.find(e => e.id === id);
+        if (!enq) return alert('Enquiry not found or already deleted. Please refresh the enquiry list.');
         ['eCustName','eCustPhone','eCarPlate','eCarModel','eChassisNumber','eTotalPrice','eOrderByStaff','eRemarks'].forEach(f => { let val = enq[f.replace('eOrderByStaff','staff').replace('eCustName','name').replace('eCustPhone','phone').replace('eCarPlate','plate').replace('eCarModel','car').replace('eChassisNumber','chassis').replace('eTotalPrice','total').replace('eRemarks','remarks')] || ''; document.getElementById(f).value = val; });
         document.getElementById('eDynamicItemsContainer').innerHTML = ''; eItemPhotosMap = {}; const itemsToLoad = enq.items || []; if(itemsToLoad.length === 0) addEItemBlock(); itemsToLoad.forEach(data => addEItemBlock(data));
         eEditingId = id; document.getElementById('eMainBtn').innerText = "Confirm Update Enquiry"; document.getElementById('eMainBtn').style.backgroundColor = "#10b981"; document.getElementById('eCancelBtn').style.display = "block"; window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1871,10 +1993,10 @@ Uploaded ${successCount} item(s) to Cloud.`);
         } catch(err) { alert("Upload Error: " + err.message); } finally { eMainBtn.innerText = originalText; eMainBtn.disabled = false; }
     }
 
-    async function deleteEnquire(id) { if(!navigator.onLine) return; const enq = enquiries.find(e => e.id === id) || {}; if(isAdmin && confirm("Delete Enquiry?")) { await db.ref('enquiries/' + id).remove(); await writeAuditLog('DELETE_ENQUIRY', 'enquiries', enq.refNo || '', id, { name: enq.name || '', plate: enq.plate || '' }); } else if(!isAdmin) alert("Admin only."); }
+    async function deleteEnquire(id) { if(!navigator.onLine) return alert('Requires internet.'); const enq = enquiries.find(e => e.id === id) || {}; if(isAdmin && confirm('Delete Enquiry?')) { await db.ref('enquiries/' + id).remove(); await writeAuditLog('DELETE_ENQUIRY', 'enquiries', enq.refNo || '', id, { name: enq.name || '', plate: enq.plate || '' }); } else if(!isAdmin) { await submitDeleteRequest('enquiries', id, enq.refNo || '', { name: enq.name || '', plate: enq.plate || '', car: enq.car || '' }); } }
 
     function convertEnqToQuote(id) {
-        const enq = enquiries.find(e => e.id === id); if(!enq) return; document.getElementById('tabBtnQuote').click();
+        const enq = enquiries.find(e => e.id === id); if(!enq) return alert('Enquiry not found or already deleted. Please refresh the enquiry list.'); document.getElementById('tabBtnQuote').click();
         document.getElementById('qCustName').value = enq.name || ''; document.getElementById('qCustPhone').value = enq.phone || ''; document.getElementById('qCarPlate').value = enq.plate || ''; document.getElementById('qCarModel').value = enq.car || ''; document.getElementById('qChassisNumber').value = enq.chassis || ''; document.getElementById('qOrderByStaff').value = enq.staff || ''; document.getElementById('qRemarks').value = "From Enquiry: " + enq.refNo + (enq.remarks ? " - " + enq.remarks : '');
         document.getElementById('qDynamicItemsContainer').innerHTML = ''; qItemPhotosMap = {}; qItemMapIdCounter = 0; const itemsToLoad = enq.items || []; if(itemsToLoad.length === 0) addQItemBlock(); itemsToLoad.forEach(data => addQItemBlock(data));
         writeAuditLog('CONVERT_ENQUIRY_TO_QUOTE_FORM', 'enquiries', enq.refNo || '', id, { name: enq.name || '', plate: enq.plate || '' }); alert("✅ Enquiry Loaded into Quotation! Please review prices and click 'Save Quotation'."); window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1903,16 +2025,16 @@ Uploaded ${successCount} item(s) to Cloud.`);
             let partsHtml = `<ul class="table-item-list">`; let waList = [];
             (enq.items||[]).forEach(item => {
                 const priceDetails = parseFloat(item.subTotal) > 0 ? `<span style="float:right;font-size:13px;color:#64748b;">${item.qty||1} x RM${parseFloat(item.unitPrice||0).toFixed(2)} = <b style="color:#0f172a;">RM${parseFloat(item.subTotal||0).toFixed(2)}</b></span>` : `<span style="float:right;font-size:13px;color:#64748b;font-weight:bold;">Qty: ${item.qty||1}</span>`;
-                let photoHtml = ''; if (item.photos && item.photos.length > 0) { photoHtml = `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;">`; item.photos.forEach(p => { photoHtml += `<img src="${p}" class="photo-thumbnail" onclick="showPhoto('${p}')" style="width:40px;height:40px;border:1px solid #cbd5e1;">`; }); photoHtml += `</div>`; }
-                const pNo = item.partNo && item.partNo.trim() !== '' ? item.partNo.trim() : null; const partNoHTML = pNo ? ` <small class="mono-text" style="color:#64748b; font-weight:bold;">[${pNo}]</small>` : '';
-                partsHtml += `<li><div style="margin-bottom:4px;"><strong style="font-size:14px;color:#0f172a;">${item.part||'-'}</strong>${partNoHTML}${priceDetails}</div><small style="color:#64748b;">Brd: ${item.brand||'-'} • Sup: ${item.supplier||'-'}</small>${photoHtml}</li>`;
+                let photoHtml = ''; if (item.photos && item.photos.length > 0) { photoHtml = `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;">`; item.photos.forEach(p => { photoHtml += `<img src="${safePhotoSrc(p)}" class="photo-thumbnail" onclick="showPhoto('${safePhotoSrc(p)}')" style="width:40px;height:40px;border:1px solid #cbd5e1;">`; }); photoHtml += `</div>`; }
+                const pNo = item.partNo && item.partNo.trim() !== '' ? item.partNo.trim() : null; const partNoHTML = pNo ? ` <small class="mono-text" style="color:#64748b; font-weight:bold;">[${escapeHTML(pNo)}]</small>` : '';
+                partsHtml += `<li><div style="margin-bottom:4px;"><strong style="font-size:14px;color:#0f172a;">${escapeHTML(item.part||'-')}</strong>${partNoHTML}${priceDetails}</div><small style="color:#64748b;">Brd: ${escapeHTML(item.brand||'-')} • Sup: ${escapeHTML(item.supplier||'-')}</small>${photoHtml}</li>`;
                 const partNoWA = pNo ? `[${pNo}] ` : ''; const brandWA = item.brand && item.brand.trim() !== '' ? `(Brand: ${item.brand.trim()}) ` : '';
                 const priceWA = parseFloat(item.subTotal) > 0 ? ` -> ${item.qty||1} x RM${parseFloat(item.unitPrice||0).toFixed(2)} = RM${parseFloat(item.subTotal||0).toFixed(2)}` : ` -> Qty: ${item.qty||1}`;
                 waList.push(`• ${item.part||'-'} ${partNoWA}${brandWA}${priceWA}`);
             }); partsHtml += `</ul>`;
             
-            const msgE = `💬 *MALAYSIA MOTOR COMPANY - MAKLUMBALAS PERTANYAAN / ENQUIRY RESPONSE*\n\nPelanggan yang dihormati ${enq.name},\nTerima kasih kerana menghubungi kami. Berikut adalah maklumat untuk pertanyaan anda:\n\nDear ${enq.name},\nThank you for reaching out. Here is the information regarding your enquiry:\n\n*No. Pertanyaan / Enq ID:* ${enq.refNo}\n*Car Plate:* ${enq.plate||'-'}\n*Kenderaan / Car:* ${enq.car||''}\n*Senarai Barang / Items:*\n${waList.join('\n')}\n\n*Anggaran Jumlah / Estimated Total:* RM${enq.total}\n\nSila beritahu kami jika anda mempunyai sebarang soalan lanjut. / Please let us know if you have any further questions.\nTerima kasih! / Thank you!`;
-            const tr = document.createElement('tr'); const plateHtml = enq.plate ? `<span style="background:#fef08a; color:#b45309; padding:2px 6px; border-radius:4px; font-weight:bold; font-size:12px; letter-spacing:1px;">${enq.plate}</span><br>` : '';
+            const msgE = `💬 *MALAYSIA MOTOR COMPANY - MAKLUMBALAS PERTANYAAN / ENQUIRY RESPONSE*\n\nPelanggan yang dihormati ${escapeHTML(enq.name)},\nTerima kasih kerana menghubungi kami. Berikut adalah maklumat untuk pertanyaan anda:\n\nDear ${escapeHTML(enq.name)},\nThank you for reaching out. Here is the information regarding your enquiry:\n\n*No. Pertanyaan / Enq ID:* ${escapeHTML(enq.refNo)}\n*Car Plate:* ${enq.plate||'-'}\n*Kenderaan / Car:* ${enq.car||''}\n*Senarai Barang / Items:*\n${waList.join('\n')}\n\n*Anggaran Jumlah / Estimated Total:* RM${escapeHTML(enq.total)}\n\nSila beritahu kami jika anda mempunyai sebarang soalan lanjut. / Please let us know if you have any further questions.\nTerima kasih! / Thank you!`;
+            const tr = document.createElement('tr'); const plateHtml = enq.plate ? `<span style="background:#fef08a; color:#b45309; padding:2px 6px; border-radius:4px; font-weight:bold; font-size:12px; letter-spacing:1px;">${escapeHTML(enq.plate)}</span><br>` : '';
             
             let mainActions = '';
             if (enq.offlinePending) {
@@ -1923,9 +2045,89 @@ Uploaded ${successCount} item(s) to Cloud.`);
                 mainActions += `</div><button class="print-btn" onclick="printChecklist('${enq.id}', 'enquire')" style="width:100%; margin-top:5px; margin-bottom:5px;">🖨️ Print Enquiry</button>`;
             }
 
-            tr.innerHTML = `<td><span class="ref-badge">${enq.refNo}</span><br><small style="color:#64748b;margin-top:6px;display:inline-block;font-weight:700;">${enq.date}</small><br>${enq.staff?`<span class="staff-badge">👤 ${enq.staff}</span>`:''}</td><td><strong style="color:#0f172a;">${enq.name}</strong><br><small style="color:#3b82f6;font-weight:bold;">${enq.phone}</small><br><div style="margin-top:8px;padding-top:8px;border-top:1px dashed #e2e8f0;">${plateHtml}<strong style="color:#334155; font-size:13px; display:inline-block; margin-top:4px;">${enq.car||'-'}</strong> <span class="mono-text" style="color:#64748b;font-size:12px;">${enq.chassis||''}</span></div></td><td>${partsHtml}<div class="notes-text" style="margin-top:8px;color:#059669;font-weight:600;">${enq.remarks?'📝 Remarks: '+enq.remarks:''}</div></td><td><strong style="font-size:18px;color:#0f172a;">RM${enq.total}</strong></td><td><div class="action-btns">${enq.offlinePending ? '<div style="font-size:12px; color:#ef4444; font-weight:bold;">Waiting Sync</div>' : (enq.phone ? `<a href="https://wa.me/${enq.phone}?text=${encodeURIComponent(msgE)}" target="_blank" class="wa-btn wa-btn-enq" style="width:100%;">💬 Send Enquiry</a>` : '<div style="font-size:12px; color:#94a3b8; font-weight:bold;">No Phone</div>')}</div></td><td>${mainActions}</td>`;
+            tr.innerHTML = `<td><span class="ref-badge">${escapeHTML(enq.refNo)}</span><br><small style="color:#64748b;margin-top:6px;display:inline-block;font-weight:700;">${escapeHTML(enq.date)}</small><br>${enq.staff?`<span class="staff-badge">👤 ${escapeHTML(enq.staff)}</span>`:''}</td><td><strong style="color:#0f172a;">${escapeHTML(enq.name)}</strong><br><small style="color:#3b82f6;font-weight:bold;">${escapeHTML(enq.phone)}</small><br><div style="margin-top:8px;padding-top:8px;border-top:1px dashed #e2e8f0;">${plateHtml}<strong style="color:#334155; font-size:13px; display:inline-block; margin-top:4px;">${escapeHTML(enq.car||'-')}</strong> <span class="mono-text" style="color:#64748b;font-size:12px;">${escapeHTML(enq.chassis||'')}</span></div></td><td>${partsHtml}<div class="notes-text" style="margin-top:8px;color:#059669;font-weight:600;">${enq.remarks ? '📝 Remarks: ' + escapeHTML(enq.remarks) : ''}</div></td><td><strong style="font-size:18px;color:#0f172a;">RM${escapeHTML(enq.total)}</strong></td><td><div class="action-btns">${enq.offlinePending ? '<div style="font-size:12px; color:#ef4444; font-weight:bold;">Waiting Sync</div>' : (enq.phone ? `<a href="https://wa.me/${escapeHTML(enq.phone)}?text=${encodeURIComponent(msgE)}" target="_blank" class="wa-btn wa-btn-enq" style="width:100%;">💬 Send Enquiry</a>` : '<div style="font-size:12px; color:#94a3b8; font-weight:bold;">No Phone</div>')}</div></td><td>${mainActions}</td>`;
             tbody.appendChild(tr);
         });
+    }
+
+
+    // ==========================================
+    // V72 DELETE REQUEST WORKFLOW
+    // ==========================================
+    function getPathForModule(moduleName) {
+        return moduleName === 'orders' ? 'orders' : moduleName === 'quotations' ? 'quotations' : moduleName === 'enquiries' ? 'enquiries' : moduleName === 'restock' ? 'restock' : '';
+    }
+
+    async function submitDeleteRequest(moduleName, recordId, refNo, details) {
+        if (!auth.currentUser) return alert('Please login first.');
+        const reason = prompt('Please enter delete reason (required):\nExample: wrong item / duplicate / customer cancelled');
+        if (!reason || !reason.trim()) return alert('Delete request cancelled. Reason is required.');
+        const req = {
+            module: moduleName,
+            recordId: recordId,
+            refNo: refNo || '',
+            details: details || {},
+            reason: reason.trim(),
+            requestedBy: auth.currentUser.email,
+            requestedDeviceId: currentDeviceId || getOrCreateDeviceId(),
+            requestedDeviceName: currentDeviceName || getDeviceName(),
+            status: 'pending',
+            requestedAt: firebase.database.ServerValue.TIMESTAMP
+        };
+        await db.ref('deleteRequests').push(req);
+        await writeAuditLog('REQUEST_DELETE', moduleName, refNo || '', recordId, { reason: reason.trim(), details: details || {} });
+        alert('✅ Delete request sent to Boss/Admin for approval.');
+    }
+
+    async function viewDeleteRequests() {
+        if (!isAdmin) return alert('Admin only.');
+        document.getElementById('historyContent').innerHTML = `<h3>🗑️ Delete Requests</h3><p>Loading...</p>`;
+        document.getElementById('historyModal').style.display = 'flex';
+        try {
+            const snap = await db.ref('deleteRequests').orderByChild('requestedAt').limitToLast(100).once('value');
+            const reqs = [];
+            snap.forEach(child => reqs.push({ id: child.key, ...child.val() }));
+            reqs.sort((a,b) => (b.requestedAt || 0) - (a.requestedAt || 0));
+            let html = `<h3>🗑️ Delete Requests</h3><p style="font-size:12px;color:#64748b;">Boss/Admin can approve or reject staff delete requests.</p>`;
+            const pending = reqs.filter(r => (r.status || 'pending') === 'pending');
+            if (pending.length === 0) html += `<p style="font-size:13px;color:#64748b;">No pending delete requests.</p>`;
+            pending.forEach(r => {
+                html += `<div style="border:1px solid #fecaca;background:#fff7ed;border-radius:8px;padding:10px;margin-bottom:8px;font-size:12px;line-height:1.5;word-break:break-word;">
+                    <strong>${escapeHTML((r.module || '-').toUpperCase())}</strong> | Ref: <b>${escapeHTML(r.refNo || r.recordId || '-')}</b><br>
+                    Requested by: <b>${escapeHTML(r.requestedBy || '-')}</b><br>
+                    Reason: <b style="color:#b45309;">${escapeHTML(r.reason || '-')}</b><br>
+                    Details: ${escapeHTML(JSON.stringify(r.details || {}))}<br>
+                    <button onclick="approveDeleteRequest('${r.id}')" style="background:#dc2626;color:white;border:none;padding:8px 10px;border-radius:5px;font-weight:bold;margin-top:8px;cursor:pointer;">✅ Approve Delete</button>
+                    <button onclick="rejectDeleteRequest('${r.id}')" style="background:#64748b;color:white;border:none;padding:8px 10px;border-radius:5px;font-weight:bold;margin-top:8px;cursor:pointer;">Reject</button>
+                </div>`;
+            });
+            html += `<button onclick="document.getElementById('historyModal').style.display='none'" style="padding:12px;width:100%;background:#64748b;color:white;border:none;border-radius:6px;font-weight:bold;cursor:pointer;">Close</button>`;
+            document.getElementById('historyContent').innerHTML = html;
+        } catch (err) {
+            document.getElementById('historyContent').innerHTML = `<h3>🗑️ Delete Requests</h3><p style="color:#ef4444;font-weight:bold;">Unable to load requests: ${escapeHTML(err && err.message ? err.message : err)}</p><button onclick="document.getElementById('historyModal').style.display='none'" style="padding:10px;width:100%;">Close</button>`;
+        }
+    }
+
+    async function approveDeleteRequest(requestId) {
+        if (!isAdmin) return alert('Admin only.');
+        const snap = await db.ref('deleteRequests/' + requestId).once('value');
+        const r = snap.val();
+        if (!r || r.status !== 'pending') return alert('Request is not pending.');
+        if (!confirm(`Approve delete for ${r.module} ${r.refNo || r.recordId}?`)) return;
+        const path = getPathForModule(r.module);
+        if (!path) return alert('Invalid module.');
+        await db.ref(path + '/' + r.recordId).remove();
+        await db.ref('deleteRequests/' + requestId).update({ status: 'approved', approvedBy: auth.currentUser.email, approvedAt: firebase.database.ServerValue.TIMESTAMP });
+        await writeAuditLog('APPROVE_DELETE_REQUEST', r.module, r.refNo || '', r.recordId, { reason: r.reason || '', requestedBy: r.requestedBy || '' });
+        viewDeleteRequests();
+    }
+
+    async function rejectDeleteRequest(requestId) {
+        if (!isAdmin) return alert('Admin only.');
+        const reason = prompt('Reject reason (optional):') || '';
+        await db.ref('deleteRequests/' + requestId).update({ status: 'rejected', rejectedBy: auth.currentUser.email, rejectedReason: reason, rejectedAt: firebase.database.ServerValue.TIMESTAMP });
+        await writeAuditLog('REJECT_DELETE_REQUEST', 'deleteRequests', '', requestId, { reason });
+        viewDeleteRequests();
     }
 
     // ==========================================
@@ -1942,16 +2144,16 @@ Uploaded ${successCount} item(s) to Cloud.`);
     }
     document.getElementById('r_needOrder').addEventListener('input', calcRestockCost);
 
-    function processRestockPhotos(event) { const files = event.target.files; if (!files || files.length === 0) return; if (currentRestockPhotos.length + files.length > 5) { alert("⚠️ Max 5 photos!"); event.target.value = ''; return; } Array.from(files).forEach(file => { const reader = new FileReader(); reader.onload = function(e) { const img = new Image(); img.onload = function() { const canvas = document.createElement('canvas'); let width = img.width; let height = img.height; if (width > height) { if(width > 800) { height *= 800/width; width = 800; } } else { if(height > 800) { width *= 800/height; height = 800; } } canvas.width = width; canvas.height = height; canvas.getContext('2d').drawImage(img, 0, 0, width, height); currentRestockPhotos.push(canvas.toDataURL('image/jpeg', 0.8)); renderRestockGalleryUI(); }; img.src = e.target.result; }; reader.readAsDataURL(file); }); event.target.value = ''; }
+    function processRestockPhotos(event) { processPhotoFiles(event, currentRestockPhotos, renderRestockGalleryUI, 5); }
     function renderRestockGalleryUI() { const gallery = document.getElementById('r_gallery'); document.getElementById('r_count').innerText = currentRestockPhotos.length; gallery.innerHTML = ''; currentRestockPhotos.forEach((b64Data, index) => { gallery.innerHTML += `<div class="photo-wrapper"><img src="${b64Data}" class="photo-thumbnail" onclick="showPhoto('${b64Data}')"><button type="button" class="rotate-single-btn" onclick="rotateRestockImage(${index})">↻</button><button type="button" class="remove-single-btn" onclick="removeRestockSinglePhoto(${index})">✖</button></div>`; }); }
     function removeRestockSinglePhoto(index) { currentRestockPhotos.splice(index, 1); renderRestockGalleryUI(); }
     function rotateRestockImage(index) { rotatePhotoBase64(currentRestockPhotos[index], (newBase64) => { currentRestockPhotos[index] = newBase64; renderRestockGalleryUI(); }); }
 
     async function addRestockItem() {
-        const part = document.getElementById('r_part').value; const code = document.getElementById('r_code').value.trim().toUpperCase(); const brand = document.getElementById('r_brand').value; const supp = document.getElementById('r_supp').value; const onHandQty = String(toNonNegativeNumber(document.getElementById('r_onHand').value, 0)); const needOrderQty = String(toNonNegativeNumber(document.getElementById('r_needOrder').value, 1));
+        const part = document.getElementById('r_part').value; const code = document.getElementById('r_code').value.trim().toUpperCase(); const brand = document.getElementById('r_brand').value; const supp = document.getElementById('r_supp').value; const car = document.getElementById('r_car').value; const onHandQty = String(toNonNegativeNumber(document.getElementById('r_onHand').value, 0)); const needOrderQty = String(toNonNegativeNumber(document.getElementById('r_needOrder').value, 1));
         const unitCost = toNonNegativeNumber(document.getElementById('r_unitCost').value, 0).toFixed(2); const totalCost = toNonNegativeNumber(document.getElementById('r_totalCost').value, 0).toFixed(2);
         if(!part && !code) return alert("Please enter at least a part description or item code.");
-        const payload = { part, code, brand, supp, onHandQty, needOrderQty, unitCost, totalCost, date: getStandardDateStr(), timestamp: Date.now(), status: 'Not Yet Order', photos: [...currentRestockPhotos] };
+        const payload = { part, code, brand, supp, car, onHandQty, needOrderQty, unitCost, totalCost, date: getStandardDateStr(), timestamp: Date.now(), status: 'Not Yet Order', photos: [...currentRestockPhotos] };
         const btn = document.getElementById('addRestockBtn'); const origText = btn.innerText; btn.innerText = "⏳ Uploading..."; btn.disabled = true;
         try {
             if (!navigator.onLine) {
@@ -1966,7 +2168,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
             const newRef = await db.ref('restock').push(payload);
             await writeAuditLog('CREATE_RESTOCK', 'restock', '', newRef.key, { part: payload.part, code: payload.code, supplier: payload.supp, needOrderQty: payload.needOrderQty });
 
-            ['r_part','r_code','r_brand','r_supp','r_onHand','r_needOrder','r_unitCost','r_totalCost'].forEach(id => document.getElementById(id).value = '');
+            ['r_part','r_code','r_brand','r_supp','r_car','r_onHand','r_needOrder','r_unitCost','r_totalCost'].forEach(id => document.getElementById(id).value = '');
             currentRestockPhotos = [];
             renderRestockGalleryUI();
         } catch (e) {
@@ -1980,12 +2182,45 @@ Uploaded ${successCount} item(s) to Cloud.`);
     async function updateRestockSupplier(id, newValue) { if(!isAdmin) return; if(!navigator.onLine) return; const item = restockItems.find(r => r.id === id) || {}; await db.ref('restock/' + id).update({ supp: newValue }); await writeAuditLog('UPDATE_RESTOCK_SUPPLIER', 'restock', '', id, { part: item.part || '', from: item.supp || '', to: newValue }); }
     async function markRestockOrdered(id) { if(!navigator.onLine) return; const item = restockItems.find(r => r.id === id) || {}; await db.ref('restock/' + id).update({ status: 'Ordered' }); await writeAuditLog('MARK_RESTOCK_ORDERED', 'restock', '', id, { part: item.part || '', code: item.code || '' }); }
     async function returnToNotYet(id) { if(!navigator.onLine) return; const item = restockItems.find(r => r.id === id) || {}; await db.ref('restock/' + id).update({ status: 'Not Yet Order' }); await writeAuditLog('RETURN_RESTOCK_NOT_YET', 'restock', '', id, { part: item.part || '', code: item.code || '' }); }
-    async function deleteRestock(id) { if(!navigator.onLine) return; const item = restockItems.find(r => r.id === id) || {}; if(isAdmin && confirm("Delete this record permanently?")) { await db.ref('restock/' + id).remove(); await writeAuditLog('DELETE_RESTOCK', 'restock', '', id, { part: item.part || '', code: item.code || '' }); } }
+
+    async function editRestock(id) {
+        if (!navigator.onLine) return alert('Requires internet.');
+        const item = restockItems.find(r => r.id === id);
+        if (!item) return alert('Restock item not found.');
+        const part = prompt('Part Description:', item.part || ''); if (part === null) return;
+        const code = prompt('Item Code / OEM:', item.code || ''); if (code === null) return;
+        const brand = prompt('Brand:', item.brand || ''); if (brand === null) return;
+        const supp = prompt('Supplier:', item.supp || ''); if (supp === null) return;
+        const car = prompt('Car Model:', item.car || ''); if (car === null) return;
+        const onHandQty = prompt('On Hand Qty:', item.onHandQty || '0'); if (onHandQty === null) return;
+        const needOrderQty = prompt('Order Qty:', item.needOrderQty || '1'); if (needOrderQty === null) return;
+        const updates = {
+            part: part,
+            code: (code || '').trim().toUpperCase(),
+            brand: brand,
+            supp: supp,
+            car: car,
+            onHandQty: String(toNonNegativeNumber(onHandQty, 0)),
+            needOrderQty: String(toNonNegativeNumber(needOrderQty, 1)),
+            editedAt: firebase.database.ServerValue.TIMESTAMP,
+            editedBy: auth.currentUser ? auth.currentUser.email : ''
+        };
+        if (isAdmin) {
+            const unitCost = prompt('Unit Cost (RM):', item.unitCost || '0'); if (unitCost === null) return;
+            updates.unitCost = toNonNegativeNumber(unitCost, 0).toFixed(2);
+            updates.totalCost = (toNonNegativeNumber(updates.needOrderQty, 1) * toNonNegativeNumber(updates.unitCost, 0)).toFixed(2);
+        }
+        await db.ref('restock/' + id).update(updates);
+        await writeAuditLog('EDIT_RESTOCK', 'restock', '', id, updates);
+        alert('✅ Restock record updated.');
+    }
+
+    async function deleteRestock(id) { if(!navigator.onLine) return alert('Requires internet.'); const item = restockItems.find(r => r.id === id) || {}; if(isAdmin && confirm('Delete this record permanently?')) { await db.ref('restock/' + id).remove(); await writeAuditLog('DELETE_RESTOCK', 'restock', '', id, { part: item.part || '', code: item.code || '', car: item.car || '' }); } else if(!isAdmin) { await submitDeleteRequest('restock', id, item.refNo || '', { part: item.part || '', code: item.code || '', car: item.car || '', supp: item.supp || '' }); } }
     
     async function markFilteredOrdered() { if(!isAdmin) return alert("Admin only."); if(!navigator.onLine) return alert("Requires internet."); let toUpdate = currentRestockView.filter(i => i.status !== 'Ordered' && !i.offlinePending); if(toUpdate.length === 0) return alert('No cloud pending items found in your current view. Offline pending items must sync first.'); if(!confirm(`Mark all ${toUpdate.length} cloud item(s) on this screen as ORDERED?`)) return; let updates = {}; toUpdate.forEach(i => { updates[i.id + '/status'] = 'Ordered'; }); await db.ref('restock').update(updates); await writeAuditLog('BULK_MARK_RESTOCK_ORDERED', 'restock', '', '', { count: Object.keys(updates).length }); }
 
     function renderRestockTable() {
-        let theadHTML = `<tr><th style="width:100px;">Date Added</th><th>Part Description</th><th>Item Code / OEM</th><th>Brand</th><th>Supplier ${isAdmin ? '<span style="font-size:10px; color:#b45309;">(Boss Edit)</span>' : ''}</th><th style="text-align:center; width: 60px;">On Hand</th><th style="text-align:center; width: 60px;">Order Qty</th>`;
+        let theadHTML = `<tr><th style="width:100px;">Date Added</th><th>Part Description</th><th>Item Code / OEM</th><th>Brand</th><th>Supplier ${isAdmin ? '<span style="font-size:10px; color:#b45309;">(Boss Edit)</span>' : ''}</th><th>Car Model</th><th style="text-align:center; width: 60px;">On Hand</th><th style="text-align:center; width: 60px;">Order Qty</th>`;
         if (isAdmin) { theadHTML += `<th style="text-align:center;">Unit Cost</th><th style="text-align:center;">Total Cost</th>`; }
         theadHTML += `<th style="text-align:center; width: 100px;">Photos</th><th style="text-align:center; width: 100px;">Status</th><th style="text-align:center; width: 80px;">Actions</th></tr>`;
         document.getElementById('restockThead').innerHTML = theadHTML;
@@ -2012,19 +2247,19 @@ Uploaded ${successCount} item(s) to Cloud.`);
                 if (status !== 'Ordered') { actionHtml += `<button class="complete-btn" onclick="markRestockOrdered('${item.id}')" style="width:100%; margin-bottom:4px;">✔️ Done</button>`; } else { actionHtml += `<button class="edit-btn" onclick="returnToNotYet('${item.id}')" style="width:100%; margin-bottom:4px;">⏪ Return</button>`; } 
                 if (isAdmin) { actionHtml += `<button class="delete-btn" onclick="deleteRestock('${item.id}')" style="width:100%;">✖ Del</button>`; } 
             }
-            let suppHtml = (isAdmin && !item.offlinePending) ? `<input type="text" class="pos-input" value="${item.supp||''}" placeholder="Type..." style="width:100px; font-size:12px; background:#fffbeb; color:#b45309; font-weight:bold;" list="supplierList" onchange="updateRestockSupplier('${item.id}', this.value)">` : (item.supp || '-');
+            let suppHtml = (isAdmin && !item.offlinePending) ? `<input type="text" class="pos-input" value="${escapeAttr(item.supp||'')}" placeholder="Type..." style="width:100px; font-size:12px; background:#fffbeb; color:#b45309; font-weight:bold;" list="supplierList" onchange="updateRestockSupplier('${item.id}', this.value)">` : escapeHTML(item.supp || '-');
             let costHtml = isAdmin ? `<td style="text-align:center; font-weight:bold; color:#059669;">RM ${parseFloat(item.unitCost||0).toFixed(2)}</td><td style="text-align:center; font-weight:bold; color:#059669;">RM ${parseFloat(item.totalCost||0).toFixed(2)}</td>` : ``;
-            let photoHtml = ''; if (item.photos && item.photos.length > 0) { photoHtml = `<div style="display:flex; gap:4px; flex-wrap:wrap; justify-content:center;">`; item.photos.forEach(p => { photoHtml += `<img src="${p}" class="photo-thumbnail" onclick="showPhoto('${p}')" style="width:35px;height:35px;border:1px solid #cbd5e1; cursor:pointer;">`; }); photoHtml += `</div>`; } else { photoHtml = `<span style="color:#94a3b8; font-size:11px;">No Photo</span>`; }
+            let photoHtml = ''; if (item.photos && item.photos.length > 0) { photoHtml = `<div style="display:flex; gap:4px; flex-wrap:wrap; justify-content:center;">`; item.photos.forEach(p => { photoHtml += `<img src="${safePhotoSrc(p)}" class="photo-thumbnail" onclick="showPhoto('${safePhotoSrc(p)}')" style="width:35px;height:35px;border:1px solid #cbd5e1; cursor:pointer;">`; }); photoHtml += `</div>`; } else { photoHtml = `<span style="color:#94a3b8; font-size:11px;">No Photo</span>`; }
             const tr = document.createElement('tr'); tr.style.opacity = status === 'Ordered' ? '0.6' : '1';
-            tr.innerHTML = `<td><small style="color:#64748b; font-weight:bold;">${item.date}</small></td><td><strong>${item.part || '-'}</strong></td><td class="mono-text">${item.code || '-'}</td><td>${item.brand || '-'}</td><td>${suppHtml}</td><td style="text-align:center; font-weight:bold;">${item.onHandQty || '0'}</td><td style="text-align:center; color:#ef4444; font-weight:bold;">${item.needOrderQty || '1'}</td>${costHtml}<td style="text-align:center;">${photoHtml}</td><td style="text-align:center;">${statusHtml}</td><td><div class="action-btns" style="flex-direction:column;">${actionHtml}</div></td>`; tbody.appendChild(tr);
+            tr.innerHTML = `<td><small style="color:#64748b; font-weight:bold;">${escapeHTML(item.date)}</small></td><td><strong>${escapeHTML(item.part || '-') }</strong></td><td class="mono-text">${escapeHTML(item.code || '-') }</td><td>${escapeHTML(item.brand || '-') }</td><td>${suppHtml}</td><td>${escapeHTML(item.car || '-') }</td><td style="text-align:center; font-weight:bold;">${escapeHTML(item.onHandQty || '0') }</td><td style="text-align:center; color:#ef4444; font-weight:bold;">${escapeHTML(item.needOrderQty || '1') }</td>${costHtml}<td style="text-align:center;">${photoHtml}</td><td style="text-align:center;">${statusHtml}</td><td><div class="action-btns" style="flex-direction:column;">${actionHtml}</div></td>`; tbody.appendChild(tr);
         });
     }
 
     function getRestockHTML() {
-        let rows = ''; currentRestockView.filter(i => !i.offlinePending).forEach((i, idx) => { const status = i.status || 'Not Yet Order'; let costHtml = isAdmin ? `<td style="text-align:center; padding:8px; border:1px solid #ccc;">RM ${parseFloat(i.unitCost||0).toFixed(2)}</td><td style="text-align:center; padding:8px; border:1px solid #ccc;">RM ${parseFloat(i.totalCost||0).toFixed(2)}</td>` : ''; rows += `<tr><td style="text-align:center; padding:8px; border:1px solid #ccc;">${idx+1}</td><td style="padding:8px; border:1px solid #ccc;">${i.date}</td><td style="padding:8px; border:1px solid #ccc;"><strong>${i.part||'-'}</strong></td><td style="padding:8px; border:1px solid #ccc;">${i.code||'-'}</td><td style="padding:8px; border:1px solid #ccc;">${i.brand||'-'}</td><td style="padding:8px; border:1px solid #ccc;">${i.supp||'-'}</td><td style="text-align:center; padding:8px; border:1px solid #ccc;">${i.onHandQty||'0'}</td><td style="text-align:center; color:red; font-weight:bold; padding:8px; border:1px solid #ccc;">${i.needOrderQty||'1'}</td>${costHtml}<td style="text-align:center; padding:8px; border:1px solid #ccc;">${status}</td></tr>`; });
+        let rows = ''; currentRestockView.filter(i => !i.offlinePending).forEach((i, idx) => { const status = i.status || 'Not Yet Order'; let costHtml = isAdmin ? `<td style="text-align:center; padding:8px; border:1px solid #ccc;">RM ${parseFloat(i.unitCost||0).toFixed(2)}</td><td style="text-align:center; padding:8px; border:1px solid #ccc;">RM ${parseFloat(i.totalCost||0).toFixed(2)}</td>` : ''; rows += `<tr><td style="text-align:center; padding:8px; border:1px solid #ccc;">${idx+1}</td><td style="padding:8px; border:1px solid #ccc;">${escapeHTML(i.date)}</td><td style="padding:8px; border:1px solid #ccc;"><strong>${escapeHTML(i.part||'-')}</strong></td><td style="padding:8px; border:1px solid #ccc;">${escapeHTML(i.code||'-')}</td><td style="padding:8px; border:1px solid #ccc;">${escapeHTML(i.brand||'-')}</td><td style="padding:8px; border:1px solid #ccc;">${escapeHTML(i.supp||'-')}</td><td style="padding:8px; border:1px solid #ccc;">${escapeHTML(i.car||'-')}</td><td style="text-align:center; padding:8px; border:1px solid #ccc;">${escapeHTML(i.onHandQty||'0')}</td><td style="text-align:center; color:red; font-weight:bold; padding:8px; border:1px solid #ccc;">${escapeHTML(i.needOrderQty||'1')}</td>${costHtml}<td style="text-align:center; padding:8px; border:1px solid #ccc;">${escapeHTML(status)}</td></tr>`; });
         let filterTitle = "RESTOCK SUMMARY REPORT"; const suppFilter = document.getElementById('rSuppFilter').value; if(suppFilter && suppFilter !== 'all') { filterTitle = `ORDER LIST FOR: ${suppFilter.toUpperCase()}`; }
         let headerCost = isAdmin ? `<th style="width:8%; text-align:center;">Unit Cost</th><th style="width:8%; text-align:center;">Total Cost</th>` : '';
-        return `<style>*, *::before, *::after { box-sizing: border-box; } body{font-family:sans-serif;padding:30px;} table{width:100%;border-collapse:collapse;margin-top:20px;font-size:12px;table-layout:fixed;} th,td{border:1px solid #ccc;padding:8px;word-wrap:break-word;} th{background:#f1f5f9;}</style><div id="rInvoiceBody"><h2 style="text-align:center; margin-bottom:5px;">${filterTitle}</h2><table><thead><tr><th style="width:4%; text-align:center;">No</th><th style="width:10%;">Date</th><th style="width:20%; text-align:left;">Part Description</th><th style="width:15%; text-align:left;">Item Code</th><th style="width:10%; text-align:left;">Brand</th><th style="width:10%; text-align:left;">Supplier</th><th style="width:6%; text-align:center;">On Hand</th><th style="width:6%; text-align:center;">Need</th>${headerCost}<th style="width:10%; text-align:center;">Status</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+        return `<style>*, *::before, *::after { box-sizing: border-box; } body{font-family:sans-serif;padding:30px;} table{width:100%;border-collapse:collapse;margin-top:20px;font-size:12px;table-layout:fixed;} th,td{border:1px solid #ccc;padding:8px;word-wrap:break-word;} th{background:#f1f5f9;}</style><div id="rInvoiceBody"><h2 style="text-align:center; margin-bottom:5px;">${escapeHTML(filterTitle)}</h2><table><thead><tr><th style="width:4%; text-align:center;">No</th><th style="width:10%;">Date</th><th style="width:20%; text-align:left;">Part Description</th><th style="width:15%; text-align:left;">Item Code</th><th style="width:10%; text-align:left;">Brand</th><th style="width:10%; text-align:left;">Supplier</th><th style="width:10%; text-align:left;">Car Model</th><th style="width:6%; text-align:center;">On Hand</th><th style="width:6%; text-align:center;">Need</th>${headerCost}<th style="width:10%; text-align:center;">Status</th></tr></thead><tbody>${rows}</tbody></table></div>`;
     }
     
     function printRestock() { const p = window.open('', '_blank'); p.document.write('<html><head><title>Order List</title></head><body>'+getRestockHTML()+'</body></html>'); p.document.close(); p.focus(); setTimeout(() => { p.print(); p.close(); }, 350); }
@@ -2045,7 +2280,8 @@ Date Filter: ${dateText}
                 const codeWA = i.code && i.code.trim() !== '' ? `[${i.code.trim()}] ` : '';
                 const brandWA = i.brand && i.brand.trim() !== '' ? `(Brd: ${i.brand.trim()}) ` : '';
                 const suppWA = i.supp && i.supp.trim() !== '' ? `(Sup: ${i.supp.trim()}) ` : '';
-                text += `• ${i.part||''} ${codeWA}${brandWA}${suppWA}(Need: ${i.needOrderQty||'1'})
+                const carWA = i.car && i.car.trim() !== '' ? `(Car: ${i.car.trim()}) ` : '';
+                text += `• ${i.part||''} ${codeWA}${brandWA}${suppWA}${carWA}(Need: ${escapeHTML(i.needOrderQty||'1')})
 `;
                 notYetCount++;
             }
