@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="MMC Portal">
     <link rel="apple-touch-icon" href="logo.png">
-    <title>Malaysia Motor Company - Secure Portal V70</title>
+    <title>Malaysia Motor Company - Secure Portal V71</title>
     <link rel="manifest" href="manifest.json">
     <script>
         if ('serviceWorker' in navigator) {
@@ -16,12 +16,12 @@
             navigator.serviceWorker.addEventListener('controllerchange', () => { if (!refreshing) { window.location.reload(); refreshing = true; }});
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js').then(reg => {
-                    setInterval(() => { console.log("Checking server for V70 updates..."); reg.update(); }, 5 * 60 * 1000);
+                    setInterval(() => { console.log("Checking server for V71 updates..."); reg.update(); }, 5 * 60 * 1000);
                     reg.onupdatefound = () => {
                         const installingWorker = reg.installing;
                         installingWorker.onstatechange = () => {
                             if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                if (confirm("🔄 New system version (V70) available! Click OK to apply.")) { installingWorker.postMessage('SKIP_WAITING'); }
+                                if (confirm("🔄 New system version (V71) available! Click OK to apply.")) { installingWorker.postMessage('SKIP_WAITING'); }
                             }
                         };
                     };
@@ -195,7 +195,7 @@
 <div id="mainApp" class="container">
     <div class="header-flex">
         <div>
-            <h2>Malaysia Motor Company <span class="version-badge">V70 Enterprise</span> <span id="adminBadge">👑 Boss View</span></h2>
+            <h2>Malaysia Motor Company <span class="version-badge">V71 Enterprise</span> <span id="adminBadge">👑 Boss View</span></h2>
             <div style="margin-top:8px;">
                 <span id="networkBadge" class="net-online">🟢 Online (Live Cloud Sync)</span>
             </div>
@@ -216,6 +216,7 @@
             <button onclick="clearLocalOfflineQueue()" style="background:#dc2626; color:white; border:none; padding:10px 15px; border-radius:6px; font-weight:bold; cursor:pointer; box-shadow: 0 2px 4px rgba(220,38,38,0.2);">🧹 Clear Local Queue</button>
             <button onclick="backupAndResetRecords()" style="background:#7f1d1d; color:white; border:none; padding:10px 15px; border-radius:6px; font-weight:bold; cursor:pointer; box-shadow: 0 2px 4px rgba(127,29,29,0.25);">⚠️ Backup & Reset Records</button>
             <button onclick="manageDeviceApprovals()" style="background:#312e81; color:white; border:none; padding:10px 15px; border-radius:6px; font-weight:bold; cursor:pointer; box-shadow: 0 2px 4px rgba(49,46,129,0.25);">🛡️ Device Approval</button>
+            <button onclick="viewAuditLog()" style="background:#111827; color:white; border:none; padding:10px 15px; border-radius:6px; font-weight:bold; cursor:pointer; box-shadow: 0 2px 4px rgba(17,24,39,0.25);">📜 Audit Log</button>
         </div>
     </div>
 
@@ -506,7 +507,7 @@
     }
 
     // ==========================================
-    // V70 OFFLINE ENGINE - Auth Ready + Better Error + Safer Photo Sync
+    // V71 OFFLINE ENGINE - Auth Ready + Better Error + Safer Photo Sync
     // ==========================================
     const netBadge = document.getElementById('networkBadge');
 
@@ -515,12 +516,13 @@
     let isSyncingOffline = false;
 
     function updateNetworkStatus() {
+        const pending = offlineRecords && offlineRecords.length ? ` | Pending: ${offlineRecords.length}` : '';
         if (navigator.onLine) {
-            netBadge.innerText = '🟢 Online (Live Cloud Sync)';
+            netBadge.innerText = '🟢 Online (Live Cloud Sync)' + pending;
             netBadge.className = 'net-online';
             checkOfflineQueue();
         } else {
-            netBadge.innerText = '🔴 Offline (Saving Local)';
+            netBadge.innerText = '🔴 Offline (Saving Local)' + pending;
             netBadge.className = 'net-offline';
         }
     }
@@ -559,6 +561,7 @@
             if (typeof renderQTable === 'function') renderQTable();
             if (typeof renderETable === 'function') renderETable();
             if (typeof renderRestockTable === 'function') renderRestockTable();
+            updateNetworkStatus();
         };
 
         req.onerror = function() {
@@ -647,7 +650,7 @@
     async function checkOfflineQueue() {
         if (!navigator.onLine || !offlineDB || isSyncingOffline) return;
 
-        // V70: wait until Firebase Auth session is ready before cloud sync.
+        // V71: wait until Firebase Auth session is ready before cloud sync.
         if (!auth.currentUser) {
             console.warn('Offline sync skipped: Firebase auth user not ready yet. Retrying in 3 seconds.');
             setTimeout(() => checkOfflineQueue(), 3000);
@@ -720,7 +723,7 @@ Uploading ${items.length} offline item(s) to Cloud...`);
                         }
                     }
 
-                    // V70 safety: remove each local pending item immediately after successful cloud upload.
+                    // V71 safety: remove each local pending item immediately after successful cloud upload.
                     // This prevents duplicate uploads if the next pending item fails halfway.
                     await deleteOfflineQueueItem(tempId);
                     successCount++;
@@ -757,7 +760,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
     }
 
     // ==========================================
-    // V70 DEVICE APPROVAL SYSTEM - Plan B
+    // V71 DEVICE APPROVAL SYSTEM - Plan B
     // Device must be approved AND linked to the correct staff email.
     // ==========================================
     const DEVICE_AUTH_KEY = "mmc_authorized_device_v1"; // Old MMC888 local key kept for admin migration/emergency only.
@@ -774,6 +777,111 @@ Uploaded ${successCount} item(s) to Cloud.`);
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#39;');
+    }
+
+
+    // ==========================================
+    // V71 SAFETY HELPERS - Non-negative numbers + Audit Log
+    // ==========================================
+    function toNonNegativeNumber(value, fallback = 0) {
+        const n = parseFloat(value);
+        if (isNaN(n)) return fallback;
+        return Math.max(0, n);
+    }
+
+    function sanitizeNonNegativeInput(el) {
+        if (!el || el.type !== 'number') return;
+        if (el.value === '') return;
+        const n = parseFloat(el.value);
+        if (!isNaN(n) && n < 0) el.value = '0';
+    }
+
+    function enforceNumberInputSafety() {
+        document.querySelectorAll('input[type="number"]').forEach(input => {
+            input.setAttribute('min', '0');
+            input.setAttribute('inputmode', 'decimal');
+        });
+    }
+
+    document.addEventListener('input', function(e) {
+        if (e.target && e.target.matches && e.target.matches('input[type="number"]')) {
+            sanitizeNonNegativeInput(e.target);
+        }
+    }, true);
+
+    document.addEventListener('change', function(e) {
+        if (e.target && e.target.matches && e.target.matches('input[type="number"]')) {
+            sanitizeNonNegativeInput(e.target);
+        }
+    }, true);
+
+    window.addEventListener('load', enforceNumberInputSafety);
+
+    function getAuditActorInfo() {
+        return {
+            email: auth && auth.currentUser ? auth.currentUser.email : 'unknown',
+            deviceId: currentDeviceId || getOrCreateDeviceId(),
+            deviceName: currentDeviceName || getDeviceName(),
+            userAgent: navigator.userAgent || ''
+        };
+    }
+
+    async function writeAuditLog(action, moduleName, refNo, recordId, details = {}) {
+        try {
+            if (!auth || !auth.currentUser || !navigator.onLine) return;
+            const actor = getAuditActorInfo();
+            await db.ref('auditLogs').push({
+                action: action,
+                module: moduleName,
+                refNo: refNo || '',
+                recordId: recordId || '',
+                details: details || {},
+                email: actor.email,
+                deviceId: actor.deviceId,
+                deviceName: actor.deviceName,
+                userAgent: actor.userAgent,
+                localTime: new Date().toISOString(),
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            });
+        } catch (err) {
+            console.warn('Audit log write skipped:', err);
+        }
+    }
+
+    function formatAuditTime(ts, localTime) {
+        if (ts) return new Date(ts).toLocaleString('en-GB');
+        if (localTime) return new Date(localTime).toLocaleString('en-GB');
+        return '-';
+    }
+
+    async function viewAuditLog() {
+        if (!isAdmin) return alert('Admin only.');
+        document.getElementById('historyContent').innerHTML = `<h3>📜 Audit Log</h3><p>Loading latest activity...</p>`;
+        document.getElementById('historyModal').style.display = 'flex';
+        try {
+            const snap = await db.ref('auditLogs').orderByChild('timestamp').limitToLast(80).once('value');
+            const logs = [];
+            snap.forEach(child => logs.push({ id: child.key, ...child.val() }));
+            logs.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
+            let html = `<h3>📜 Audit Log</h3><p style="font-size:12px;color:#64748b;">Latest ${logs.length} activity record(s). This helps Boss check who changed what and from which device.</p>`;
+            if (logs.length === 0) {
+                html += `<p style="font-size:13px;color:#64748b;">No audit log yet.</p>`;
+            } else {
+                logs.forEach(log => {
+                    html += `<div style="border:1px solid #e2e8f0;background:#f8fafc;border-radius:8px;padding:10px;margin-bottom:8px;font-size:12px;line-height:1.5;word-break:break-word;">
+                        <strong style="color:#0f172a;">${escapeHTML(log.action || '-')}</strong> <span style="color:#64748b;">(${escapeHTML(log.module || '-')})</span><br>
+                        Ref: <b>${escapeHTML(log.refNo || '-')}</b> | By: <b>${escapeHTML(log.email || '-')}</b><br>
+                        Device: ${escapeHTML(log.deviceName || '-')}<br>
+                        Time: ${escapeHTML(formatAuditTime(log.timestamp, log.localTime))}<br>
+                        <small style="color:#64748b;">Details: ${escapeHTML(JSON.stringify(log.details || {}))}</small>
+                    </div>`;
+                });
+            }
+            html += `<button onclick="document.getElementById('historyModal').style.display='none'" style="padding:12px;width:100%;background:#64748b;color:white;border:none;border-radius:6px;font-weight:bold;cursor:pointer;">Close</button>`;
+            document.getElementById('historyContent').innerHTML = html;
+        } catch (err) {
+            document.getElementById('historyContent').innerHTML = `<h3>📜 Audit Log</h3><p style="color:#ef4444;font-weight:bold;">Unable to load audit log: ${escapeHTML(err && err.message ? err.message : err)}</p><button onclick="document.getElementById('historyModal').style.display='none'" style="padding:10px;width:100%;">Close</button>`;
+        }
     }
 
     function getOrCreateDeviceId() {
@@ -1035,7 +1143,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
     }
     function manageStaff() {
         if(!isAdmin) return; let input = prompt("👥 Manage Staff List (separate names by comma):", staffList.join(', '));
-        if(input !== null) { db.ref('settings/staff').set(input.split(',').map(s => s.trim()).filter(s => s)); alert("✅ Staff list updated instantly across all devices!"); }
+        if(input !== null) { db.ref('settings/staff').set(input.split(',').map(s => s.trim()).filter(s => s)); writeAuditLog('MANAGE_STAFF_LIST', 'settings', '', '', { staffList: input }); alert("✅ Staff list updated instantly across all devices!"); }
     }
 
 
@@ -1089,6 +1197,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
                         Allowed Email: <b>${escapeHTML(a.allowedEmail || '-')}</b><br>
                         Device ID: ${escapeHTML(id)}<br>
                         Last Login: ${escapeHTML(a.lastLoginEmail || '-')}<br>
+                        Last Seen: ${escapeHTML(formatAuditTime(a.lastSeen, ''))}<br>
                         <button onclick="renameDeviceFromPanel('${id}')" style="background:#2563eb;color:white;border:none;padding:7px 10px;border-radius:5px;font-weight:bold;margin-top:8px;cursor:pointer;">✏️ Rename</button>
                         <button onclick="changeDeviceEmailFromPanel('${id}')" style="background:#7c3aed;color:white;border:none;padding:7px 10px;border-radius:5px;font-weight:bold;margin-top:8px;margin-left:5px;cursor:pointer;">👤 Change Email</button>
                         <button onclick="blockDeviceFromPanel('${id}')" style="background:#ef4444;color:white;border:none;padding:7px 10px;border-radius:5px;font-weight:bold;margin-top:8px;margin-left:5px;cursor:pointer;">🚫 Block</button>
@@ -1123,6 +1232,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
             lastSeen: firebase.database.ServerValue.TIMESTAMP
         });
         await db.ref('deviceRequests/' + deviceId).update({ status: 'approved', approvedBy: auth.currentUser.email, approvedAt: firebase.database.ServerValue.TIMESTAMP });
+        await writeAuditLog('APPROVE_DEVICE', 'devices', '', deviceId, { allowedEmail: allowedEmail.trim().toLowerCase(), deviceName: deviceName });
         alert('✅ Device approved for ' + allowedEmail);
         manageDeviceApprovals();
     }
@@ -1132,6 +1242,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
         if (!confirm('Block this device? It will not be able to use the system.')) return;
         await db.ref('approvedDevices/' + deviceId).update({ blocked: true, approved: false, blockedBy: auth.currentUser.email, blockedAt: firebase.database.ServerValue.TIMESTAMP });
         await db.ref('deviceRequests/' + deviceId).update({ status: 'blocked', blockedBy: auth.currentUser.email, blockedAt: firebase.database.ServerValue.TIMESTAMP });
+        await writeAuditLog('BLOCK_DEVICE', 'devices', '', deviceId, {});
         manageDeviceApprovals();
     }
 
@@ -1140,6 +1251,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
         if (!confirm('Remove this device record? If the staff opens again, it will request approval again.')) return;
         await db.ref('approvedDevices/' + deviceId).remove();
         await db.ref('deviceRequests/' + deviceId).remove();
+        await writeAuditLog('REMOVE_DEVICE', 'devices', '', deviceId, {});
         manageDeviceApprovals();
     }
 
@@ -1151,6 +1263,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
         if (!name) return;
         await db.ref('approvedDevices/' + deviceId).update({ deviceName: name.trim() });
         await db.ref('deviceRequests/' + deviceId).update({ deviceName: name.trim() });
+        await writeAuditLog('RENAME_DEVICE', 'devices', '', deviceId, { deviceName: name.trim() });
         manageDeviceApprovals();
     }
 
@@ -1161,6 +1274,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
         const email = prompt('Allowed staff email for this device:', device.allowedEmail || '');
         if (!email) return;
         await db.ref('approvedDevices/' + deviceId).update({ allowedEmail: email.trim().toLowerCase(), updatedBy: auth.currentUser.email, updatedAt: firebase.database.ServerValue.TIMESTAMP });
+        await writeAuditLog('CHANGE_DEVICE_EMAIL', 'devices', '', deviceId, { allowedEmail: email.trim().toLowerCase() });
         manageDeviceApprovals();
     }
 
@@ -1211,7 +1325,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
         Array.from(sSet).sort().forEach(s => { let opt = document.createElement('option'); opt.value = s; sList.appendChild(opt); filterSelect.innerHTML += `<option value="${s}">${s}</option>`; }); filterSelect.value = currentFilterVal || 'all';
     }
 
-    // V70 UPDATE: Cloud loading stays standard; offline pending records are merged inside render functions
+    // V71 UPDATE: Cloud loading stays standard; offline pending records are merged inside render functions
     function loadDatabaseData() { db.ref('orders').orderByChild('timestamp').limitToLast(orderLimit).on('value', (snapshot) => { orders = []; snapshot.forEach(child => { orders.push({ id: child.key, ...child.val() }); }); orders.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0)); buildDictionaries(); renderTable(); calculateDailyCash(); }); }
     function loadQuoteData() { db.ref('quotations').orderByChild('timestamp').limitToLast(quoteLimit).on('value', (snapshot) => { quotes = []; snapshot.forEach(child => { quotes.push({ id: child.key, ...child.val() }); }); quotes.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0)); buildDictionaries(); renderQTable(); }); }
     function loadEnquireData() { db.ref('enquiries').orderByChild('timestamp').limitToLast(enquireLimit).on('value', (snapshot) => { enquiries = []; snapshot.forEach(child => { enquiries.push({ id: child.key, ...child.val() }); }); enquiries.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0)); buildDictionaries(); renderETable(); }); }
@@ -1224,14 +1338,14 @@ Uploaded ${successCount} item(s) to Cloud.`);
     async function backupDatabase() {
         if(!isAdmin) return; const snap = await db.ref('/').once('value'); const data = snap.val();
         const jsonStr = JSON.stringify(data, null, 2); const blob = new Blob([jsonStr], {type: "application/json"}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-        a.download = `MMC_Database_Backup_${new Date().toLocaleDateString('en-GB').replace(/\//g, '-')}.json`; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        a.download = `MMC_Database_Backup_${new Date().toLocaleDateString('en-GB').replace(/\//g, '-')}.json`; document.body.appendChild(a); a.click(); document.body.removeChild(a); await writeAuditLog('BACKUP_DATABASE', 'admin', '', '', {});
     }
     function restoreDatabase(event) {
         if(!isAdmin) return; const file = event.target.files[0]; if(!file) return;
         if(!confirm("⚠️ WARNING! Restoring will OVERWRITE the current live cloud database with this file. Are you absolutely sure?")) { event.target.value = ''; return; }
         const reader = new FileReader();
         reader.onload = async function(e) {
-            try { const jsonData = JSON.parse(e.target.result); if(jsonData && (jsonData.orders || jsonData.restock || jsonData.orderCounter || jsonData.quotations)) { await db.ref('/').set(jsonData); alert("✅ Database successfully restored!"); } else { alert("Invalid backup file format."); } } catch(err) { alert("Error reading file: " + err.message); } event.target.value = ''; 
+            try { const jsonData = JSON.parse(e.target.result); if(jsonData && (jsonData.orders || jsonData.restock || jsonData.orderCounter || jsonData.quotations)) { await db.ref('/').set(jsonData); await writeAuditLog('RESTORE_DATABASE', 'admin', '', '', {}); alert("✅ Database successfully restored!"); } else { alert("Invalid backup file format."); } } catch(err) { alert("Error reading file: " + err.message); } event.target.value = ''; 
         }; reader.readAsText(file);
     }
 
@@ -1263,7 +1377,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
             await clearOfflineQueueStore();
             offlineRecords = [];
             refreshOfflineRecords();
-            alert("✅ Local offline queue cleared on this device.");
+            await writeAuditLog('CLEAR_LOCAL_OFFLINE_QUEUE', 'admin', '', '', { count: items.length }); alert("✅ Local offline queue cleared on this device.");
         } catch (err) {
             alert("Unable to clear local offline queue: " + err.message);
         }
@@ -1300,6 +1414,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
             }
 
             await db.ref('/').update(updates);
+            await writeAuditLog('BACKUP_AND_RESET_RECORDS', 'admin', '', '', { resetCounters: resetCounters });
             forceDataSync(true);
             alert("✅ Backup downloaded and cloud records reset completed.");
         } catch (err) {
@@ -1335,9 +1450,27 @@ Uploaded ${successCount} item(s) to Cloud.`);
     // ==========================================
     // PREORDER LOGIC
     // ==========================================
-    function calcRowTotal(rowId) { const row = document.getElementById(rowId); if(!row) return; const qty = parseFloat(row.querySelector('.i-qty').value) || 0; const price = parseFloat(row.querySelector('.i-unitPrice').value) || 0; row.querySelector('.i-subTotal').value = (qty * price) > 0 ? (qty * price).toFixed(2) : ''; calcGrandTotal(); }
+    function calcRowTotal(rowId) {
+        const row = document.getElementById(rowId);
+        if(!row) return;
+        const qtyEl = row.querySelector('.i-qty');
+        const priceEl = row.querySelector('.i-unitPrice');
+        sanitizeNonNegativeInput(qtyEl);
+        sanitizeNonNegativeInput(priceEl);
+        const qty = toNonNegativeNumber(qtyEl.value, 0);
+        const price = toNonNegativeNumber(priceEl.value, 0);
+        row.querySelector('.i-subTotal').value = (qty * price) > 0 ? (qty * price).toFixed(2) : '';
+        calcGrandTotal();
+    }
     function calcGrandTotal() { let grand = 0; document.querySelectorAll('#ordersTab .pos-table-row').forEach(row => { grand += parseFloat(row.querySelector('.i-subTotal').value) || 0; }); document.getElementById('totalPrice').value = grand > 0 ? grand.toFixed(2) : ''; calcBalance(); }
-    function calcBalance() { const total = parseFloat(document.getElementById('totalPrice').value) || 0; let depositInput = document.getElementById('deposit'); let deposit = parseFloat(depositInput.value) || 0; if(deposit > total) { deposit = total; depositInput.value = deposit.toFixed(2); } document.getElementById('balance').value = Math.max(0, total - deposit).toFixed(2); }
+    function calcBalance() {
+        const total = toNonNegativeNumber(document.getElementById('totalPrice').value, 0);
+        let depositInput = document.getElementById('deposit');
+        sanitizeNonNegativeInput(depositInput);
+        let deposit = toNonNegativeNumber(depositInput.value, 0);
+        if(deposit > total) { deposit = total; depositInput.value = deposit.toFixed(2); }
+        document.getElementById('balance').value = Math.max(0, total - deposit).toFixed(2);
+    }
     function updateRowNumbers() { document.querySelectorAll('#ordersTab .pos-table-row').forEach((row, index) => { const numDiv = row.querySelector('.row-num'); if (numDiv) numDiv.innerText = index + 1; }); }
 
     function addNewItemBlock(data = null) {
@@ -1364,6 +1497,10 @@ Uploaded ${successCount} item(s) to Cloud.`);
 
     function editOrder(id) {
         const order = orders.find(o => o.id === id);
+        if (order && order.status === 'completed' && !isAdmin) {
+            alert('Completed orders are locked. Please ask Boss/Admin to edit or return this order.');
+            return;
+        }
         ['custName','custPhone','carPlate','carModel','chassisNumber','totalPrice','deposit','balance','orderByStaff','remarks'].forEach(f => { let val = order[f.replace('orderByStaff','staff').replace('custName','name').replace('custPhone','phone').replace('carPlate','plate').replace('carModel','car').replace('chassisNumber','chassis').replace('totalPrice','total')] || ''; document.getElementById(f).value = val; });
         document.getElementById('dynamicItemsContainer').innerHTML = ''; itemPhotosMap = {}; const itemsToLoad = order.items || []; if(itemsToLoad.length === 0) addNewItemBlock(); itemsToLoad.forEach(data => addNewItemBlock(data));
         editingId = id; document.getElementById('mainBtn').innerText = "Confirm Update Data (Cloud)"; document.getElementById('mainBtn').style.backgroundColor = "#10b981"; document.getElementById('cancelBtn').style.display = "block"; window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1377,8 +1514,13 @@ Uploaded ${successCount} item(s) to Cloud.`);
     async function saveOrUpdateOrder() {
         const mainBtn = document.getElementById('mainBtn'); if (mainBtn.disabled) return; 
         let finalPhone = document.getElementById('custPhone').value.replace(/[^0-9]/g, ''); if (finalPhone.startsWith('0')) { finalPhone = '60' + finalPhone.substring(1); } document.getElementById('custPhone').value = finalPhone; 
-        const payload = { name: document.getElementById('custName').value, phone: finalPhone, plate: document.getElementById('carPlate').value.trim().toUpperCase(), car: document.getElementById('carModel').value, chassis: document.getElementById('chassisNumber').value.trim().toUpperCase(), total: document.getElementById('totalPrice').value || "0", deposit: document.getElementById('deposit').value || "0", balance: document.getElementById('balance').value || "0", staff: document.getElementById('orderByStaff').value, remarks: document.getElementById('remarks').value, items: [] };
-        document.querySelectorAll('#ordersTab .pos-table-row').forEach(card => { const id = card.id; const p = { part: card.querySelector('.i-part').value, partNo: card.querySelector('.i-partNo').value.trim().toUpperCase(), brand: card.querySelector('.i-brand').value, supplier: card.querySelector('.i-supplier').value, qty: card.querySelector('.i-qty').value || "1", unitPrice: card.querySelector('.i-unitPrice').value || "0", subTotal: card.querySelector('.i-subTotal').value || "0", eta: card.querySelector('.i-eta').value, photos: itemPhotosMap[id] || [] }; if (p.part || p.partNo) payload.items.push(p); });
+        const payload = { name: document.getElementById('custName').value, phone: finalPhone, plate: document.getElementById('carPlate').value.trim().toUpperCase(), car: document.getElementById('carModel').value, chassis: document.getElementById('chassisNumber').value.trim().toUpperCase(), total: toNonNegativeNumber(document.getElementById('totalPrice').value, 0).toFixed(2), deposit: toNonNegativeNumber(document.getElementById('deposit').value, 0).toFixed(2), balance: toNonNegativeNumber(document.getElementById('balance').value, 0).toFixed(2), staff: document.getElementById('orderByStaff').value, remarks: document.getElementById('remarks').value, items: [] };
+        const existingOrder = editingId ? orders.find(o => o.id === editingId) : null;
+        if (existingOrder && existingOrder.status === 'completed' && !isAdmin) {
+            alert('Completed orders are locked. Please ask Boss/Admin to edit or return this order.');
+            return;
+        }
+        document.querySelectorAll('#ordersTab .pos-table-row').forEach(card => { const id = card.id; const p = { part: card.querySelector('.i-part').value, partNo: card.querySelector('.i-partNo').value.trim().toUpperCase(), brand: card.querySelector('.i-brand').value, supplier: card.querySelector('.i-supplier').value, qty: String(toNonNegativeNumber(card.querySelector('.i-qty').value, 1)), unitPrice: toNonNegativeNumber(card.querySelector('.i-unitPrice').value, 0).toFixed(2), subTotal: toNonNegativeNumber(card.querySelector('.i-subTotal').value, 0).toFixed(2), eta: card.querySelector('.i-eta').value, photos: itemPhotosMap[id] || [] }; if (p.part || p.partNo) payload.items.push(p); });
         if(!payload.name) return alert("Please fill Customer Name."); if(payload.items.length === 0) return alert("Enter at least 1 Part.");
 
         if (!navigator.onLine) {
@@ -1396,20 +1538,32 @@ Uploaded ${successCount} item(s) to Cloud.`);
         const originalText = mainBtn.innerText; mainBtn.innerText = "⏳ Processing Photos & Data..."; mainBtn.disabled = true;
         try {
             for(let i=0; i<payload.items.length; i++) { if(payload.items[i].photos && payload.items[i].photos.length > 0) { payload.items[i].photos = await uploadBase64ToStorage(payload.items[i].photos); } }
-            if (editingId) { await db.ref('orders/' + editingId).update(payload); } else { const snapshot = await db.ref('orderCounter').transaction(cv => (cv || 1000) + 1); payload.refNo = 'MMC-' + snapshot.snapshot.val(); payload.date = getStandardDateStr(); payload.status = 'waiting'; payload.timestamp = Date.now(); await db.ref('orders').push(payload); }
+            if (editingId) {
+                const oldOrder = orders.find(o => o.id === editingId) || {};
+                await db.ref('orders/' + editingId).update(payload);
+                await writeAuditLog('UPDATE_ORDER', 'orders', oldOrder.refNo || '', editingId, { name: payload.name, plate: payload.plate, total: payload.total });
+            } else {
+                const snapshot = await db.ref('orderCounter').transaction(cv => (cv || 1000) + 1);
+                payload.refNo = 'MMC-' + snapshot.snapshot.val();
+                payload.date = getStandardDateStr();
+                payload.status = 'waiting';
+                payload.timestamp = Date.now();
+                const newRef = await db.ref('orders').push(payload);
+                await writeAuditLog('CREATE_ORDER', 'orders', payload.refNo, newRef.key, { name: payload.name, plate: payload.plate, total: payload.total });
+            }
             cancelEdit();
         } catch(err) { alert("Upload Error: " + err.message); } finally { mainBtn.innerText = originalText; mainBtn.disabled = false; }
     }
 
-    async function toggleStatus(id) { if(!navigator.onLine) return alert("Requires internet."); const order = orders.find(o => o.id === id); if(order.status === 'completed' || order.status === 'offline') return; let newStatus = order.status === 'waiting' ? 'arrived' : 'waiting'; await db.ref('orders/' + id).update({ status: newStatus }); }
-    async function markCompleted(id) { if(!navigator.onLine) return alert("Offline!"); if(confirm("Confirm item collected?")) { await db.ref('orders/' + id).update({ status: 'completed', completedDate: getStandardDateStr() }); } }
-    async function restoreOrder(id) { if(!navigator.onLine) return; await db.ref('orders/' + id).update({ status: 'arrived', completedDate: null }); }
-    async function deleteOrder(id) { if(!navigator.onLine) return; if(isAdmin && confirm("Delete order?")) await db.ref('orders/' + id).remove(); else if(!isAdmin) alert("Admin only."); }
+    async function toggleStatus(id) { if(!navigator.onLine) return alert("Requires internet."); const order = orders.find(o => o.id === id); if(!order || order.status === 'completed' || order.status === 'offline') return; let newStatus = order.status === 'waiting' ? 'arrived' : 'waiting'; await db.ref('orders/' + id).update({ status: newStatus }); await writeAuditLog('TOGGLE_ORDER_STATUS', 'orders', order.refNo || '', id, { from: order.status, to: newStatus }); }
+    async function markCompleted(id) { if(!navigator.onLine) return alert("Offline!"); const order = orders.find(o => o.id === id) || {}; if(confirm("Confirm item collected?")) { await db.ref('orders/' + id).update({ status: 'completed', completedDate: getStandardDateStr() }); await writeAuditLog('MARK_ORDER_COMPLETED', 'orders', order.refNo || '', id, { completedDate: getStandardDateStr() }); } }
+    async function restoreOrder(id) { if(!navigator.onLine) return; if(!isAdmin) return alert('Only Boss/Admin can return completed orders.'); const order = orders.find(o => o.id === id) || {}; await db.ref('orders/' + id).update({ status: 'arrived', completedDate: null }); await writeAuditLog('RETURN_COMPLETED_ORDER', 'orders', order.refNo || '', id, { to: 'arrived' }); }
+    async function deleteOrder(id) { if(!navigator.onLine) return; const order = orders.find(o => o.id === id) || {}; if(isAdmin && confirm("Delete order?")) { await db.ref('orders/' + id).remove(); await writeAuditLog('DELETE_ORDER', 'orders', order.refNo || '', id, { name: order.name || '', plate: order.plate || '' }); } else if(!isAdmin) alert("Admin only."); }
     function toggleAllOrderChecks(source) { document.querySelectorAll('.order-check').forEach(cb => cb.checked = source.checked); }
     async function markSelectedArrived() {
         if(!navigator.onLine) return alert("Requires internet."); let checkboxes = document.querySelectorAll('.order-check:checked'); if(checkboxes.length === 0) return alert("Please check at least one pending order.");
         if(!confirm(`Mark ${checkboxes.length} selected items as ARRIVED?`)) return; let updates = {}; checkboxes.forEach(cb => { let id = cb.value; let o = orders.find(x => x.id === id); if(o && o.status === 'waiting') updates[id + '/status'] = 'arrived'; });
-        if(Object.keys(updates).length > 0) { await db.ref('orders').update(updates); document.getElementById('selectAllOrders').checked = false; } 
+        if(Object.keys(updates).length > 0) { await db.ref('orders').update(updates); await writeAuditLog('BULK_MARK_ARRIVED', 'orders', '', '', { count: Object.keys(updates).length }); document.getElementById('selectAllOrders').checked = false; } 
     }
 
     function clearDateFilter(type) { if(type === 'order') { document.getElementById('orderDateFilter').value = ''; renderTable(); } else if(type === 'quote') { document.getElementById('quoteDateFilter').value = ''; renderQTable(); } else if(type === 'enquire') { document.getElementById('enquireDateFilter').value = ''; renderETable(); } else if(type === 'restock') { document.getElementById('rDateFilter').value = ''; renderRestockTable(); } }
@@ -1468,8 +1622,15 @@ Uploaded ${successCount} item(s) to Cloud.`);
                 mainActions = `<div style="font-size:12px; color:#ef4444; font-weight:bold; text-align:center; line-height:1.4;">🔴 Saved Offline<br>Waiting Cloud Sync</div>`;
             } else {
                 mainActions += `<div class="action-btns" style="margin-bottom:6px;"><button class="copy-btn" onclick="duplicateOrder('${order.id}')">📋 Copy</button></div><div class="action-btns">`;
-                if (order.status !== 'completed') { mainActions += `<button class="complete-btn" onclick="markCompleted('${order.id}')">✔️ Done</button>`; } else { mainActions += `<button class="edit-btn" onclick="restoreOrder('${order.id}')">⏪ Return</button>`; }
-                mainActions += `<button class="edit-btn" onclick="editOrder('${order.id}')">✏️ Edit</button>`;
+                if (order.status !== 'completed') {
+                    mainActions += `<button class="complete-btn" onclick="markCompleted('${order.id}')">✔️ Done</button>`;
+                    mainActions += `<button class="edit-btn" onclick="editOrder('${order.id}')">✏️ Edit</button>`;
+                } else if (isAdmin) {
+                    mainActions += `<button class="edit-btn" onclick="restoreOrder('${order.id}')">⏪ Return</button>`;
+                    mainActions += `<button class="edit-btn" onclick="editOrder('${order.id}')">✏️ Edit</button>`;
+                } else {
+                    mainActions += `<span style="font-size:12px;color:#64748b;font-weight:bold;">🔒 Completed Locked</span>`;
+                }
                 if (isAdmin) { mainActions += `<button class="delete-btn" onclick="deleteOrder('${order.id}')">✖ Del</button>`; }
                 mainActions += `</div><button class="print-btn" onclick="printChecklist('${order.id}', 'order')" style="width:100%; margin-top:5px; margin-bottom:5px;">🖨️ Print Checklist</button>`;
             }
@@ -1496,7 +1657,18 @@ Uploaded ${successCount} item(s) to Cloud.`);
     // ==========================================
     // QUOTATION SYSTEM
     // ==========================================
-    function calcQRowTotal(rowId) { const row = document.getElementById(rowId); if(!row) return; const qty = parseFloat(row.querySelector('.i-qty').value) || 0; const price = parseFloat(row.querySelector('.i-unitPrice').value) || 0; row.querySelector('.i-subTotal').value = (qty * price) > 0 ? (qty * price).toFixed(2) : ''; calcQGrandTotal(); }
+    function calcQRowTotal(rowId) {
+        const row = document.getElementById(rowId);
+        if(!row) return;
+        const qtyEl = row.querySelector('.i-qty');
+        const priceEl = row.querySelector('.i-unitPrice');
+        sanitizeNonNegativeInput(qtyEl);
+        sanitizeNonNegativeInput(priceEl);
+        const qty = toNonNegativeNumber(qtyEl.value, 0);
+        const price = toNonNegativeNumber(priceEl.value, 0);
+        row.querySelector('.i-subTotal').value = (qty * price) > 0 ? (qty * price).toFixed(2) : '';
+        calcQGrandTotal();
+    }
     function calcQGrandTotal() { let grand = 0; document.querySelectorAll('#quoteTab .pos-table-row').forEach(row => { grand += parseFloat(row.querySelector('.i-subTotal').value) || 0; }); document.getElementById('qTotalPrice').value = grand > 0 ? grand.toFixed(2) : ''; }
     function updateQRowNumbers() { document.querySelectorAll('#quoteTab .pos-table-row').forEach((row, index) => { const numDiv = row.querySelector('.row-num'); if (numDiv) numDiv.innerText = index + 1; }); }
 
@@ -1528,8 +1700,8 @@ Uploaded ${successCount} item(s) to Cloud.`);
         const qMainBtn = document.getElementById('qMainBtn'); if (qMainBtn.disabled) return;
         let finalPhone = document.getElementById('qCustPhone').value.replace(/[^0-9]/g, ''); if (finalPhone.startsWith('0')) { finalPhone = '60' + finalPhone.substring(1); } document.getElementById('qCustPhone').value = finalPhone; 
         const name = document.getElementById('qCustName').value; if(!name) return alert("Please fill Customer Name.");
-        const payload = { name: name, phone: finalPhone, plate: document.getElementById('qCarPlate').value.trim().toUpperCase(), car: document.getElementById('qCarModel').value, chassis: document.getElementById('qChassisNumber').value.trim().toUpperCase(), total: document.getElementById('qTotalPrice').value || "0", staff: document.getElementById('qOrderByStaff').value, remarks: document.getElementById('qRemarks').value, items: [] };
-        document.querySelectorAll('#quoteTab .pos-table-row').forEach(card => { const id = card.id; const p = { part: card.querySelector('.i-part').value, partNo: card.querySelector('.i-partNo').value.trim().toUpperCase(), brand: card.querySelector('.i-brand').value, supplier: card.querySelector('.i-supplier').value, qty: card.querySelector('.i-qty').value || "1", unitPrice: card.querySelector('.i-unitPrice').value || "0", subTotal: card.querySelector('.i-subTotal').value || "0", eta: card.querySelector('.i-eta').value, photos: qItemPhotosMap[id] || [] }; if (p.part || p.partNo) payload.items.push(p); });
+        const payload = { name: name, phone: finalPhone, plate: document.getElementById('qCarPlate').value.trim().toUpperCase(), car: document.getElementById('qCarModel').value, chassis: document.getElementById('qChassisNumber').value.trim().toUpperCase(), total: toNonNegativeNumber(document.getElementById('qTotalPrice').value, 0).toFixed(2), staff: document.getElementById('qOrderByStaff').value, remarks: document.getElementById('qRemarks').value, items: [] };
+        document.querySelectorAll('#quoteTab .pos-table-row').forEach(card => { const id = card.id; const p = { part: card.querySelector('.i-part').value, partNo: card.querySelector('.i-partNo').value.trim().toUpperCase(), brand: card.querySelector('.i-brand').value, supplier: card.querySelector('.i-supplier').value, qty: String(toNonNegativeNumber(card.querySelector('.i-qty').value, 1)), unitPrice: toNonNegativeNumber(card.querySelector('.i-unitPrice').value, 0).toFixed(2), subTotal: toNonNegativeNumber(card.querySelector('.i-subTotal').value, 0).toFixed(2), eta: card.querySelector('.i-eta').value, photos: qItemPhotosMap[id] || [] }; if (p.part || p.partNo) payload.items.push(p); });
         if(payload.items.length === 0) return alert("Enter at least 1 Part.");
 
         if (!navigator.onLine) {
@@ -1546,18 +1718,29 @@ Uploaded ${successCount} item(s) to Cloud.`);
         const originalText = qMainBtn.innerText; qMainBtn.innerText = "⏳ Processing Photos & Data..."; qMainBtn.disabled = true;
         try {
             for(let i=0; i<payload.items.length; i++) { if(payload.items[i].photos && payload.items[i].photos.length > 0) { payload.items[i].photos = await uploadBase64ToStorage(payload.items[i].photos); } }
-            if (qEditingId) { await db.ref('quotations/' + qEditingId).update(payload); } else { const snapshot = await db.ref('quoteCounter').transaction(cv => (cv || 1000) + 1); payload.refNo = 'QT-' + snapshot.snapshot.val(); payload.date = getStandardDateStr(); payload.timestamp = Date.now(); await db.ref('quotations').push(payload); }
+            if (qEditingId) {
+                const oldQuote = quotes.find(q => q.id === qEditingId) || {};
+                await db.ref('quotations/' + qEditingId).update(payload);
+                await writeAuditLog('UPDATE_QUOTATION', 'quotations', oldQuote.refNo || '', qEditingId, { name: payload.name, plate: payload.plate, total: payload.total });
+            } else {
+                const snapshot = await db.ref('quoteCounter').transaction(cv => (cv || 1000) + 1);
+                payload.refNo = 'QT-' + snapshot.snapshot.val();
+                payload.date = getStandardDateStr();
+                payload.timestamp = Date.now();
+                const newRef = await db.ref('quotations').push(payload);
+                await writeAuditLog('CREATE_QUOTATION', 'quotations', payload.refNo, newRef.key, { name: payload.name, plate: payload.plate, total: payload.total });
+            }
             cancelQEdit();
         } catch(err) { alert("Upload Error: " + err.message); } finally { qMainBtn.innerText = originalText; qMainBtn.disabled = false; }
     }
 
-    async function deleteQuote(id) { if(!navigator.onLine) return; if(isAdmin && confirm("Delete Quotation?")) await db.ref('quotations/' + id).remove(); else if(!isAdmin) alert("Admin only."); }
+    async function deleteQuote(id) { if(!navigator.onLine) return; const quote = quotes.find(q => q.id === id) || {}; if(isAdmin && confirm("Delete Quotation?")) { await db.ref('quotations/' + id).remove(); await writeAuditLog('DELETE_QUOTATION', 'quotations', quote.refNo || '', id, { name: quote.name || '', plate: quote.plate || '' }); } else if(!isAdmin) alert("Admin only."); }
 
     function convertToPreorder(id) {
         const quote = quotes.find(q => q.id === id); if(!quote) return; document.getElementById('tabBtnOrder').click();
         document.getElementById('custName').value = quote.name || ''; document.getElementById('custPhone').value = quote.phone || ''; document.getElementById('carPlate').value = quote.plate || ''; document.getElementById('carModel').value = quote.car || ''; document.getElementById('chassisNumber').value = quote.chassis || ''; document.getElementById('orderByStaff').value = quote.staff || ''; document.getElementById('remarks').value = "From Quotation: " + quote.refNo + (quote.remarks ? " - " + quote.remarks : '');
         document.getElementById('dynamicItemsContainer').innerHTML = ''; itemPhotosMap = {}; itemMapIdCounter = 0; const itemsToLoad = quote.items || []; if(itemsToLoad.length === 0) addNewItemBlock(); itemsToLoad.forEach(data => addNewItemBlock(data));
-        alert("✅ Quotation Loaded! Please enter Deposit and click 'Save Document & Sync' to create Official Order."); window.scrollTo({ top: 0, behavior: 'smooth' });
+        writeAuditLog('CONVERT_QUOTE_TO_ORDER_FORM', 'quotations', quote.refNo || '', id, { name: quote.name || '', plate: quote.plate || '' }); alert("✅ Quotation Loaded! Please enter Deposit and click 'Save Document & Sync' to create Official Order."); window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function renderQTable() {
@@ -1611,7 +1794,18 @@ Uploaded ${successCount} item(s) to Cloud.`);
     // ==========================================
     // ENQUIRY SYSTEM LOGIC
     // ==========================================
-    function calcERowTotal(rowId) { const row = document.getElementById(rowId); if(!row) return; const qty = parseFloat(row.querySelector('.i-qty').value) || 0; const price = parseFloat(row.querySelector('.i-unitPrice').value) || 0; row.querySelector('.i-subTotal').value = (qty * price) > 0 ? (qty * price).toFixed(2) : ''; calcEGrandTotal(); }
+    function calcERowTotal(rowId) {
+        const row = document.getElementById(rowId);
+        if(!row) return;
+        const qtyEl = row.querySelector('.i-qty');
+        const priceEl = row.querySelector('.i-unitPrice');
+        sanitizeNonNegativeInput(qtyEl);
+        sanitizeNonNegativeInput(priceEl);
+        const qty = toNonNegativeNumber(qtyEl.value, 0);
+        const price = toNonNegativeNumber(priceEl.value, 0);
+        row.querySelector('.i-subTotal').value = (qty * price) > 0 ? (qty * price).toFixed(2) : '';
+        calcEGrandTotal();
+    }
     function calcEGrandTotal() { let grand = 0; document.querySelectorAll('#enquireTab .pos-table-row').forEach(row => { grand += parseFloat(row.querySelector('.i-subTotal').value) || 0; }); document.getElementById('eTotalPrice').value = grand > 0 ? grand.toFixed(2) : ''; }
     function updateERowNumbers() { document.querySelectorAll('#enquireTab .pos-table-row').forEach((row, index) => { const numDiv = row.querySelector('.row-num'); if (numDiv) numDiv.innerText = index + 1; }); }
 
@@ -1643,8 +1837,8 @@ Uploaded ${successCount} item(s) to Cloud.`);
         const eMainBtn = document.getElementById('eMainBtn'); if (eMainBtn.disabled) return;
         let finalPhone = document.getElementById('eCustPhone').value.replace(/[^0-9]/g, ''); if (finalPhone.startsWith('0')) { finalPhone = '60' + finalPhone.substring(1); } document.getElementById('eCustPhone').value = finalPhone; 
         const name = document.getElementById('eCustName').value; if(!name) return alert("Please fill Customer Name.");
-        const payload = { name: name, phone: finalPhone, plate: document.getElementById('eCarPlate').value.trim().toUpperCase(), car: document.getElementById('eCarModel').value, chassis: document.getElementById('eChassisNumber').value.trim().toUpperCase(), total: document.getElementById('eTotalPrice').value || "0", staff: document.getElementById('eOrderByStaff').value, remarks: document.getElementById('eRemarks').value, items: [] };
-        document.querySelectorAll('#enquireTab .pos-table-row').forEach(card => { const id = card.id; const p = { part: card.querySelector('.i-part').value, partNo: card.querySelector('.i-partNo').value.trim().toUpperCase(), brand: card.querySelector('.i-brand').value, supplier: card.querySelector('.i-supplier').value, qty: card.querySelector('.i-qty').value || "1", unitPrice: card.querySelector('.i-unitPrice').value || "0", subTotal: card.querySelector('.i-subTotal').value || "0", eta: card.querySelector('.i-eta').value, photos: eItemPhotosMap[id] || [] }; if (p.part || p.partNo) payload.items.push(p); });
+        const payload = { name: name, phone: finalPhone, plate: document.getElementById('eCarPlate').value.trim().toUpperCase(), car: document.getElementById('eCarModel').value, chassis: document.getElementById('eChassisNumber').value.trim().toUpperCase(), total: toNonNegativeNumber(document.getElementById('eTotalPrice').value, 0).toFixed(2), staff: document.getElementById('eOrderByStaff').value, remarks: document.getElementById('eRemarks').value, items: [] };
+        document.querySelectorAll('#enquireTab .pos-table-row').forEach(card => { const id = card.id; const p = { part: card.querySelector('.i-part').value, partNo: card.querySelector('.i-partNo').value.trim().toUpperCase(), brand: card.querySelector('.i-brand').value, supplier: card.querySelector('.i-supplier').value, qty: String(toNonNegativeNumber(card.querySelector('.i-qty').value, 1)), unitPrice: toNonNegativeNumber(card.querySelector('.i-unitPrice').value, 0).toFixed(2), subTotal: toNonNegativeNumber(card.querySelector('.i-subTotal').value, 0).toFixed(2), eta: card.querySelector('.i-eta').value, photos: eItemPhotosMap[id] || [] }; if (p.part || p.partNo) payload.items.push(p); });
         if(payload.items.length === 0) return alert("Enter at least 1 Part.");
 
         if (!navigator.onLine) {
@@ -1661,18 +1855,29 @@ Uploaded ${successCount} item(s) to Cloud.`);
         const originalText = eMainBtn.innerText; eMainBtn.innerText = "⏳ Processing Photos & Data..."; eMainBtn.disabled = true;
         try {
             for(let i=0; i<payload.items.length; i++) { if(payload.items[i].photos && payload.items[i].photos.length > 0) { payload.items[i].photos = await uploadBase64ToStorage(payload.items[i].photos); } }
-            if (eEditingId) { await db.ref('enquiries/' + eEditingId).update(payload); } else { const snapshot = await db.ref('enquireCounter').transaction(cv => (cv || 1000) + 1); payload.refNo = 'ENQ-' + snapshot.snapshot.val(); payload.date = getStandardDateStr(); payload.timestamp = Date.now(); await db.ref('enquiries').push(payload); }
+            if (eEditingId) {
+                const oldEnq = enquiries.find(e => e.id === eEditingId) || {};
+                await db.ref('enquiries/' + eEditingId).update(payload);
+                await writeAuditLog('UPDATE_ENQUIRY', 'enquiries', oldEnq.refNo || '', eEditingId, { name: payload.name, plate: payload.plate, total: payload.total });
+            } else {
+                const snapshot = await db.ref('enquireCounter').transaction(cv => (cv || 1000) + 1);
+                payload.refNo = 'ENQ-' + snapshot.snapshot.val();
+                payload.date = getStandardDateStr();
+                payload.timestamp = Date.now();
+                const newRef = await db.ref('enquiries').push(payload);
+                await writeAuditLog('CREATE_ENQUIRY', 'enquiries', payload.refNo, newRef.key, { name: payload.name, plate: payload.plate, total: payload.total });
+            }
             cancelEEdit();
         } catch(err) { alert("Upload Error: " + err.message); } finally { eMainBtn.innerText = originalText; eMainBtn.disabled = false; }
     }
 
-    async function deleteEnquire(id) { if(!navigator.onLine) return; if(isAdmin && confirm("Delete Enquiry?")) await db.ref('enquiries/' + id).remove(); else if(!isAdmin) alert("Admin only."); }
+    async function deleteEnquire(id) { if(!navigator.onLine) return; const enq = enquiries.find(e => e.id === id) || {}; if(isAdmin && confirm("Delete Enquiry?")) { await db.ref('enquiries/' + id).remove(); await writeAuditLog('DELETE_ENQUIRY', 'enquiries', enq.refNo || '', id, { name: enq.name || '', plate: enq.plate || '' }); } else if(!isAdmin) alert("Admin only."); }
 
     function convertEnqToQuote(id) {
         const enq = enquiries.find(e => e.id === id); if(!enq) return; document.getElementById('tabBtnQuote').click();
         document.getElementById('qCustName').value = enq.name || ''; document.getElementById('qCustPhone').value = enq.phone || ''; document.getElementById('qCarPlate').value = enq.plate || ''; document.getElementById('qCarModel').value = enq.car || ''; document.getElementById('qChassisNumber').value = enq.chassis || ''; document.getElementById('qOrderByStaff').value = enq.staff || ''; document.getElementById('qRemarks').value = "From Enquiry: " + enq.refNo + (enq.remarks ? " - " + enq.remarks : '');
         document.getElementById('qDynamicItemsContainer').innerHTML = ''; qItemPhotosMap = {}; qItemMapIdCounter = 0; const itemsToLoad = enq.items || []; if(itemsToLoad.length === 0) addQItemBlock(); itemsToLoad.forEach(data => addQItemBlock(data));
-        alert("✅ Enquiry Loaded into Quotation! Please review prices and click 'Save Quotation'."); window.scrollTo({ top: 0, behavior: 'smooth' });
+        writeAuditLog('CONVERT_ENQUIRY_TO_QUOTE_FORM', 'enquiries', enq.refNo || '', id, { name: enq.name || '', plate: enq.plate || '' }); alert("✅ Enquiry Loaded into Quotation! Please review prices and click 'Save Quotation'."); window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function renderETable() {
@@ -1726,7 +1931,15 @@ Uploaded ${successCount} item(s) to Cloud.`);
     // ==========================================
     // RESTOCK SYSTEM
     // ==========================================
-    function calcRestockCost() { const qty = parseFloat(document.getElementById('r_needOrder').value) || 1; const uCost = parseFloat(document.getElementById('r_unitCost').value) || 0; document.getElementById('r_totalCost').value = (qty * uCost).toFixed(2); }
+    function calcRestockCost() {
+        const qtyEl = document.getElementById('r_needOrder');
+        const costEl = document.getElementById('r_unitCost');
+        sanitizeNonNegativeInput(qtyEl);
+        sanitizeNonNegativeInput(costEl);
+        const qty = toNonNegativeNumber(qtyEl.value, 1);
+        const uCost = toNonNegativeNumber(costEl.value, 0);
+        document.getElementById('r_totalCost').value = (qty * uCost).toFixed(2);
+    }
     document.getElementById('r_needOrder').addEventListener('input', calcRestockCost);
 
     function processRestockPhotos(event) { const files = event.target.files; if (!files || files.length === 0) return; if (currentRestockPhotos.length + files.length > 5) { alert("⚠️ Max 5 photos!"); event.target.value = ''; return; } Array.from(files).forEach(file => { const reader = new FileReader(); reader.onload = function(e) { const img = new Image(); img.onload = function() { const canvas = document.createElement('canvas'); let width = img.width; let height = img.height; if (width > height) { if(width > 800) { height *= 800/width; width = 800; } } else { if(height > 800) { width *= 800/height; height = 800; } } canvas.width = width; canvas.height = height; canvas.getContext('2d').drawImage(img, 0, 0, width, height); currentRestockPhotos.push(canvas.toDataURL('image/jpeg', 0.8)); renderRestockGalleryUI(); }; img.src = e.target.result; }; reader.readAsDataURL(file); }); event.target.value = ''; }
@@ -1735,8 +1948,8 @@ Uploaded ${successCount} item(s) to Cloud.`);
     function rotateRestockImage(index) { rotatePhotoBase64(currentRestockPhotos[index], (newBase64) => { currentRestockPhotos[index] = newBase64; renderRestockGalleryUI(); }); }
 
     async function addRestockItem() {
-        const part = document.getElementById('r_part').value; const code = document.getElementById('r_code').value.trim().toUpperCase(); const brand = document.getElementById('r_brand').value; const supp = document.getElementById('r_supp').value; const onHandQty = document.getElementById('r_onHand').value || "0"; const needOrderQty = document.getElementById('r_needOrder').value || "1";
-        const unitCost = document.getElementById('r_unitCost').value || "0"; const totalCost = document.getElementById('r_totalCost').value || "0";
+        const part = document.getElementById('r_part').value; const code = document.getElementById('r_code').value.trim().toUpperCase(); const brand = document.getElementById('r_brand').value; const supp = document.getElementById('r_supp').value; const onHandQty = String(toNonNegativeNumber(document.getElementById('r_onHand').value, 0)); const needOrderQty = String(toNonNegativeNumber(document.getElementById('r_needOrder').value, 1));
+        const unitCost = toNonNegativeNumber(document.getElementById('r_unitCost').value, 0).toFixed(2); const totalCost = toNonNegativeNumber(document.getElementById('r_totalCost').value, 0).toFixed(2);
         if(!part && !code) return alert("Please enter at least a part description or item code.");
         const payload = { part, code, brand, supp, onHandQty, needOrderQty, unitCost, totalCost, date: getStandardDateStr(), timestamp: Date.now(), status: 'Not Yet Order', photos: [...currentRestockPhotos] };
         const btn = document.getElementById('addRestockBtn'); const origText = btn.innerText; btn.innerText = "⏳ Uploading..."; btn.disabled = true;
@@ -1750,7 +1963,8 @@ Uploaded ${successCount} item(s) to Cloud.`);
                 payload.photos = await uploadBase64ToStorage(payload.photos);
             }
 
-            await db.ref('restock').push(payload);
+            const newRef = await db.ref('restock').push(payload);
+            await writeAuditLog('CREATE_RESTOCK', 'restock', '', newRef.key, { part: payload.part, code: payload.code, supplier: payload.supp, needOrderQty: payload.needOrderQty });
 
             ['r_part','r_code','r_brand','r_supp','r_onHand','r_needOrder','r_unitCost','r_totalCost'].forEach(id => document.getElementById(id).value = '');
             currentRestockPhotos = [];
@@ -1763,12 +1977,12 @@ Uploaded ${successCount} item(s) to Cloud.`);
         }
     }
 
-    function updateRestockSupplier(id, newValue) { if(!isAdmin) return; if(navigator.onLine) db.ref('restock/' + id).update({ supp: newValue }); }
-    async function markRestockOrdered(id) { if(!navigator.onLine) return; await db.ref('restock/' + id).update({ status: 'Ordered' }); }
-    async function returnToNotYet(id) { if(!navigator.onLine) return; await db.ref('restock/' + id).update({ status: 'Not Yet Order' }); }
-    async function deleteRestock(id) { if(!navigator.onLine) return; if(isAdmin && confirm("Delete this record permanently?")) { await db.ref('restock/' + id).remove(); } }
+    async function updateRestockSupplier(id, newValue) { if(!isAdmin) return; if(!navigator.onLine) return; const item = restockItems.find(r => r.id === id) || {}; await db.ref('restock/' + id).update({ supp: newValue }); await writeAuditLog('UPDATE_RESTOCK_SUPPLIER', 'restock', '', id, { part: item.part || '', from: item.supp || '', to: newValue }); }
+    async function markRestockOrdered(id) { if(!navigator.onLine) return; const item = restockItems.find(r => r.id === id) || {}; await db.ref('restock/' + id).update({ status: 'Ordered' }); await writeAuditLog('MARK_RESTOCK_ORDERED', 'restock', '', id, { part: item.part || '', code: item.code || '' }); }
+    async function returnToNotYet(id) { if(!navigator.onLine) return; const item = restockItems.find(r => r.id === id) || {}; await db.ref('restock/' + id).update({ status: 'Not Yet Order' }); await writeAuditLog('RETURN_RESTOCK_NOT_YET', 'restock', '', id, { part: item.part || '', code: item.code || '' }); }
+    async function deleteRestock(id) { if(!navigator.onLine) return; const item = restockItems.find(r => r.id === id) || {}; if(isAdmin && confirm("Delete this record permanently?")) { await db.ref('restock/' + id).remove(); await writeAuditLog('DELETE_RESTOCK', 'restock', '', id, { part: item.part || '', code: item.code || '' }); } }
     
-    async function markFilteredOrdered() { if(!isAdmin) return alert("Admin only."); if(!navigator.onLine) return alert("Requires internet."); let toUpdate = currentRestockView.filter(i => i.status !== 'Ordered' && !i.offlinePending); if(toUpdate.length === 0) return alert('No cloud pending items found in your current view. Offline pending items must sync first.'); if(!confirm(`Mark all ${toUpdate.length} cloud item(s) on this screen as ORDERED?`)) return; let updates = {}; toUpdate.forEach(i => { updates[i.id + '/status'] = 'Ordered'; }); await db.ref('restock').update(updates); }
+    async function markFilteredOrdered() { if(!isAdmin) return alert("Admin only."); if(!navigator.onLine) return alert("Requires internet."); let toUpdate = currentRestockView.filter(i => i.status !== 'Ordered' && !i.offlinePending); if(toUpdate.length === 0) return alert('No cloud pending items found in your current view. Offline pending items must sync first.'); if(!confirm(`Mark all ${toUpdate.length} cloud item(s) on this screen as ORDERED?`)) return; let updates = {}; toUpdate.forEach(i => { updates[i.id + '/status'] = 'Ordered'; }); await db.ref('restock').update(updates); await writeAuditLog('BULK_MARK_RESTOCK_ORDERED', 'restock', '', '', { count: Object.keys(updates).length }); }
 
     function renderRestockTable() {
         let theadHTML = `<tr><th style="width:100px;">Date Added</th><th>Part Description</th><th>Item Code / OEM</th><th>Brand</th><th>Supplier ${isAdmin ? '<span style="font-size:10px; color:#b45309;">(Boss Edit)</span>' : ''}</th><th style="text-align:center; width: 60px;">On Hand</th><th style="text-align:center; width: 60px;">Order Qty</th>`;
