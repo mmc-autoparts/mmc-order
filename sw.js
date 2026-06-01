@@ -1,4 +1,4 @@
-const CACHE_NAME = "mmc-portal-V72-9-1"; // UPDATE THIS EVERY TIME YOU CHANGE THE APP
+const CACHE_NAME = "mmc-portal-V72-9-2"; // UPDATE THIS EVERY TIME YOU CHANGE THE APP
 
 const APP_SHELL = [
     "./",
