@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="MMC Portal">
     <link rel="apple-touch-icon" href="logo.png">
-    <title>Malaysia Motor Company - Secure Portal V72.7</title>
+    <title>Malaysia Motor Company - Secure Portal V72.9.1</title>
     <link rel="manifest" href="manifest.json">
     <script>
         if ('serviceWorker' in navigator) {
@@ -16,12 +16,12 @@
             navigator.serviceWorker.addEventListener('controllerchange', () => { if (!refreshing) { window.location.reload(); refreshing = true; }});
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js').then(reg => {
-                    setInterval(() => { console.log("Checking server for V72.7 updates..."); reg.update(); }, 5 * 60 * 1000);
+                    setInterval(() => { console.log("Checking server for V72.9.1 updates..."); reg.update(); }, 5 * 60 * 1000);
                     reg.onupdatefound = () => {
                         const installingWorker = reg.installing;
                         installingWorker.onstatechange = () => {
                             if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                if (confirm("🔄 New system version (V72.7) available! Click OK to apply.")) { installingWorker.postMessage('SKIP_WAITING'); }
+                                if (confirm("🔄 New system version (V72.9.1) available! Click OK to apply.")) { installingWorker.postMessage('SKIP_WAITING'); }
                             }
                         };
                     };
@@ -195,7 +195,7 @@
 <div id="mainApp" class="container">
     <div class="header-flex">
         <div>
-            <h2>Malaysia Motor Company <span class="version-badge">V72.7 Enterprise</span> <span id="adminBadge">👑 Boss View</span></h2>
+            <h2>Malaysia Motor Company <span class="version-badge">V72.9.1 Enterprise</span> <span id="adminBadge">👑 Boss View</span></h2>
             <div style="margin-top:8px;">
                 <span id="networkBadge" class="net-online">🟢 Online (Live Cloud Sync)</span>
             </div>
@@ -478,14 +478,14 @@
             const b64 = base64Array[idx];
             if (!b64) continue;
 
-            // V72.7: Only keep existing secure Firebase/HTTPS photo URLs.
+            // V72.9.1: Only keep existing secure Firebase/HTTPS photo URLs.
             // Do not allow http:// or arbitrary data:image types such as SVG.
             if (typeof b64 === 'string' && b64.startsWith('https://')) {
                 uploadedUrls.push(b64);
                 continue;
             }
 
-            // V72.7: Only upload safe raster base64 image types.
+            // V72.9.1: Only upload safe raster base64 image types.
             // Blocks data:image/svg+xml and malformed data URLs before Firebase Storage upload.
             if (
                 typeof b64 !== 'string' ||
@@ -530,7 +530,7 @@
     }
 
     // ==========================================
-    // V72.7 OFFLINE ENGINE - Auth Ready + Better Error + Safer Photo Sync
+    // V72.9.1 OFFLINE ENGINE - Auth Ready + Better Error + Safer Photo Sync
     // ==========================================
     const netBadge = document.getElementById('networkBadge');
 
@@ -673,7 +673,7 @@
     async function checkOfflineQueue() {
         if (!navigator.onLine || !offlineDB || isSyncingOffline) return;
 
-        // V72.7: do not loop forever before login; sync will run again after login/refresh/online event.
+        // V72.9.1: do not loop forever before login; sync will run again after login/refresh/online event.
         if (!auth.currentUser) {
             console.warn('Offline sync skipped: Firebase auth user not ready yet.');
             isSyncingOffline = false;
@@ -783,7 +783,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
     }
 
     // ==========================================
-    // V72.7 DEVICE APPROVAL SYSTEM - Plan B
+    // V72.9.1 DEVICE APPROVAL SYSTEM - Plan B
     // Device must be approved AND linked to the correct staff email.
     // ==========================================
     const DEVICE_AUTH_KEY = "mmc_authorized_device_v1"; // Old MMC888 local key kept for admin migration/emergency only.
@@ -841,9 +841,162 @@ Uploaded ${successCount} item(s) to Cloud.`);
         if (src) showPhoto(src);
     }
 
+    // ==========================================
+    // V72.9.1 iPhone PRINT / PDF FALLBACK
+    // iPhone PWA often blocks popup print windows. This fallback opens
+    // a same-page printable view with Back and Print buttons.
+    // ==========================================
+    function isIPhoneLike() {
+        const ua = navigator.userAgent || '';
+        return /iPhone|iPod/i.test(ua);
+    }
+
+    function ensurePrintableViewShell() {
+        if (!document.getElementById('mmcPrintableStyle')) {
+            const style = document.createElement('style');
+            style.id = 'mmcPrintableStyle';
+            style.textContent = `
+                #printableView {
+                    display: none;
+                    position: fixed;
+                    inset: 0;
+                    z-index: 99999;
+                    background: #ffffff;
+                    color: #111827;
+                    overflow: auto;
+                    -webkit-overflow-scrolling: touch;
+                }
+                #printableToolbar {
+                    position: sticky;
+                    top: 0;
+                    z-index: 100000;
+                    background: #0f172a;
+                    color: #ffffff;
+                    padding: 12px;
+                    display: flex;
+                    gap: 8px;
+                    align-items: center;
+                    flex-wrap: wrap;
+                    box-shadow: 0 2px 10px rgba(15,23,42,0.25);
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+                }
+                #printableToolbar button {
+                    border: none;
+                    border-radius: 8px;
+                    padding: 10px 14px;
+                    font-weight: 800;
+                    cursor: pointer;
+                }
+                #printableBackBtn { background: #64748b; color: white; }
+                #printablePrintBtn { background: #2563eb; color: white; }
+                #printableHint {
+                    font-size: 12px;
+                    line-height: 1.35;
+                    color: #e2e8f0;
+                    flex: 1 1 260px;
+                }
+                #printablePage {
+                    padding: 12px;
+                    background: white;
+                }
+                @media print {
+                    body.printable-mode > *:not(#printableView) {
+                        display: none !important;
+                    }
+                    #printableView {
+                        display: block !important;
+                        position: static !important;
+                        inset: auto !important;
+                        overflow: visible !important;
+                        background: white !important;
+                    }
+                    #printableToolbar { display: none !important; }
+                    #printablePage { padding: 0 !important; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        let view = document.getElementById('printableView');
+        if (!view) {
+            view = document.createElement('div');
+            view.id = 'printableView';
+            view.innerHTML = `
+                <div id="printableToolbar">
+                    <button type="button" id="printableBackBtn">⬅ Back</button>
+                    <button type="button" id="printablePrintBtn">🖨️ Print / Save PDF</button>
+                    <div id="printableHint">iPhone mode: If the print screen does not open, use Safari/Share options or open this page in Safari. iPad/PC can continue using normal Print/PDF.</div>
+                </div>
+                <div id="printablePage"></div>
+            `;
+            document.body.appendChild(view);
+            document.getElementById('printableBackBtn').addEventListener('click', closePrintableView);
+            document.getElementById('printablePrintBtn').addEventListener('click', function() {
+                setTimeout(() => window.print(), 100);
+            });
+        }
+        return view;
+    }
+
+    function openPrintableView(html, titleText = 'Printable View') {
+        const view = ensurePrintableViewShell();
+        const page = document.getElementById('printablePage');
+        let safeTitle = escapeHTML(titleText || 'Printable View');
+        let styles = '';
+        let bodyHTML = html;
+
+        try {
+            const doc = new DOMParser().parseFromString(String(html || ''), 'text/html');
+            safeTitle = escapeHTML(doc.title || titleText || 'Printable View');
+            styles = Array.from(doc.head.querySelectorAll('style')).map(s => s.textContent || '').join('\n');
+            bodyHTML = doc.body ? doc.body.innerHTML : String(html || '');
+        } catch (err) {
+            console.warn('Printable parse fallback:', err);
+        }
+
+        page.innerHTML = `
+            <style>${styles}</style>
+            <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; padding:8px 4px 0; color:#475569; font-size:12px;">${safeTitle}</div>
+            <div class="printable-document">${bodyHTML}</div>
+        `;
+        view.style.display = 'block';
+        document.body.classList.add('printable-mode');
+        window.scrollTo(0, 0);
+    }
+
+    function closePrintableView() {
+        const view = document.getElementById('printableView');
+        if (view) view.style.display = 'none';
+        document.body.classList.remove('printable-mode');
+    }
+
+    function openPrintWindowOrPrintableView(html, titleText = 'Printable View', outputMode = 'print') {
+        if (isIPhoneLike()) {
+            openPrintableView(html, titleText);
+            return;
+        }
+
+        if (outputMode === 'pdf') {
+            alert("PDF export will open the print screen. Please choose 'Save as PDF' or 'Print to PDF'.");
+        }
+
+        const p = window.open('', '_blank');
+        if (!p || p.closed || typeof p.closed === 'undefined') {
+            openPrintableView(html, titleText);
+            return;
+        }
+        p.document.write(html);
+        p.document.close();
+        p.focus();
+        setTimeout(() => {
+            try { p.print(); p.close(); }
+            catch (err) { console.warn('Popup print failed, opening printable view:', err); openPrintableView(html, titleText); }
+        }, 350);
+    }
+
 
     // ==========================================
-    // V72.7 SAFETY HELPERS - Non-negative numbers + Audit Log
+    // V72.9.1 SAFETY HELPERS - Non-negative numbers + Audit Log
     // ==========================================
     function toNonNegativeNumber(value, fallback = 0) {
         const n = parseFloat(value);
@@ -1057,7 +1210,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
 
     async function authorizeDevice() {
         // Legacy MMC888 button kept so old Register Device button does not throw ReferenceError.
-        // For V72.7 security, only Boss/Admin can emergency-approve the current device after login.
+        // For V72.9.1 security, only Boss/Admin can emergency-approve the current device after login.
         if (auth && auth.currentUser && auth.currentUser.email && auth.currentUser.email.toLowerCase() === BOSS_EMAIL.toLowerCase()) {
             return bossEmergencyApproveDevice();
         }
@@ -1207,7 +1360,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
 
 
     // ==========================================
-    // V72.7 STABILITY HELPERS - Refresh + Recover + Timeout
+    // V72.9.1 STABILITY HELPERS - Refresh + Recover + Timeout
     // ==========================================
     function resetProcessingButtons() {
         const buttonMap = [
@@ -1550,11 +1703,10 @@ Uploaded ${successCount} item(s) to Cloud.`);
         else { footerFinance = `Total Amount: <strong>RM ${parseFloat(data.total||0).toFixed(2)}</strong><br>Deposit Paid: RM ${parseFloat(data.deposit||0).toFixed(2)}<br><div style="margin-top:8px; font-size:16px;">Balance Due: <strong style="color:#ef4444;">RM ${parseFloat(data.balance||0).toFixed(2)}</strong></div>`; }
         
         const html = `<html><head><title>${title} - ${data.refNo}</title><style>@media print { @page { margin: 15mm; } body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } } body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 20px; color: #333; } table { width: 100%; border-collapse: collapse; margin-top: 20px; } th { background: #f8fafc !important; font-size: 12px; text-transform: uppercase; color: #475569; padding: 12px 10px; border: 1px solid #e2e8f0; }</style></head><body><h2 style="text-align:center; margin-bottom:10px; text-transform:uppercase; letter-spacing:1px; font-weight:800; font-size:22px;">Malaysia Motor Company</h2><hr style="border: 0; border-bottom: 2px solid #1e293b; margin-bottom: 20px;"><h3 style="text-align:center; margin-bottom:25px; font-size:18px; letter-spacing:1px;">${title}</h3><div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; display: flex; justify-content: space-between; margin-bottom: 25px; font-size: 13px; line-height: 1.6; border: 1px solid #e2e8f0;"><div style="width: 48%;"><strong>Customer Name:</strong> ${escapeHTML(data.name || 'N/A')}<br><strong>Contact:</strong> <span style="color:#2563eb; font-weight:bold;">${escapeHTML(data.phone || 'N/A')}</span><br><strong>Car Details:</strong> ${escapeHTML(data.car || '')} ${data.plate ? '['+escapeHTML(data.plate)+']' : ''}</div><div style="width: 48%;"><strong>Ref No:</strong> ${escapeHTML(data.refNo || 'N/A')}<br><strong>Date:</strong> ${escapeHTML(data.date || 'N/A')}<br><strong>Served By:</strong> ${escapeHTML(data.staff || 'N/A')}<br><strong>Status:</strong> ${escapeHTML(statusText)}</div></div><table><thead><tr><th style="width:5%; text-align:center;">No.</th><th style="width:5%; text-align:center;">Pack</th><th style="width:34%; text-align:left;">Part Description</th><th style="width:14%; text-align:left;">Item Code</th><th style="width:12%; text-align:left;">Brand</th><th style="width:5%; text-align:center;">QTY</th><th style="width:12%; text-align:right;">U.Price</th><th style="width:13%; text-align:right;">Total</th></tr></thead><tbody>${rows}</tbody></table><div style="text-align:right; margin-top:25px; font-size:14px; line-height:1.8;">${footerFinance}</div><div style="text-align:center; margin-top:60px; font-size:11px; color:#94a3b8;">Thank you for choosing Malaysia Motor Company. Please retain this list for your records.</div></body></html>`;
-        const p = window.open('', '_blank'); p.document.write(html); p.document.close(); p.focus(); setTimeout(() => { p.print(); p.close(); }, 350);
+        openPrintWindowOrPrintableView(html, `${title} - ${escapeHTML(data.refNo || 'N/A')}`, outputMode);
     }
 
     function saveChecklistPDF(id, docType) {
-        alert("PDF export will open the print screen. Please choose 'Save as PDF' or 'Print to PDF'.");
         printChecklist(id, docType, 'pdf');
     }
 
@@ -2384,8 +2536,11 @@ Uploaded ${successCount} item(s) to Cloud.`);
         return `<style>*, *::before, *::after { box-sizing: border-box; } body{font-family:sans-serif;padding:30px;} table{width:100%;border-collapse:collapse;margin-top:20px;font-size:12px;table-layout:fixed;} th,td{border:1px solid #ccc;padding:8px;word-wrap:break-word;} th{background:#f1f5f9;}</style><div id="rInvoiceBody"><h2 style="text-align:center; margin-bottom:5px;">${escapeHTML(filterTitle)}</h2><table><thead><tr><th style="width:4%; text-align:center;">No</th><th style="width:10%;">Date</th><th style="width:20%; text-align:left;">Part Description</th><th style="width:15%; text-align:left;">Item Code</th><th style="width:10%; text-align:left;">Brand</th><th style="width:10%; text-align:left;">Supplier</th><th style="width:10%; text-align:left;">Car Model</th><th style="width:6%; text-align:center;">On Hand</th><th style="width:6%; text-align:center;">Need</th>${headerCost}<th style="width:10%; text-align:center;">Status</th></tr></thead><tbody>${rows}</tbody></table></div>`;
     }
     
-    function printRestock() { const p = window.open('', '_blank'); p.document.write('<html><head><title>Order List</title></head><body>'+getRestockHTML()+'</body></html>'); p.document.close(); p.focus(); setTimeout(() => { p.print(); p.close(); }, 350); }
-    function saveRestockPDF() { alert("PDF export will open the print screen. Please choose 'Save as PDF' or 'Print to PDF'."); printRestock(); }
+    function printRestock(outputMode = 'print') {
+        const html = '<html><head><title>Restock PO List</title></head><body>' + getRestockHTML() + '</body></html>';
+        openPrintWindowOrPrintableView(html, 'Restock PO List', outputMode);
+    }
+    function saveRestockPDF() { printRestock('pdf'); }
 
     function sendRestockWA(phone, bossName) {
         if (currentRestockView.length === 0) { alert("No items found for this view/date."); return; }
