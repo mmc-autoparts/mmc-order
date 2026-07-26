@@ -1,12 +1,14 @@
-const CACHE_NAME = "mmc-portal-V72-9-2"; // UPDATE THIS EVERY TIME YOU CHANGE THE APP
+const CACHE_NAME = "mmc-portal-V73-1";
 
 const APP_SHELL = [
     "./",
-    "./index.html"
+    "./index.html",
+    "./manifest.json",
+    "./logo.png"
 ];
 
-self.addEventListener("install", (e) => {
-    e.waitUntil(
+self.addEventListener("install", (event) => {
+    event.waitUntil(
         caches.open(CACHE_NAME)
             .then((cache) => cache.addAll(APP_SHELL))
             .then(() => self.skipWaiting())
@@ -16,38 +18,38 @@ self.addEventListener("install", (e) => {
     );
 });
 
-self.addEventListener("activate", (e) => {
-    e.waitUntil(
+self.addEventListener("activate", (event) => {
+    event.waitUntil(
         caches.keys()
-            .then((cacheNames) => {
-                return Promise.all(
-                    cacheNames.map((cacheName) => {
-                        if (cacheName !== CACHE_NAME) {
-                            console.log("Deleting old cache:", cacheName);
-                            return caches.delete(cacheName);
-                        }
-                        return Promise.resolve();
-                    })
-                );
-            })
+            .then((cacheNames) => Promise.all(
+                cacheNames.map((cacheName) => {
+                    if (cacheName !== CACHE_NAME) {
+                        console.log("Deleting old cache:", cacheName);
+                        return caches.delete(cacheName);
+                    }
+                    return Promise.resolve();
+                })
+            ))
             .then(() => self.clients.claim())
     );
 });
 
-self.addEventListener("fetch", (e) => {
+self.addEventListener("fetch", (event) => {
+    const url = event.request.url;
     if (
-        e.request.url.includes("firebaseio.com") ||
-        e.request.url.includes("firebaseapp.com") ||
-        e.request.url.includes("googleapis.com") ||
-        e.request.url.includes("gstatic.com")
+        url.includes("firebaseio.com") ||
+        url.includes("firebaseapp.com") ||
+        url.includes("googleapis.com") ||
+        url.includes("gstatic.com") ||
+        url.includes("firebasestorage.app")
     ) {
-        e.respondWith(fetch(e.request));
+        event.respondWith(fetch(event.request));
         return;
     }
 
-    if (e.request.mode === "navigate") {
-        e.respondWith(
-            fetch(e.request)
+    if (event.request.mode === "navigate") {
+        event.respondWith(
+            fetch(event.request)
                 .then((response) => {
                     const clonedResponse = response.clone();
                     caches.open(CACHE_NAME).then((cache) => {
@@ -60,10 +62,8 @@ self.addEventListener("fetch", (e) => {
         return;
     }
 
-    e.respondWith(
-        caches.match(e.request).then((response) => {
-            return response || fetch(e.request);
-        })
+    event.respondWith(
+        caches.match(event.request).then((response) => response || fetch(event.request))
     );
 });
 
