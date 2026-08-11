@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="MMC Portal">
     <link rel="apple-touch-icon" href="logo.png">
-    <title>Malaysia Motor Company - Secure Portal V73.1</title>
+    <title>Malaysia Motor Company - Secure Portal V73.2</title>
     <link rel="manifest" href="manifest.json">
     <script>
         if ('serviceWorker' in navigator) {
@@ -16,12 +16,12 @@
             navigator.serviceWorker.addEventListener('controllerchange', () => { if (!refreshing) { window.location.reload(); refreshing = true; }});
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js').then(reg => {
-                    setInterval(() => { console.log("Checking server for V73.1 updates..."); reg.update(); }, 5 * 60 * 1000);
+                    setInterval(() => { console.log("Checking server for V73.2 updates..."); reg.update(); }, 5 * 60 * 1000);
                     reg.onupdatefound = () => {
                         const installingWorker = reg.installing;
                         installingWorker.onstatechange = () => {
                             if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                if (confirm("🔄 New system version (V73.1) available! Click OK to apply.")) { installingWorker.postMessage('SKIP_WAITING'); }
+                                if (confirm("🔄 New system version (V73.2) available! Click OK to apply.")) { installingWorker.postMessage('SKIP_WAITING'); }
                             }
                         };
                     };
@@ -198,7 +198,7 @@
 <div id="mainApp" class="container">
     <div class="header-flex">
         <div>
-            <h2>Malaysia Motor Company <span class="version-badge">V73.1 Enterprise</span> <span id="adminBadge">👑 Boss View</span></h2>
+            <h2>Malaysia Motor Company <span class="version-badge">V73.2 Enterprise</span> <span id="adminBadge">👑 Boss View</span></h2>
             <div style="margin-top:8px;">
                 <span id="networkBadge" class="net-online">🟢 Online (Live Cloud Sync)</span>
             </div>
@@ -271,7 +271,7 @@
         <div class="top-controls">
             <button onclick="refreshTabData('order')" class="sync-btn" style="border-radius:20px;">🔄 Refresh Orders</button><input type="text" id="searchInput" class="search-bar" placeholder="🔍 Search Name, Plate, Code, Remark, Staff..." oninput="renderTable()">
             <select id="viewFilter" onchange="renderTable()" style="font-weight: bold; color: #2563eb; padding: 12px; border-radius: 20px;"><option value="active">Active Orders Only</option><option value="history">Completed History</option><option value="all">All Records</option></select>
-            <div style="display:flex; align-items:center; gap:8px;"><span style="font-size:13px; font-weight:bold; color:#475569;">Date:</span><input type="date" id="orderDateFilter" onchange="renderTable()" style="padding:12px; border-radius:20px; width:140px; border:1px solid #cbd5e1;"><button onclick="clearDateFilter('order')" style="padding:12px; border-radius:20px; cursor:pointer; border:1px solid #cbd5e1; background:white; font-weight:bold;">Clear</button></div>
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;"><span style="font-size:13px; font-weight:bold; color:#475569;">Date From:</span><input type="date" id="orderDateFromFilter" onchange="renderTable()" style="padding:12px; border-radius:20px; width:145px; border:1px solid #cbd5e1;"><span style="font-size:13px; font-weight:bold; color:#475569;">To:</span><input type="date" id="orderDateToFilter" onchange="renderTable()" style="padding:12px; border-radius:20px; width:145px; border:1px solid #cbd5e1;"><button onclick="clearDateFilter('order')" style="padding:12px; border-radius:20px; cursor:pointer; border:1px solid #cbd5e1; background:white; font-weight:bold;">Clear</button></div>
             <button onclick="markSelectedArrived()" class="complete-btn" style="padding:12px 18px; border-radius:20px; cursor:pointer; border:none; font-weight:bold;">✅ Mark Selected Arrived</button>
             <button id="exportBtn" class="export-btn" onclick="exportCSV()" style="padding:12px; border-radius:20px;">📥 Export Excel</button>
         </div>
@@ -313,7 +313,7 @@
 
         <div class="top-controls">
             <button onclick="refreshTabData('quote')" class="sync-btn" style="border-radius:20px;">🔄 Refresh Quotes</button><input type="text" id="qSearchInput" class="search-bar" placeholder="🔍 Search Name, Plate, Code, Remark, Staff..." oninput="renderQTable()"><select id="qViewFilter" onchange="renderQTable()" style="font-weight: bold; color: #8b5cf6; padding: 12px; border-radius: 20px;"><option value="active">Active Quotations Only</option><option value="history">Completed History</option><option value="all">All Records</option></select>
-            <div style="display:flex; align-items:center; gap:8px;"><span style="font-size:13px; font-weight:bold; color:#475569;">Date:</span><input type="date" id="quoteDateFilter" onchange="renderQTable()" style="padding:12px; border-radius:20px; width:160px; border:1px solid #cbd5e1;"><button onclick="clearDateFilter('quote')" style="padding:12px 18px; border-radius:20px; cursor:pointer; border:1px solid #cbd5e1; background:white; font-weight:bold;">Clear</button></div>
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;"><span style="font-size:13px; font-weight:bold; color:#475569;">Date From:</span><input type="date" id="quoteDateFromFilter" onchange="renderQTable()" style="padding:12px; border-radius:20px; width:145px; border:1px solid #cbd5e1;"><span style="font-size:13px; font-weight:bold; color:#475569;">To:</span><input type="date" id="quoteDateToFilter" onchange="renderQTable()" style="padding:12px; border-radius:20px; width:145px; border:1px solid #cbd5e1;"><button onclick="clearDateFilter('quote')" style="padding:12px 18px; border-radius:20px; cursor:pointer; border:1px solid #cbd5e1; background:white; font-weight:bold;">Clear</button></div>
         </div>
 
         <div class="table-responsive">
@@ -353,7 +353,7 @@
 
         <div class="top-controls">
             <button onclick="refreshTabData('enquire')" class="sync-btn" style="border-radius:20px;">🔄 Refresh Enquiries</button><input type="text" id="eSearchInput" class="search-bar" placeholder="🔍 Search Name, Plate, Code, Remark, Staff..." oninput="renderETable()"><select id="eViewFilter" onchange="renderETable()" style="font-weight: bold; color: #0284c7; padding: 12px; border-radius: 20px;"><option value="active">Active Enquiries Only</option><option value="history">Completed History</option><option value="all">All Records</option></select>
-            <div style="display:flex; align-items:center; gap:8px;"><span style="font-size:13px; font-weight:bold; color:#475569;">Date:</span><input type="date" id="enquireDateFilter" onchange="renderETable()" style="padding:12px; border-radius:20px; width:160px; border:1px solid #cbd5e1;"><button onclick="clearDateFilter('enquire')" style="padding:12px 18px; border-radius:20px; cursor:pointer; border:1px solid #cbd5e1; background:white; font-weight:bold;">Clear</button></div>
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;"><span style="font-size:13px; font-weight:bold; color:#475569;">Date From:</span><input type="date" id="enquireDateFromFilter" onchange="renderETable()" style="padding:12px; border-radius:20px; width:145px; border:1px solid #cbd5e1;"><span style="font-size:13px; font-weight:bold; color:#475569;">To:</span><input type="date" id="enquireDateToFilter" onchange="renderETable()" style="padding:12px; border-radius:20px; width:145px; border:1px solid #cbd5e1;"><button onclick="clearDateFilter('enquire')" style="padding:12px 18px; border-radius:20px; cursor:pointer; border:1px solid #cbd5e1; background:white; font-weight:bold;">Clear</button></div>
         </div>
 
         <div class="table-responsive">
@@ -376,8 +376,8 @@
                 <div><span class="label-text">Car Model</span><input type="text" id="r_car" placeholder="e.g. Axia"></div>
                 <div><span class="label-text">On Hand Qty</span><input type="number" id="r_onHand" placeholder="0"></div>
                 <div><span class="label-text">Order Qty</span><input type="number" id="r_needOrder" placeholder="1"></div>
-                <div class="boss-restock" style="display:none;"><span class="label-text">Unit Cost (RM)</span><input type="number" id="r_unitCost" placeholder="0.00" oninput="calcRestockCost()"></div>
-                <div class="boss-restock" style="display:none;"><span class="label-text">Total Cost (RM)</span><input type="number" id="r_totalCost" placeholder="0.00" readonly class="readonly-input"></div>
+                <div><span class="label-text">Unit Cost (RM)</span><input type="number" id="r_unitCost" min="0" step="0.01" placeholder="0.00" oninput="sanitizeNonNegativeInput(this); calcRestockCost()"></div>
+                <div><span class="label-text">Total Cost (RM)</span><input type="number" id="r_totalCost" min="0" step="0.01" placeholder="0.00" readonly class="readonly-input"></div>
             </div>
             <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px dashed #cbd5e1; padding-top:15px; flex-wrap:wrap; gap:10px;">
                 <div style="display:flex; align-items:center; gap:10px;">
@@ -394,7 +394,7 @@
         <div class="top-controls" style="background:#f8fafc; padding:15px; border-radius:8px; border:1px solid #e2e8f0; align-items:center;">
             <button onclick="refreshTabData('restock')" class="sync-btn" style="border-radius:6px;">🔄 Refresh Restock</button><select id="rViewFilter" onchange="renderRestockTable()" style="padding:10px; border-radius:6px; font-weight:bold; color:#2563eb; border:1px solid #cbd5e1;"><option value="active">Active List (Not Yet Order)</option><option value="history">History (Ordered)</option><option value="all">All Items</option></select>
             <select id="rSuppFilter" onchange="renderRestockTable()" style="padding:10px; border-radius:6px; font-weight:bold; border:1px solid #cbd5e1; background: #fffbeb; color: #b45309;"><option value="all">🔍 All Suppliers</option></select>
-            <div style="display:flex; align-items:center; gap:8px;"><span style="font-size:13px; font-weight:bold; color:#475569;">Search Date:</span><input type="date" id="rDateFilter" onchange="renderRestockTable()" style="padding:10px; border-radius:6px; width:160px; border:1px solid #cbd5e1;"><button onclick="clearDateFilter('restock')" style="padding:10px; border-radius:6px; cursor:pointer; border:1px solid #cbd5e1; background:white; font-weight:bold;">Clear</button></div>
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;"><span style="font-size:13px; font-weight:bold; color:#475569;">Date From:</span><input type="date" id="rDateFromFilter" onchange="renderRestockTable()" style="padding:10px; border-radius:6px; width:155px; border:1px solid #cbd5e1;"><span style="font-size:13px; font-weight:bold; color:#475569;">To:</span><input type="date" id="rDateToFilter" onchange="renderRestockTable()" style="padding:10px; border-radius:6px; width:155px; border:1px solid #cbd5e1;"><button onclick="clearDateFilter('restock')" style="padding:10px; border-radius:6px; cursor:pointer; border:1px solid #cbd5e1; background:white; font-weight:bold;">Clear</button></div>
             <div style="margin-left:auto; display:flex; gap:10px; flex-wrap:wrap;"><button class="print-btn" onclick="printRestock()" style="padding:10px 15px; border-radius:6px; font-weight:bold; cursor:pointer;">🖨️ Print PO List</button><button class="print-btn" onclick="saveRestockPDF()" style="padding:10px 15px; border-radius:6px; font-weight:bold; cursor:pointer;">📄 Supplier PO (RM0)</button><button class="print-btn boss-restock" onclick="saveRestockBossPDF()" style="display:none; padding:10px 15px; border-radius:6px; font-weight:bold; cursor:pointer; background:#7c3aed;">👑 Boss Cost PO</button><button class="wa-btn" style="background:#25D366; margin:0; padding:10px 15px; border-radius:6px; font-size:13px;" onclick="sendRestockWA('60194482580', 'Hock')">📲 WA Hock</button><button class="wa-btn" style="background:#25D366; margin:0; padding:10px 15px; border-radius:6px; font-size:13px;" onclick="sendRestockWA('60164401970', 'Kelvin')">📲 WA Kelvin</button><button class="complete-btn" onclick="markFilteredOrdered()" style="margin:0; padding:10px 15px; border-radius:6px; font-size:13px;">📦 Mark View as Ordered</button></div>
         </div>
         <div class="table-responsive"><table><thead id="restockThead"></thead><tbody id="restockTableBody"></tbody></table></div>
@@ -408,16 +408,16 @@
 <datalist id="customerList"></datalist><datalist id="supplierList"></datalist>
 
 <script>
-   const firebaseConfig = {
-   apiKey: "AIzaSyDdTc6A67sqq1D5vMRWI1q-bhGsSd5DQBs",
-   authDomain: "malaysia-motor-preorder.firebaseapp.com",
-   databaseURL: "https://malaysia-motor-preorder-default-rtdb.asia-southeast1.firebasedatabase.app",
-   projectId: "malaysia-motor-preorder",
-   storageBucket: "malaysia-motor-preorder.firebasestorage.app",
-   messagingSenderId: "409637154704",
-   appId: "1:409637154704:web:ac1ed4603fb62bd0258d15",
-   measurementId: "G-CPSC89HTB5"
-};
+    const firebaseConfig = {
+    apiKey: "AIzaSyDdTc6A67sqq1D5vMRWI1q-bhGsSd5DQBs",
+    authDomain: "malaysia-motor-preorder.firebaseapp.com",
+    databaseURL: "https://malaysia-motor-preorder-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "malaysia-motor-preorder",
+    storageBucket: "malaysia-motor-preorder.firebasestorage.app",
+    messagingSenderId: "409637154704",
+    appId: "1:409637154704:web:ac1ed4603fb62bd0258d15",
+    measurementId: "G-CPSC89HTB5"
+    };
     
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth(); const db = firebase.database(); const storage = firebase.storage(); 
@@ -526,59 +526,16 @@
     }
 
     function rotatePhotoBase64(base64data, callback) {
-        const source = String(base64data || '');
-        if (!source) {
-            alert('No photo found to rotate.');
-            callback(null);
-            return;
-        }
-
-        const img = new Image();
-        let finished = false;
-        const finish = (result) => {
-            if (finished) return;
-            finished = true;
-            callback(result || null);
-        };
-
-        img.onload = function() {
-            try {
-                const canvas = document.createElement('canvas');
-                canvas.width = img.height;
-                canvas.height = img.width;
-                const ctx = canvas.getContext('2d');
-                ctx.translate(canvas.width / 2, canvas.height / 2);
-                ctx.rotate(90 * Math.PI / 180);
-                ctx.drawImage(img, -img.width / 2, -img.height / 2);
-                finish(canvas.toDataURL('image/jpeg', 0.8));
-            } catch (err) {
-                console.warn('Photo rotation failed:', err);
-                alert('This cloud photo cannot be rotated on this device. Please remove it and upload a newly rotated photo if needed.');
-                finish(null);
-            }
-        };
-        img.onerror = function() {
-            alert('Photo could not be loaded for rotation. Please try again after refreshing.');
-            finish(null);
-        };
-
-        if (source.startsWith('http://') || source.startsWith('https://')) {
-            img.crossOrigin = 'anonymous';
-        }
-        img.src = source;
+        const img = new Image(); img.onload = function() {
+            const canvas = document.createElement('canvas'); canvas.width = img.height; canvas.height = img.width; const ctx = canvas.getContext('2d');
+            ctx.translate(canvas.width / 2, canvas.height / 2); ctx.rotate(90 * Math.PI / 180); ctx.drawImage(img, -img.width / 2, -img.height / 2); callback(canvas.toDataURL('image/jpeg', 0.8));
+        }; img.src = base64data;
     }
 
     window.rotateImage = function(itemId, index, listType) {
         let targetMap = listType === 'quote' ? qItemPhotosMap : (listType === 'enquire' ? eItemPhotosMap : itemPhotosMap);
         let targetRender = listType === 'quote' ? renderQGalleryUI : (listType === 'enquire' ? renderEGalleryUI : renderGalleryUI);
-        if (!targetMap[itemId] || !targetMap[itemId][index]) {
-            alert('Photo not found. Please refresh and try again.');
-            return;
-        }
-        rotatePhotoBase64(targetMap[itemId][index], (newBase64) => {
-            if (newBase64) targetMap[itemId][index] = newBase64;
-            targetRender(itemId);
-        });
+        rotatePhotoBase64(targetMap[itemId][index], (newBase64) => { targetMap[itemId][index] = newBase64; targetRender(itemId); });
     }
 
     // ==========================================
@@ -1374,78 +1331,6 @@ Uploaded ${successCount} item(s) to Cloud.`);
         btnElement.classList.add('active');
     }
 
-    function clearHtmlById(id) {
-        const el = document.getElementById(id);
-        if (el) el.innerHTML = '';
-    }
-
-    function resetLocalAppStateOnLogout() {
-        editingId = null;
-        qEditingId = null;
-        eEditingId = null;
-        restockEditingId = null;
-        isDataLoaded = false;
-
-        itemMapIdCounter = 0;
-        qItemMapIdCounter = 0;
-        eItemMapIdCounter = 0;
-        itemPhotosMap = {};
-        qItemPhotosMap = {};
-        eItemPhotosMap = {};
-        currentRestockPhotos = [];
-        currentRestockView = [];
-        photoPreviewCounter = 0;
-        Object.keys(photoPreviewStore).forEach(key => delete photoPreviewStore[key]);
-
-        document.querySelectorAll('#mainApp input, #mainApp select').forEach(el => {
-            if (el.type === 'checkbox') el.checked = false;
-            else el.value = '';
-        });
-        document.getElementById('authPassword').value = '';
-
-        [
-            'dynamicItemsContainer',
-            'qDynamicItemsContainer',
-            'eDynamicItemsContainer',
-            'orderTableBody',
-            'quoteTableBody',
-            'enquireTableBody',
-            'restockTableBody',
-            'restockThead',
-            'customerList',
-            'supplierList',
-            'r_gallery',
-            'historyContent'
-        ].forEach(clearHtmlById);
-
-        const rCount = document.getElementById('r_count');
-        if (rCount) rCount.innerText = '0';
-        const modalImg = document.getElementById('modalImg');
-        if (modalImg) modalImg.src = '';
-        const photoModal = document.getElementById('photoModal');
-        if (photoModal) photoModal.style.display = 'none';
-        const historyModal = document.getElementById('historyModal');
-        if (historyModal) historyModal.style.display = 'none';
-
-        const restockBtn = document.getElementById('addRestockBtn');
-        if (restockBtn) {
-            restockBtn.innerText = '➕ Add to Restock';
-            restockBtn.style.backgroundColor = '#2563eb';
-            restockBtn.disabled = false;
-        }
-        const cancelRestockBtn = document.getElementById('cancelRestockEditBtn');
-        if (cancelRestockBtn) cancelRestockBtn.style.display = 'none';
-        resetProcessingButtons();
-        updateDeleteRequestIndicators(0);
-
-        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        const ordersTab = document.getElementById('ordersTab');
-        const orderBtn = document.getElementById('tabBtnOrder');
-        if (ordersTab) ordersTab.classList.add('active');
-        if (orderBtn) orderBtn.classList.add('active');
-    }
-
     auth.onAuthStateChanged(async (user) => {
         if (user) {
             const approved = await verifyDeviceAccess(user);
@@ -1468,7 +1353,6 @@ Uploaded ${successCount} item(s) to Cloud.`);
             db.ref('settings/staff').off();
             db.ref('deviceRequests').off();
             db.ref('approvedDevices').off();
-            resetLocalAppStateOnLogout();
             showNormalLogin();
         }
     });
@@ -1478,10 +1362,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
         const password = document.getElementById('authPassword').value; const btn = document.getElementById('loginBtnTrigger'); btn.innerText = "Connecting..."; 
         auth.signInWithEmailAndPassword(email, password).catch(() => { document.getElementById('loginError').style.display = 'block'; btn.innerText = "Secure Login"; });
     }
-    function logoutSystem() {
-        resetLocalAppStateOnLogout();
-        auth.signOut();
-    }
+    function logoutSystem() { auth.signOut(); }
 
     function forceDataSync(skipOfflineSync = false) {
         db.ref('orders').off();
@@ -1963,7 +1844,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
 
     function cancelEdit() {
         editingId = null; document.getElementById('mainBtn').innerText = "💾 Save Document & Sync"; document.getElementById('mainBtn').style.backgroundColor = "#2563eb"; document.getElementById('cancelBtn').style.display = "none";
-        document.querySelectorAll('#ordersTab input:not(.login-input)').forEach(i => { if(i.id !== 'searchInput' && i.id !== 'orderDateFilter') i.value = ''; }); document.getElementById('orderByStaff').value = ''; document.getElementById('dynamicItemsContainer').innerHTML = ''; itemPhotosMap = {}; addNewItemBlock();
+        document.querySelectorAll('#ordersTab input:not(.login-input)').forEach(i => { if(i.id !== 'searchInput' && i.id !== 'orderDateFromFilter' && i.id !== 'orderDateToFilter') i.value = ''; }); document.getElementById('orderByStaff').value = ''; document.getElementById('dynamicItemsContainer').innerHTML = ''; itemPhotosMap = {}; addNewItemBlock();
     }
 
     async function saveOrUpdateOrder() {
@@ -2013,7 +1894,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
     async function toggleStatus(id) { if(!navigator.onLine) return alert("Requires internet."); const order = orders.find(o => o.id === id); if(!order || order.status === 'completed' || order.status === 'offline') return; let newStatus = order.status === 'waiting' ? 'arrived' : 'waiting'; await db.ref('orders/' + id).update({ status: newStatus }); await writeAuditLog('TOGGLE_ORDER_STATUS', 'orders', order.refNo || '', id, { from: order.status, to: newStatus }); }
     async function markCompleted(id) { if(!navigator.onLine) return alert("Offline!"); const order = orders.find(o => o.id === id); if(!order) return alert('Record not found or already deleted. Please refresh.'); if(confirm("Confirm item collected?")) { await db.ref('orders/' + id).update({ status: 'completed', completedDate: getStandardDateStr() }); await writeAuditLog('MARK_ORDER_COMPLETED', 'orders', order.refNo || '', id, { completedDate: getStandardDateStr() }); } }
     async function restoreOrder(id) { if(!navigator.onLine) return; if(!isAdmin) return alert('Only Boss/Admin can return completed orders.'); const order = orders.find(o => o.id === id); if(!order) return alert('Record not found or already deleted. Please refresh.'); await db.ref('orders/' + id).update({ status: 'arrived', completedDate: null }); await writeAuditLog('RETURN_COMPLETED_ORDER', 'orders', order.refNo || '', id, { to: 'arrived' }); }
-    async function deleteOrder(id) { if(!navigator.onLine) return alert('Requires internet.'); const order = orders.find(o => o.id === id); if(!order) return alert('Record not found or already deleted. Please refresh.'); if(isAdmin && confirm('Delete order?')) { await db.ref('orders/' + id).remove(); await writeAuditLog('DELETE_ORDER', 'orders', order.refNo || '', id, { name: order.name || '', plate: order.plate || '' }); } else if(!isAdmin) { await submitDeleteRequest('orders', id, order.refNo || '', { name: order.name || '', plate: order.plate || '', car: order.car || '' }); } }
+    async function deleteOrder(id) { if(!navigator.onLine) return alert('Requires internet.'); const order = orders.find(o => o.id === id); if(!order) return alert('Record not found or already deleted. Please refresh.'); if(!confirm('Delete this order permanently?')) return; await db.ref('orders/' + id).remove(); await writeAuditLog('DELETE_ORDER', 'orders', order.refNo || '', id, { name: order.name || '', plate: order.plate || '', deletedBy: auth.currentUser ? auth.currentUser.email : '' }); }
     function toggleAllOrderChecks(source) { document.querySelectorAll('.order-check').forEach(cb => cb.checked = source.checked); }
     async function markSelectedArrived() {
         if(!navigator.onLine) return alert("Requires internet."); let checkboxes = document.querySelectorAll('.order-check:checked'); if(checkboxes.length === 0) return alert("Please check at least one pending order.");
@@ -2021,12 +1902,12 @@ Uploaded ${successCount} item(s) to Cloud.`);
         if(Object.keys(updates).length > 0) { await db.ref('orders').update(updates); await writeAuditLog('BULK_MARK_ARRIVED', 'orders', '', '', { count: Object.keys(updates).length }); document.getElementById('selectAllOrders').checked = false; } 
     }
 
-    function clearDateFilter(type) { if(type === 'order') { document.getElementById('orderDateFilter').value = ''; renderTable(); } else if(type === 'quote') { document.getElementById('quoteDateFilter').value = ''; renderQTable(); } else if(type === 'enquire') { document.getElementById('enquireDateFilter').value = ''; renderETable(); } else if(type === 'restock') { document.getElementById('rDateFilter').value = ''; renderRestockTable(); } }
+    function clearDateFilter(type) { if(type === 'order') { document.getElementById('orderDateFromFilter').value = ''; document.getElementById('orderDateToFilter').value = ''; renderTable(); } else if(type === 'quote') { document.getElementById('quoteDateFromFilter').value = ''; document.getElementById('quoteDateToFilter').value = ''; renderQTable(); } else if(type === 'enquire') { document.getElementById('enquireDateFromFilter').value = ''; document.getElementById('enquireDateToFilter').value = ''; renderETable(); } else if(type === 'restock') { document.getElementById('rDateFromFilter').value = ''; document.getElementById('rDateToFilter').value = ''; renderRestockTable(); } }
     function getFormattedDateForFilter(dateVal) { if(!dateVal) return ""; let [y, m, d] = dateVal.split('-'); const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]; return `${d} ${months[parseInt(m)-1]} ${y}`; }
 
     function renderTable() {
         const tbody = document.getElementById('orderTableBody'); tbody.innerHTML = '';
-        const search = document.getElementById('searchInput').value.toLowerCase(); const viewFilter = document.getElementById('viewFilter').value; const dateVal = document.getElementById('orderDateFilter').value; const filterDateStr = getFormattedDateForFilter(dateVal);
+        const search = document.getElementById('searchInput').value.toLowerCase(); const viewFilter = document.getElementById('viewFilter').value; const dateFromVal = document.getElementById('orderDateFromFilter').value; const dateToVal = document.getElementById('orderDateToFilter').value;
         const offlineOrders = offlineRecords
             .filter(x => x.dataType === 'order')
             .map(x => ({
@@ -2039,7 +1920,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
         const displayOrders = [...offlineOrders, ...orders];
 
         let filteredOrders = displayOrders.filter(o => { 
-            if (viewFilter === 'active' && o.status === 'completed') return false; if (viewFilter === 'history' && o.status !== 'completed') return false; if (filterDateStr && o.date !== filterDateStr) return false;
+            if (viewFilter === 'active' && o.status === 'completed') return false; if (viewFilter === 'history' && o.status !== 'completed') return false; if (!recordMatchesDateRange(o, dateFromVal, dateToVal)) return false;
             const itemMatch = (o.items||[]).some(i => (i.part&&i.part.toLowerCase().includes(search)) || (i.partNo&&i.partNo.toLowerCase().includes(search))); 
             return (o.name||'').toLowerCase().includes(search) || (o.car&&o.car.toLowerCase().includes(search)) || (o.refNo&&o.refNo.toLowerCase().includes(search)) || (o.plate&&o.plate.toLowerCase().includes(search)) || (o.remarks&&o.remarks.toLowerCase().includes(search)) || (o.staff&&o.staff.toLowerCase().includes(search)) || itemMatch; 
         });
@@ -2086,8 +1967,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
                 } else {
                     mainActions += `<span style="font-size:12px;color:#64748b;font-weight:bold;">🔒 Completed Locked</span>`;
                 }
-                if (isAdmin) { mainActions += `<button class="delete-btn" onclick="deleteOrder('${order.id}')">✖ Del</button>`; }
-                else { mainActions += `<button class="delete-btn" onclick="deleteOrder('${order.id}')">🗑️ Req Del</button>`; }
+                mainActions += `<button class="delete-btn" onclick="deleteOrder('${order.id}')">✖ Del</button>`;
                 mainActions += `</div><button class="print-btn" onclick="printChecklist('${order.id}', 'order')" style="width:100%; margin-top:5px; margin-bottom:5px;">🖨️ Print Checklist</button><button class="print-btn" onclick="saveChecklistPDF('${order.id}', 'order')" style="width:100%; margin-top:5px; margin-bottom:5px;">📄 PDF Checklist</button>`;
             }
 
@@ -2160,7 +2040,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
 
     function cancelQEdit() {
         qEditingId = null; document.getElementById('qMainBtn').innerText = "💾 Save Quotation"; document.getElementById('qMainBtn').style.backgroundColor = "#8b5cf6"; document.getElementById('qCancelBtn').style.display = "none";
-        document.querySelectorAll('#quoteTab input:not(.login-input)').forEach(i => { if(i.id !== 'qSearchInput' && i.id !== 'quoteDateFilter') i.value = ''; }); document.getElementById('qOrderByStaff').value = ''; document.getElementById('qDynamicItemsContainer').innerHTML = ''; qItemPhotosMap = {}; addQItemBlock();
+        document.querySelectorAll('#quoteTab input:not(.login-input)').forEach(i => { if(i.id !== 'qSearchInput' && i.id !== 'quoteDateFromFilter' && i.id !== 'quoteDateToFilter') i.value = ''; }); document.getElementById('qOrderByStaff').value = ''; document.getElementById('qDynamicItemsContainer').innerHTML = ''; qItemPhotosMap = {}; addQItemBlock();
     }
 
     async function saveOrUpdateQuote() {
@@ -2201,7 +2081,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
         } catch(err) { alert("Upload Error: " + err.message); } finally { qMainBtn.innerText = originalText; qMainBtn.disabled = false; }
     }
 
-    async function deleteQuote(id) { if(!navigator.onLine) return alert('Requires internet.'); const quote = quotes.find(q => q.id === id); if(!quote) return alert('Record not found or already deleted. Please refresh.'); if(isAdmin && confirm('Delete Quotation?')) { await db.ref('quotations/' + id).remove(); await writeAuditLog('DELETE_QUOTATION', 'quotations', quote.refNo || '', id, { name: quote.name || '', plate: quote.plate || '' }); } else if(!isAdmin) { await submitDeleteRequest('quotations', id, quote.refNo || '', { name: quote.name || '', plate: quote.plate || '', car: quote.car || '' }); } }
+    async function deleteQuote(id) { if(!navigator.onLine) return alert('Requires internet.'); const quote = quotes.find(q => q.id === id); if(!quote) return alert('Record not found or already deleted. Please refresh.'); if(!confirm('Delete this quotation permanently?')) return; await db.ref('quotations/' + id).remove(); await writeAuditLog('DELETE_QUOTATION', 'quotations', quote.refNo || '', id, { name: quote.name || '', plate: quote.plate || '', deletedBy: auth.currentUser ? auth.currentUser.email : '' }); }
 
     async function markQuoteDone(id) {
         if(!navigator.onLine) return alert('Requires internet.');
@@ -2237,7 +2117,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
 
     function renderQTable() {
         const tbody = document.getElementById('quoteTableBody'); tbody.innerHTML = '';
-        const search = document.getElementById('qSearchInput').value.toLowerCase(); const dateVal = document.getElementById('quoteDateFilter').value; const filterDateStr = getFormattedDateForFilter(dateVal); const viewFilter = document.getElementById('qViewFilter') ? document.getElementById('qViewFilter').value : 'active';
+        const search = document.getElementById('qSearchInput').value.toLowerCase(); const dateFromVal = document.getElementById('quoteDateFromFilter').value; const dateToVal = document.getElementById('quoteDateToFilter').value; const viewFilter = document.getElementById('qViewFilter') ? document.getElementById('qViewFilter').value : 'active';
         const offlineQuotes = offlineRecords
             .filter(x => x.dataType === 'quote')
             .map(x => ({
@@ -2252,7 +2132,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
             const isCompleted = !q.offlinePending && ((q.status || '').toLowerCase() === 'completed' || (q.status || '').toLowerCase() === 'done');
             if (viewFilter === 'active' && isCompleted) return false;
             if (viewFilter === 'history' && !isCompleted) return false;
-            if (filterDateStr && q.date !== filterDateStr) return false;
+            if (!recordMatchesDateRange(q, dateFromVal, dateToVal)) return false;
             const itemMatch = (q.items||[]).some(i => (i.part&&i.part.toLowerCase().includes(search)) || (i.partNo&&i.partNo.toLowerCase().includes(search))); 
             return (q.name||'').toLowerCase().includes(search) || (q.car&&q.car.toLowerCase().includes(search)) || (q.refNo&&q.refNo.toLowerCase().includes(search)) || (q.plate&&q.plate.toLowerCase().includes(search)) || (q.remarks&&q.remarks.toLowerCase().includes(search)) || (q.staff&&q.staff.toLowerCase().includes(search)) || itemMatch; 
         });
@@ -2279,11 +2159,11 @@ Uploaded ${successCount} item(s) to Cloud.`);
                 mainActions = `<div style="font-size:12px; color:#ef4444; font-weight:bold; text-align:center; line-height:1.4;">🔴 Saved Offline<br>Waiting Cloud Sync</div>`;
             } else if (isCompletedQuote) {
                 mainActions += `<div class="action-btns"><button class="edit-btn" onclick="restoreQuote('${quote.id}')">⏪ Return</button></div><div class="action-btns"><button class="edit-btn" onclick="editQuote('${quote.id}')">✏️ Edit</button>`;
-                if (isAdmin) { mainActions += `<button class="delete-btn" onclick="deleteQuote('${quote.id}')">✖ Del</button>`; } else { mainActions += `<button class="delete-btn" onclick="deleteQuote('${quote.id}')">🗑️ Req Del</button>`; }
+                mainActions += `<button class="delete-btn" onclick="deleteQuote('${quote.id}')">✖ Del</button>`;
                 mainActions += `</div><button class="print-btn" onclick="printChecklist('${quote.id}', 'quote')" style="width:100%; margin-top:5px; margin-bottom:5px;">🖨️ Print Checklist</button><button class="print-btn" onclick="saveChecklistPDF('${quote.id}', 'quote')" style="width:100%; margin-top:5px; margin-bottom:5px;">📄 PDF Checklist</button>`;
             } else {
                 mainActions += `<div class="action-btns"><button class="convert-btn" onclick="convertToPreorder('${quote.id}')">➡️ Convert to Order</button></div><div class="action-btns"><button class="complete-btn" onclick="markQuoteDone('${quote.id}')">✔️ Done</button><button class="edit-btn" onclick="editQuote('${quote.id}')">✏️ Edit</button>`;
-                if (isAdmin) { mainActions += `<button class="delete-btn" onclick="deleteQuote('${quote.id}')">✖ Del</button>`; } else { mainActions += `<button class="delete-btn" onclick="deleteQuote('${quote.id}')">🗑️ Req Del</button>`; }
+                mainActions += `<button class="delete-btn" onclick="deleteQuote('${quote.id}')">✖ Del</button>`;
                 mainActions += `</div><button class="print-btn" onclick="printChecklist('${quote.id}', 'quote')" style="width:100%; margin-top:5px; margin-bottom:5px;">🖨️ Print Checklist</button><button class="print-btn" onclick="saveChecklistPDF('${quote.id}', 'quote')" style="width:100%; margin-top:5px; margin-bottom:5px;">📄 PDF Checklist</button>`;
             }
 
@@ -2332,7 +2212,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
 
     function cancelEEdit() {
         eEditingId = null; document.getElementById('eMainBtn').innerText = "💾 Save Enquiry"; document.getElementById('eMainBtn').style.backgroundColor = "#0284c7"; document.getElementById('eCancelBtn').style.display = "none";
-        document.querySelectorAll('#enquireTab input:not(.login-input)').forEach(i => { if(i.id !== 'eSearchInput' && i.id !== 'enquireDateFilter') i.value = ''; }); document.getElementById('eOrderByStaff').value = ''; document.getElementById('eDynamicItemsContainer').innerHTML = ''; eItemPhotosMap = {}; addEItemBlock();
+        document.querySelectorAll('#enquireTab input:not(.login-input)').forEach(i => { if(i.id !== 'eSearchInput' && i.id !== 'enquireDateFromFilter' && i.id !== 'enquireDateToFilter') i.value = ''; }); document.getElementById('eOrderByStaff').value = ''; document.getElementById('eDynamicItemsContainer').innerHTML = ''; eItemPhotosMap = {}; addEItemBlock();
     }
 
     async function saveOrUpdateEnquire() {
@@ -2373,7 +2253,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
         } catch(err) { alert("Upload Error: " + err.message); } finally { eMainBtn.innerText = originalText; eMainBtn.disabled = false; }
     }
 
-    async function deleteEnquire(id) { if(!navigator.onLine) return alert('Requires internet.'); const enq = enquiries.find(e => e.id === id); if(!enq) return alert('Record not found or already deleted. Please refresh.'); if(isAdmin && confirm('Delete Enquiry?')) { await db.ref('enquiries/' + id).remove(); await writeAuditLog('DELETE_ENQUIRY', 'enquiries', enq.refNo || '', id, { name: enq.name || '', plate: enq.plate || '' }); } else if(!isAdmin) { await submitDeleteRequest('enquiries', id, enq.refNo || '', { name: enq.name || '', plate: enq.plate || '', car: enq.car || '' }); } }
+    async function deleteEnquire(id) { if(!navigator.onLine) return alert('Requires internet.'); const enq = enquiries.find(e => e.id === id); if(!enq) return alert('Record not found or already deleted. Please refresh.'); if(!confirm('Delete this enquiry permanently?')) return; await db.ref('enquiries/' + id).remove(); await writeAuditLog('DELETE_ENQUIRY', 'enquiries', enq.refNo || '', id, { name: enq.name || '', plate: enq.plate || '', deletedBy: auth.currentUser ? auth.currentUser.email : '' }); }
 
     async function markEnquiryDone(id) {
         if(!navigator.onLine) return alert('Requires internet.');
@@ -2409,7 +2289,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
 
     function renderETable() {
         const tbody = document.getElementById('enquireTableBody'); tbody.innerHTML = '';
-        const search = document.getElementById('eSearchInput').value.toLowerCase(); const dateVal = document.getElementById('enquireDateFilter').value; const filterDateStr = getFormattedDateForFilter(dateVal); const viewFilter = document.getElementById('eViewFilter') ? document.getElementById('eViewFilter').value : 'active';
+        const search = document.getElementById('eSearchInput').value.toLowerCase(); const dateFromVal = document.getElementById('enquireDateFromFilter').value; const dateToVal = document.getElementById('enquireDateToFilter').value; const viewFilter = document.getElementById('eViewFilter') ? document.getElementById('eViewFilter').value : 'active';
         const offlineEnquiries = offlineRecords
             .filter(x => x.dataType === 'enquire')
             .map(x => ({
@@ -2424,7 +2304,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
             const isCompleted = !e.offlinePending && ((e.status || '').toLowerCase() === 'completed' || (e.status || '').toLowerCase() === 'done');
             if (viewFilter === 'active' && isCompleted) return false;
             if (viewFilter === 'history' && !isCompleted) return false;
-            if (filterDateStr && e.date !== filterDateStr) return false;
+            if (!recordMatchesDateRange(e, dateFromVal, dateToVal)) return false;
             const itemMatch = (e.items||[]).some(i => (i.part&&i.part.toLowerCase().includes(search)) || (i.partNo&&i.partNo.toLowerCase().includes(search))); 
             return (e.name||'').toLowerCase().includes(search) || (e.car&&e.car.toLowerCase().includes(search)) || (e.refNo&&e.refNo.toLowerCase().includes(search)) || (e.plate&&e.plate.toLowerCase().includes(search)) || (e.remarks&&e.remarks.toLowerCase().includes(search)) || (e.staff&&e.staff.toLowerCase().includes(search)) || itemMatch; 
         });
@@ -2451,11 +2331,11 @@ Uploaded ${successCount} item(s) to Cloud.`);
                 mainActions = `<div style="font-size:12px; color:#ef4444; font-weight:bold; text-align:center; line-height:1.4;">🔴 Saved Offline<br>Waiting Cloud Sync</div>`;
             } else if (isCompletedEnquiry) {
                 mainActions += `<div class="action-btns"><button class="edit-btn" onclick="restoreEnquiry('${enq.id}')">⏪ Return</button></div><div class="action-btns"><button class="edit-btn" onclick="editEnquire('${enq.id}')">✏️ Edit</button>`;
-                if (isAdmin) { mainActions += `<button class="delete-btn" onclick="deleteEnquire('${enq.id}')">✖ Del</button>`; } else { mainActions += `<button class="delete-btn" onclick="deleteEnquire('${enq.id}')">🗑️ Req Del</button>`; }
+                mainActions += `<button class="delete-btn" onclick="deleteEnquire('${enq.id}')">✖ Del</button>`;
                 mainActions += `</div><button class="print-btn" onclick="printChecklist('${enq.id}', 'enquire')" style="width:100%; margin-top:5px; margin-bottom:5px;">🖨️ Print Enquiry</button><button class="print-btn" onclick="saveChecklistPDF('${enq.id}', 'enquire')" style="width:100%; margin-top:5px; margin-bottom:5px;">📄 PDF Enquiry</button>`;
             } else {
                 mainActions += `<div class="action-btns"><button class="convert-btn-alt" onclick="convertEnqToQuote('${enq.id}')">➡️ Convert to Quote</button></div><div class="action-btns"><button class="complete-btn" onclick="markEnquiryDone('${enq.id}')">✔️ Done</button><button class="edit-btn" onclick="editEnquire('${enq.id}')">✏️ Edit</button>`;
-                if (isAdmin) { mainActions += `<button class="delete-btn" onclick="deleteEnquire('${enq.id}')">✖ Del</button>`; } else { mainActions += `<button class="delete-btn" onclick="deleteEnquire('${enq.id}')">🗑️ Req Del</button>`; }
+                mainActions += `<button class="delete-btn" onclick="deleteEnquire('${enq.id}')">✖ Del</button>`;
                 mainActions += `</div><button class="print-btn" onclick="printChecklist('${enq.id}', 'enquire')" style="width:100%; margin-top:5px; margin-bottom:5px;">🖨️ Print Enquiry</button><button class="print-btn" onclick="saveChecklistPDF('${enq.id}', 'enquire')" style="width:100%; margin-top:5px; margin-bottom:5px;">📄 PDF Enquiry</button>`;
             }
 
@@ -2611,16 +2491,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
     function processRestockPhotos(event) { processPhotoFiles(event, currentRestockPhotos, renderRestockGalleryUI, 5); }
     function renderRestockGalleryUI() { const gallery = document.getElementById('r_gallery'); document.getElementById('r_count').innerText = currentRestockPhotos.length; gallery.innerHTML = ''; currentRestockPhotos.forEach((b64Data, index) => { const key = registerPhotoPreview(b64Data); gallery.innerHTML += `<div class="photo-wrapper"><img src="${safePhotoSrc(b64Data)}" class="photo-thumbnail" onclick="showPhotoByKey('${key}')"><button type="button" class="rotate-single-btn" onclick="rotateRestockImage(${index})">↻</button><button type="button" class="remove-single-btn" onclick="removeRestockSinglePhoto(${index})">✖</button></div>`; }); }
     function removeRestockSinglePhoto(index) { currentRestockPhotos.splice(index, 1); renderRestockGalleryUI(); }
-    function rotateRestockImage(index) {
-        if (!currentRestockPhotos[index]) {
-            alert('Photo not found. Please refresh and try again.');
-            return;
-        }
-        rotatePhotoBase64(currentRestockPhotos[index], (newBase64) => {
-            if (newBase64) currentRestockPhotos[index] = newBase64;
-            renderRestockGalleryUI();
-        });
-    }
+    function rotateRestockImage(index) { rotatePhotoBase64(currentRestockPhotos[index], (newBase64) => { currentRestockPhotos[index] = newBase64; renderRestockGalleryUI(); }); }
 
     function clearRestockFormFields() {
         ['r_part','r_code','r_brand','r_supp','r_car','r_onHand','r_needOrder','r_unitCost','r_totalCost'].forEach(id => {
@@ -2640,10 +2511,8 @@ Uploaded ${successCount} item(s) to Cloud.`);
         document.getElementById('r_car').value = item.car || '';
         document.getElementById('r_onHand').value = item.onHandQty || '0';
         document.getElementById('r_needOrder').value = item.needOrderQty || '1';
-        if (isAdmin) {
-            document.getElementById('r_unitCost').value = item.unitCost || '0';
-            document.getElementById('r_totalCost').value = item.totalCost || '0';
-        }
+        document.getElementById('r_unitCost').value = item.unitCost || '0';
+        document.getElementById('r_totalCost').value = item.totalCost || '0';
         currentRestockPhotos = Array.isArray(item.photos) ? [...item.photos] : [];
         renderRestockGalleryUI();
         calcRestockCost();
@@ -2710,10 +2579,8 @@ Uploaded ${successCount} item(s) to Cloud.`);
                     editedAt: firebase.database.ServerValue.TIMESTAMP,
                     editedBy: auth.currentUser ? auth.currentUser.email : ''
                 };
-                if (isAdmin) {
-                    updates.unitCost = unitCost;
-                    updates.totalCost = (toNonNegativeNumber(needOrderQty, 1) * toNonNegativeNumber(unitCost, 0)).toFixed(2);
-                }
+                updates.unitCost = unitCost;
+                updates.totalCost = (toNonNegativeNumber(needOrderQty, 1) * toNonNegativeNumber(unitCost, 0)).toFixed(2);
                 await db.ref('restock/' + restockEditingId).update(updates);
                 await writeAuditLog('EDIT_RESTOCK_FORM', 'restock', '', restockEditingId, { part, code, brand, supp, car, onHandQty, needOrderQty, photoCount: uploadedPhotos.length });
                 alert('✅ Restock record updated.');
@@ -2755,21 +2622,54 @@ Uploaded ${successCount} item(s) to Cloud.`);
         setRestockEditMode(item);
     }
 
-    async function updateRestockSupplier(id, newValue) { if(!isAdmin) return; if(!navigator.onLine) return; const item = restockItems.find(r => r.id === id); if(!item) return alert('Restock record not found or already deleted. Please refresh.'); await db.ref('restock/' + id).update({ supp: newValue }); await writeAuditLog('UPDATE_RESTOCK_SUPPLIER', 'restock', '', id, { part: item.part || '', from: item.supp || '', to: newValue }); }
+    async function updateRestockSupplier(id, newValue) { if(!navigator.onLine) return alert('Requires internet.'); const item = restockItems.find(r => r.id === id); if(!item) return alert('Restock record not found or already deleted. Please refresh.'); await db.ref('restock/' + id).update({ supp: newValue }); await writeAuditLog('UPDATE_RESTOCK_SUPPLIER', 'restock', '', id, { part: item.part || '', from: item.supp || '', to: newValue }); }
     async function markRestockOrdered(id) { if(!navigator.onLine) return; const item = restockItems.find(r => r.id === id); if(!item) return alert('Restock record not found or already deleted. Please refresh.'); await db.ref('restock/' + id).update({ status: 'Ordered' }); await writeAuditLog('MARK_RESTOCK_ORDERED', 'restock', '', id, { part: item.part || '', code: item.code || '' }); }
     async function returnToNotYet(id) { if(!navigator.onLine) return; const item = restockItems.find(r => r.id === id); if(!item) return alert('Restock record not found or already deleted. Please refresh.'); await db.ref('restock/' + id).update({ status: 'Not Yet Order' }); await writeAuditLog('RETURN_RESTOCK_NOT_YET', 'restock', '', id, { part: item.part || '', code: item.code || '' }); }
 
-    async function deleteRestock(id) { if(!navigator.onLine) return alert('Requires internet.'); const item = restockItems.find(r => r.id === id); if(!item) return alert('Record not found or already deleted. Please refresh.'); if(isAdmin && confirm('Delete this record permanently?')) { await db.ref('restock/' + id).remove(); await writeAuditLog('DELETE_RESTOCK', 'restock', '', id, { part: item.part || '', code: item.code || '', car: item.car || '' }); } else if(!isAdmin) { await submitDeleteRequest('restock', id, item.refNo || '', { part: item.part || '', code: item.code || '', car: item.car || '', supp: item.supp || '' }); } }
+    async function deleteRestock(id) { if(!navigator.onLine) return alert('Requires internet.'); const item = restockItems.find(r => r.id === id); if(!item) return alert('Record not found or already deleted. Please refresh.'); if(!confirm('Delete this restock record permanently?')) return; await db.ref('restock/' + id).remove(); await writeAuditLog('DELETE_RESTOCK', 'restock', '', id, { part: item.part || '', code: item.code || '', car: item.car || '', deletedBy: auth.currentUser ? auth.currentUser.email : '' }); }
     
     async function markFilteredOrdered() { if(!isAdmin) return alert("Admin only."); if(!navigator.onLine) return alert("Requires internet."); let toUpdate = currentRestockView.filter(i => i.status !== 'Ordered' && !i.offlinePending); if(toUpdate.length === 0) return alert('No cloud pending items found in your current view. Offline pending items must sync first.'); if(!confirm(`Mark all ${toUpdate.length} cloud item(s) on this screen as ORDERED?`)) return; let updates = {}; toUpdate.forEach(i => { updates[i.id + '/status'] = 'Ordered'; }); await db.ref('restock').update(updates); await writeAuditLog('BULK_MARK_RESTOCK_ORDERED', 'restock', '', '', { count: Object.keys(updates).length }); }
 
+    function getRestockItemDateValue(item) {
+        if (item && Number.isFinite(Number(item.timestamp)) && Number(item.timestamp) > 0) return new Date(Number(item.timestamp));
+        const raw = String((item && item.date) || '').trim();
+        if (!raw) return null;
+        const match = raw.match(/^(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})$/);
+        if (match) {
+            const months = { january:0, february:1, march:2, april:3, may:4, june:5, july:6, august:7, september:8, october:9, november:10, december:11 };
+            const monthIndex = months[match[2].toLowerCase()];
+            if (monthIndex !== undefined) return new Date(Number(match[3]), monthIndex, Number(match[1]), 12, 0, 0, 0);
+        }
+        const parsed = new Date(raw);
+        return Number.isNaN(parsed.getTime()) ? null : parsed;
+    }
+
+    function recordMatchesDateRange(item, fromVal, toVal) {
+        if (!fromVal && !toVal) return true;
+        const itemDate = getRestockItemDateValue(item);
+        if (!itemDate) return false;
+        const itemTime = itemDate.getTime();
+        if (fromVal) {
+            const from = new Date(fromVal + 'T00:00:00');
+            if (itemTime < from.getTime()) return false;
+        }
+        if (toVal) {
+            const to = new Date(toVal + 'T23:59:59.999');
+            if (itemTime > to.getTime()) return false;
+        }
+        return true;
+    }
+
+
+    function restockMatchesDateRange(item, fromVal, toVal) { return recordMatchesDateRange(item, fromVal, toVal); }
+
     function renderRestockTable() {
-        let theadHTML = `<tr><th style="width:100px;">Date Added</th><th>Part Description</th><th>Item Code / OEM</th><th>Brand</th><th>Supplier ${isAdmin ? '<span style="font-size:10px; color:#b45309;">(Boss Edit)</span>' : ''}</th><th>Car Model</th><th style="text-align:center; width: 60px;">On Hand</th><th style="text-align:center; width: 60px;">Order Qty</th>`;
-        if (isAdmin) { theadHTML += `<th style="text-align:center;">Unit Cost</th><th style="text-align:center;">Total Cost</th>`; }
+        let theadHTML = `<tr><th style="width:100px;">Date Added</th><th>Part Description</th><th>Item Code / OEM</th><th>Brand</th><th>Supplier <span style="font-size:10px; color:#b45309;">(Editable)</span></th><th>Car Model</th><th style="text-align:center; width: 60px;">On Hand</th><th style="text-align:center; width: 60px;">Order Qty</th>`;
+        theadHTML += `<th style="text-align:center;">Unit Cost</th><th style="text-align:center;">Total Cost</th>`;
         theadHTML += `<th style="text-align:center; width: 100px;">Photos</th><th style="text-align:center; width: 100px;">Status</th><th style="text-align:center; width: 80px;">Actions</th></tr>`;
         document.getElementById('restockThead').innerHTML = theadHTML;
         const tbody = document.getElementById('restockTableBody'); tbody.innerHTML = '';
-        const view = document.getElementById('rViewFilter').value; const dateVal = document.getElementById('rDateFilter').value; const filterDateStr = getFormattedDateForFilter(dateVal); const suppFilter = document.getElementById('rSuppFilter').value;
+        const view = document.getElementById('rViewFilter').value; const dateFromVal = document.getElementById('rDateFromFilter').value; const dateToVal = document.getElementById('rDateToFilter').value; const suppFilter = document.getElementById('rSuppFilter').value;
         const offlineRestockItems = offlineRecords
             .filter(x => x.dataType === 'restock')
             .map(x => ({
@@ -2780,7 +2680,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
             }));
         const displayRestockItems = [...offlineRestockItems, ...restockItems];
 
-        currentRestockView = displayRestockItems.filter(item => { const status = item.status || 'Not Yet Order'; if (view === 'active' && status === 'Ordered') return false; if (view === 'history' && status !== 'Ordered') return false; if (filterDateStr && item.date !== filterDateStr) return false; if (suppFilter !== 'all' && (item.supp||'').trim() !== suppFilter) return false; return true; });
+        currentRestockView = displayRestockItems.filter(item => { const status = item.status || 'Not Yet Order'; if (view === 'active' && status === 'Ordered') return false; if (view === 'history' && status !== 'Ordered') return false; if (!restockMatchesDateRange(item, dateFromVal, dateToVal)) return false; if (suppFilter !== 'all' && (item.supp||'').trim() !== suppFilter) return false; return true; });
         currentRestockView.forEach(item => {
             const status = item.status || 'Not Yet Order';
             const statusHtml = status === 'Ordered' ? `<span style="padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; background:#d1fae5; color:#047857;">Ordered</span>` : `<span style="padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; background:#fef3c7; color:#b45309;">Not Yet Order</span>`;
@@ -2790,11 +2690,10 @@ Uploaded ${successCount} item(s) to Cloud.`);
             } else {
                 if (status !== 'Ordered') { actionHtml += `<button class="complete-btn" onclick="markRestockOrdered('${item.id}')" style="width:100%; margin-bottom:4px;">✔️ Done</button>`; } else { actionHtml += `<button class="edit-btn" onclick="returnToNotYet('${item.id}')" style="width:100%; margin-bottom:4px;">⏪ Return</button>`; }
                 actionHtml += `<button class="edit-btn" onclick="editRestock('${item.id}')" style="width:100%; margin-bottom:4px;">✏️ Edit</button>`;
-                if (isAdmin) { actionHtml += `<button class="delete-btn" onclick="deleteRestock('${item.id}')" style="width:100%;">✖ Del</button>`; }
-                else { actionHtml += `<button class="delete-btn" onclick="deleteRestock('${item.id}')" style="width:100%;">🗑️ Request Del</button>`; } 
+                actionHtml += `<button class="delete-btn" onclick="deleteRestock('${item.id}')" style="width:100%;">✖ Del</button>`; 
             }
-            let suppHtml = (isAdmin && !item.offlinePending) ? `<input type="text" class="pos-input" value="${escapeAttr(item.supp||'')}" placeholder="Type..." style="width:100px; font-size:12px; background:#fffbeb; color:#b45309; font-weight:bold;" list="supplierList" onchange="updateRestockSupplier('${item.id}', this.value)">` : escapeHTML(item.supp || '-');
-            let costHtml = isAdmin ? `<td style="text-align:center; font-weight:bold; color:#059669;">RM ${parseFloat(item.unitCost||0).toFixed(2)}</td><td style="text-align:center; font-weight:bold; color:#059669;">RM ${parseFloat(item.totalCost||0).toFixed(2)}</td>` : ``;
+            let suppHtml = !item.offlinePending ? `<input type="text" class="pos-input" value="${escapeAttr(item.supp||'')}" placeholder="Type..." style="width:100px; font-size:12px; background:#fffbeb; color:#b45309; font-weight:bold;" list="supplierList" onchange="updateRestockSupplier('${item.id}', this.value)">` : escapeHTML(item.supp || '-');
+            let costHtml = `<td style="text-align:center; font-weight:bold; color:#059669;">RM ${parseFloat(item.unitCost||0).toFixed(2)}</td><td style="text-align:center; font-weight:bold; color:#059669;">RM ${parseFloat(item.totalCost||0).toFixed(2)}</td>`;
             let photoHtml = ''; if (item.photos && item.photos.length > 0) { photoHtml = `<div style="display:flex; gap:4px; flex-wrap:wrap; justify-content:center;">`; item.photos.forEach(p => { const key = registerPhotoPreview(p); photoHtml += `<img src="${safePhotoSrc(p)}" class="photo-thumbnail" onclick="showPhotoByKey('${key}')" style="width:35px;height:35px;border:1px solid #cbd5e1; cursor:pointer;">`; }); photoHtml += `</div>`; } else { photoHtml = `<span style="color:#94a3b8; font-size:11px;">No Photo</span>`; }
             const tr = document.createElement('tr'); tr.style.opacity = status === 'Ordered' ? '0.6' : '1';
             tr.innerHTML = `<td><small style="color:#64748b; font-weight:bold;">${escapeHTML(item.date)}</small></td><td><strong>${escapeHTML(item.part || '-') }</strong></td><td class="mono-text">${escapeHTML(item.code || '-') }</td><td>${escapeHTML(item.brand || '-') }</td><td>${suppHtml}</td><td>${escapeHTML(item.car || '-') }</td><td style="text-align:center; font-weight:bold;">${escapeHTML(item.onHandQty || '0') }</td><td style="text-align:center; color:#ef4444; font-weight:bold;">${escapeHTML(item.needOrderQty || '1') }</td>${costHtml}<td style="text-align:center;">${photoHtml}</td><td style="text-align:center;">${statusHtml}</td><td><div class="action-btns" style="flex-direction:column;">${actionHtml}</div></td>`; tbody.appendChild(tr);
@@ -2803,7 +2702,6 @@ Uploaded ${successCount} item(s) to Cloud.`);
 
     function getRestockHTML(poMode = 'supplier') {
         const showActualCosts = poMode === 'boss' && isAdmin;
-        const showZeroCosts = !showActualCosts;
         let grandTotal = 0;
         let rows = '';
         currentRestockView.filter(i => !i.offlinePending).forEach((i, idx) => {
@@ -2813,46 +2711,62 @@ Uploaded ${successCount} item(s) to Cloud.`);
             const storedTotal = toNonNegativeNumber(i.totalCost, actualUnitCost * qty);
             const actualTotalCost = storedTotal || (actualUnitCost * qty);
             if (showActualCosts) grandTotal += actualTotalCost;
-            const unitCostText = showZeroCosts ? 'RM 0.00' : `RM ${actualUnitCost.toFixed(2)}`;
-            const totalCostText = showZeroCosts ? 'RM 0.00' : `RM ${actualTotalCost.toFixed(2)}`;
-            rows += `<tr>
-                <td style="text-align:center; padding:8px; border:1px solid #ccc;">${idx+1}</td>
-                <td style="padding:8px; border:1px solid #ccc;">${escapeHTML(i.date)}</td>
-                <td style="padding:8px; border:1px solid #ccc;"><strong>${escapeHTML(i.part||'-')}</strong></td>
-                <td style="padding:8px; border:1px solid #ccc;">${escapeHTML(i.code||'-')}</td>
-                <td style="padding:8px; border:1px solid #ccc;">${escapeHTML(i.brand||'-')}</td>
-                <td style="padding:8px; border:1px solid #ccc;">${escapeHTML(i.supp||'-')}</td>
-                <td style="padding:8px; border:1px solid #ccc;">${escapeHTML(i.car||'-')}</td>
-                <td style="text-align:center; padding:8px; border:1px solid #ccc;">${escapeHTML(i.onHandQty||'0')}</td>
-                <td style="text-align:center; color:red; font-weight:bold; padding:8px; border:1px solid #ccc;">${escapeHTML(i.needOrderQty||'1')}</td>
-                <td style="text-align:center; padding:8px; border:1px solid #ccc;">${unitCostText}</td>
-                <td style="text-align:center; padding:8px; border:1px solid #ccc;">${totalCostText}</td>
-                <td style="text-align:center; padding:8px; border:1px solid #ccc;">${escapeHTML(status)}</td>
-            </tr>`;
+
+            if (showActualCosts) {
+                rows += `<tr>
+                    <td style="text-align:center;">${idx+1}</td>
+                    <td>${escapeHTML(i.date)}</td>
+                    <td><strong>${escapeHTML(i.part||'-')}</strong></td>
+                    <td>${escapeHTML(i.code||'-')}</td>
+                    <td>${escapeHTML(i.brand||'-')}</td>
+                    <td>${escapeHTML(i.supp||'-')}</td>
+                    <td>${escapeHTML(i.car||'-')}</td>
+                    <td style="text-align:center;">${escapeHTML(i.onHandQty||'0')}</td>
+                    <td style="text-align:center;font-weight:bold;">${escapeHTML(i.needOrderQty||'1')}</td>
+                    <td style="text-align:right;">RM ${actualUnitCost.toFixed(2)}</td>
+                    <td style="text-align:right;font-weight:bold;">RM ${actualTotalCost.toFixed(2)}</td>
+                    <td style="text-align:center;">${escapeHTML(status)}</td>
+                </tr>`;
+            } else {
+                rows += `<tr>
+                    <td style="text-align:center;">${idx+1}</td>
+                    <td>${escapeHTML(i.date)}</td>
+                    <td><strong>${escapeHTML(i.part||'-')}</strong></td>
+                    <td>${escapeHTML(i.code||'-')}</td>
+                    <td>${escapeHTML(i.brand||'-')}</td>
+                    <td>${escapeHTML(i.car||'-')}</td>
+                    <td style="text-align:center;font-weight:bold;font-size:13px;">${escapeHTML(i.needOrderQty||'1')}</td>
+                </tr>`;
+            }
         });
-        let filterTitle = showActualCosts ? 'BOSS COST PURCHASE ORDER' : 'SUPPLIER PURCHASE ORDER';
+
+        const filterTitle = showActualCosts ? 'BOSS COST PURCHASE ORDER' : 'SUPPLIER PURCHASE ORDER';
         const suppFilter = document.getElementById('rSuppFilter').value;
         const supplierName = suppFilter && suppFilter !== 'all' ? suppFilter : 'All Suppliers';
-        const dateFilter = document.getElementById('rDateFilter').value || new Date().toISOString().slice(0,10);
-        const grandTotalText = showActualCosts ? `RM ${grandTotal.toFixed(2)}` : 'RM 0.00';
+        const fromVal = document.getElementById('rDateFromFilter').value;
+        const toVal = document.getElementById('rDateToFilter').value;
+        const dateFilter = fromVal || toVal ? `${fromVal || 'Start'} to ${toVal || 'Today'}` : 'All Dates';
+
+        const tableHead = showActualCosts
+            ? `<tr><th>No</th><th>Date</th><th>Part Description</th><th>Item Code</th><th>Brand</th><th>Supplier</th><th>Car Model</th><th>On Hand</th><th>Order Qty</th><th>Unit Cost</th><th>Total Cost</th><th>Status</th></tr>`
+            : `<tr><th style="width:5%;">No</th><th style="width:12%;">Date</th><th style="width:27%;">Part Description</th><th style="width:17%;">Item Code / OEM</th><th style="width:13%;">Brand</th><th style="width:16%;">Car Model</th><th style="width:10%;">Order Qty</th></tr>`;
+
         return `<style>
             *, *::before, *::after { box-sizing: border-box; }
             body{font-family:Arial,sans-serif;padding:24px;color:#0f172a;}
             table{width:100%;border-collapse:collapse;margin-top:18px;font-size:11px;table-layout:fixed;}
             th,td{border:1px solid #94a3b8;padding:7px;word-wrap:break-word;}
-            th{background:#f1f5f9;}
+            th{background:#f1f5f9;text-align:left;}
             .po-meta{display:flex;justify-content:space-between;gap:20px;margin-top:12px;font-size:13px;}
             .po-total{margin-top:14px;margin-left:auto;width:320px;border:2px solid #334155;padding:12px;font-size:17px;font-weight:800;text-align:right;}
             .confidential{margin-top:8px;text-align:center;font-size:11px;color:#7c3aed;font-weight:700;}
         </style>
         <div id="rInvoiceBody">
             <h2 style="text-align:center;margin:0;">${escapeHTML(filterTitle)}</h2>
-            ${showActualCosts ? '<div class="confidential">INTERNAL BOSS VIEW — ACTUAL COSTS</div>' : '<div class="confidential" style="color:#64748b;">SUPPLIER COPY — COST VALUES SET TO RM0.00</div>'}
-            <div class="po-meta"><div><b>Supplier:</b> ${escapeHTML(supplierName)}</div><div><b>Date:</b> ${escapeHTML(dateFilter)}</div></div>
-            <table><thead><tr>
-                <th style="width:4%;">No</th><th style="width:8%;">Date</th><th style="width:18%;">Part Description</th><th style="width:13%;">Item Code</th><th style="width:9%;">Brand</th><th style="width:10%;">Supplier</th><th style="width:9%;">Car Model</th><th style="width:6%;">On Hand</th><th style="width:6%;">Need</th><th style="width:8%;">Unit Cost</th><th style="width:9%;">Total Cost</th><th style="width:8%;">Status</th>
-            </tr></thead><tbody>${rows}</tbody></table>
-            <div class="po-total">Grand Total Cost: ${grandTotalText}</div>
+            ${showActualCosts ? '<div class="confidential">INTERNAL BOSS VIEW — ACTUAL COSTS / STOCK</div>' : ''}
+            <div class="po-meta"><div><b>Supplier:</b> ${escapeHTML(supplierName)}</div><div><b>Date Range:</b> ${escapeHTML(dateFilter)}</div></div>
+            <table><thead>${tableHead}</thead><tbody>${rows}</tbody></table>
+            ${showActualCosts ? `<div class="po-total">Grand Total Cost: RM ${grandTotal.toFixed(2)}</div>` : ''}
         </div>`;
     }
 
@@ -2867,7 +2781,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
     function getRestockPDFTitle(poMode = 'supplier') {
         const supplier = document.getElementById('rSuppFilter').value;
         const supplierName = supplier && supplier !== 'all' ? supplier : 'All Suppliers';
-        const dateText = document.getElementById('rDateFilter').value || new Date().toISOString().slice(0,10);
+        const fromVal = document.getElementById('rDateFromFilter').value; const toVal = document.getElementById('rDateToFilter').value; const dateText = fromVal || toVal ? `${fromVal || 'Start'} to ${toVal || 'Today'}` : new Date().toISOString().slice(0,10);
         const typeText = poMode === 'boss' ? 'Boss Cost PO' : 'Supplier PO';
         return sanitizeDocumentFileName(`${supplierName} ${typeText} ${dateText}`);
     }
@@ -2887,7 +2801,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
 
     function sendRestockWA(phone, bossName) {
         if (currentRestockView.length === 0) { alert("No items found for this view/date."); return; }
-        let dateText = document.getElementById('rDateFilter').value ? getFormattedDateForFilter(document.getElementById('rDateFilter').value) : "All Dates";
+        let fromVal = document.getElementById('rDateFromFilter').value; let toVal = document.getElementById('rDateToFilter').value; let dateText = fromVal || toVal ? `${fromVal || 'Start'} to ${toVal || 'Today'}` : 'All Dates';
         let text = `📦 *MMC RESTOCK SUMMARY*
 To: Boss ${bossName}
 Date Filter: ${dateText}
