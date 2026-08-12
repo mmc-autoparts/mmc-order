@@ -1,4 +1,4 @@
-const CACHE_NAME = "mmc-portal-V73-3";
+const CACHE_NAME = "mmc-portal-V73-2";
 
 const APP_SHELL = [
     "./",
@@ -12,7 +12,7 @@ self.addEventListener("install", (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then((cache) => {
-                console.log("V73.3: Caching app shell");
+                console.log("V73.2: Caching app shell");
                 return cache.addAll(APP_SHELL);
             })
             .then(() => self.skipWaiting())
@@ -33,7 +33,6 @@ self.addEventListener("activate", (event) => {
                             console.log("Deleting old cache:", cacheName);
                             return caches.delete(cacheName);
                         }
-                        return Promise.resolve();
                     })
                 );
             })
@@ -45,14 +44,13 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
     const request = event.request;
 
-    // Only handle GET requests
     if (request.method !== "GET") {
         return;
     }
 
     const url = request.url;
 
-    // Do NOT cache Firebase / Google API requests
+    // Do not cache Firebase / Google API requests
     if (
         url.includes("firebaseio.com") ||
         url.includes("firebasedatabase.app") ||
@@ -77,8 +75,8 @@ self.addEventListener("fetch", (event) => {
         return;
     }
 
-    // HTML / page navigation:
-    // Network first so users receive the newest MMC version.
+    // HTML/navigation:
+    // Network first so new MMC versions are received quickly.
     if (request.mode === "navigate") {
         event.respondWith(
             fetch(request)
@@ -91,10 +89,7 @@ self.addEventListener("fetch", (event) => {
                                 cache.put("./index.html", copy);
                             })
                             .catch((error) => {
-                                console.warn(
-                                    "Unable to update cached index:",
-                                    error
-                                );
+                                console.warn("Unable to update cached index:", error);
                             });
                     }
 
@@ -114,8 +109,7 @@ self.addEventListener("fetch", (event) => {
                         {
                             status: 503,
                             headers: {
-                                "Content-Type":
-                                    "text/plain; charset=utf-8"
+                                "Content-Type": "text/plain; charset=utf-8"
                             }
                         }
                     );
@@ -125,8 +119,8 @@ self.addEventListener("fetch", (event) => {
         return;
     }
 
-    // Static resources:
-    // Cache first, then network.
+    // Static files:
+    // Cache first, network fallback.
     event.respondWith(
         caches.match(request)
             .then((cachedResponse) => {
@@ -148,10 +142,7 @@ self.addEventListener("fetch", (event) => {
                                     cache.put(request, copy);
                                 })
                                 .catch((error) => {
-                                    console.warn(
-                                        "Unable to cache resource:",
-                                        error
-                                    );
+                                    console.warn("Unable to cache resource:", error);
                                 });
                         }
 
@@ -161,8 +152,7 @@ self.addEventListener("fetch", (event) => {
     );
 });
 
-// Allow the web app to activate a newly installed
-// service worker immediately.
+// Allow index.html to activate a newly installed SW immediately
 self.addEventListener("message", (event) => {
     if (event.data === "SKIP_WAITING") {
         self.skipWaiting();
