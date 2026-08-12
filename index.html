@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="MMC Portal">
     <link rel="apple-touch-icon" href="logo.png">
-    <title>Malaysia Motor Company - Secure Portal V73.2</title>
+    <title>Malaysia Motor Company - Secure Portal V73.3</title>
     <link rel="manifest" href="manifest.json">
     <script>
         if ('serviceWorker' in navigator) {
@@ -16,12 +16,12 @@
             navigator.serviceWorker.addEventListener('controllerchange', () => { if (!refreshing) { window.location.reload(); refreshing = true; }});
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js').then(reg => {
-                    setInterval(() => { console.log("Checking server for V73.2 updates..."); reg.update(); }, 5 * 60 * 1000);
+                    setInterval(() => { console.log("Checking server for V73.3 updates..."); reg.update(); }, 5 * 60 * 1000);
                     reg.onupdatefound = () => {
                         const installingWorker = reg.installing;
                         installingWorker.onstatechange = () => {
                             if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                if (confirm("🔄 New system version (V73.2) available! Click OK to apply.")) { installingWorker.postMessage('SKIP_WAITING'); }
+                                if (confirm("🔄 New system version (V73.3) available! Click OK to apply.")) { installingWorker.postMessage('SKIP_WAITING'); }
                             }
                         };
                     };
@@ -50,7 +50,7 @@
         .login-btn:hover { background-color: #1d4ed8; box-shadow: 0 6px 8px -1px rgba(37, 99, 235, 0.4);}
         .error-msg { color: #ef4444; font-size: 13px; margin-top: -5px; margin-bottom: 15px; display: none; font-weight: bold; }
         #mainApp { display: none; }
-        .container { max-width: 1400px; margin: auto; background: white; padding: 25px 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; position:relative;}
+        .container { max-width: 1800px; width: calc(100% - 24px); margin: auto; background: white; padding: 25px 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; position:relative;}
         .header-flex { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 15px; flex-wrap:wrap; gap:15px;}
         h2 { color: #0f172a; margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.5px;}
         .version-badge { font-size: 12px; background: #e2e8f0; color: #475569; padding: 3px 8px; border-radius: 12px; vertical-align: middle; margin-left: 8px; font-weight: bold; }
@@ -198,7 +198,7 @@
 <div id="mainApp" class="container">
     <div class="header-flex">
         <div>
-            <h2>Malaysia Motor Company <span class="version-badge">V73.2 Enterprise</span> <span id="adminBadge">👑 Boss View</span></h2>
+            <h2>Malaysia Motor Company <span class="version-badge">V73.3 Enterprise</span> <span id="adminBadge">👑 Boss View</span></h2>
             <div style="margin-top:8px;">
                 <span id="networkBadge" class="net-online">🟢 Online (Live Cloud Sync)</span>
             </div>
@@ -417,6 +417,7 @@
     messagingSenderId: "409637154704",
     appId: "1:409637154704:web:ac1ed4603fb62bd0258d15",
     measurementId: "G-CPSC89HTB5"
+    };
     };
     
     firebase.initializeApp(firebaseConfig);
@@ -851,13 +852,18 @@ Uploaded ${successCount} item(s) to Cloud.`);
     }
 
     // ==========================================
-    // V73 iPhone PRINT / PDF FALLBACK
-    // iPhone PWA often blocks popup print windows. This fallback opens
+    // V73.3 iPhone / iPad PRINT / PDF FALLBACK
+    // iOS PWA can block or mishandle popup print windows. This fallback opens
     // a same-page printable view with Back and Print buttons.
     // ==========================================
-    function isIPhoneLike() {
+    function isIOSPrintFallbackDevice() {
         const ua = navigator.userAgent || '';
-        return /iPhone|iPod/i.test(ua);
+        const platform = navigator.platform || '';
+        const isIPhoneOrIPod = /iPhone|iPod/i.test(ua);
+        const isIPadUA = /iPad/i.test(ua);
+        // iPadOS 13+ may identify itself as Macintosh.
+        const isModernIPad = platform === 'MacIntel' && navigator.maxTouchPoints > 1;
+        return isIPhoneOrIPod || isIPadUA || isModernIPad;
     }
 
     function ensurePrintableViewShell() {
@@ -934,7 +940,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
                 <div id="printableToolbar">
                     <button type="button" id="printableBackBtn">⬅ Back</button>
                     <button type="button" id="printablePrintBtn">🖨️ Print / Save PDF</button>
-                    <div id="printableHint">iPhone mode: If the print screen does not open, use Safari/Share options or open this page in Safari. iPad/PC can continue using normal Print/PDF.</div>
+                    <div id="printableHint">iPhone/iPad compatible mode: use Print / Save PDF above. If iOS does not open the print sheet, use Safari Share → Print.</div>
                 </div>
                 <div id="printablePage"></div>
             `;
@@ -990,7 +996,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
     }
 
     function openPrintWindowOrPrintableView(html, titleText = 'Printable View', outputMode = 'print') {
-        if (isIPhoneLike()) {
+        if (isIOSPrintFallbackDevice()) {
             openPrintableView(html, titleText);
             return;
         }
@@ -1974,7 +1980,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
             const statusVisual = order.status === 'offline' ? '🔴 Pending Sync' : (order.status==='waiting'?'⏳ Wait':(order.status==='arrived'?'✅ Arrived':'📦 Done'));
             const statusClass = order.status === 'offline' ? 'status-offline' : (order.status==='completed'?'status-completed':(order.status==='waiting'?'status-waiting':'status-arrived'));
 
-            tr.innerHTML = `<td><input type="checkbox" class="order-check" value="${order.id}"></td><td><span class="ref-badge">${escapeHTML(order.refNo)}</span><br><small style="color:#64748b;margin-top:6px;display:inline-block;font-weight:700;">${escapeHTML(order.date)}</small><br>${order.staff?`<span class="staff-badge">👤 ${escapeHTML(order.staff)}</span>`:''}</td><td><strong style="color:#0f172a;">${escapeHTML(order.name)}</strong><br><small style="color:#3b82f6;font-weight:bold;">${escapeHTML(order.phone)}</small><br><div style="margin-top:8px;padding-top:8px;border-top:1px dashed #e2e8f0;">${plateHtml}<strong style="color:#334155; font-size:13px; display:inline-block; margin-top:4px;">${escapeHTML(order.car||'-')}</strong> <span class="mono-text" style="color:#64748b;font-size:11px;">${order.chassis ? '(' + escapeHTML(order.chassis) + ')' : ''}</span></div></td><td>${partsHtml}<div class="notes-text" style="margin-top:8px;color:#059669;font-weight:600;">${order.remarks ? '📝 Remarks: ' + escapeHTML(order.remarks) : ''}</div></td><td><small style="color:#64748b;">Total: RM${escapeHTML(order.total)}</small><br><small style="color:#64748b;">Paid: RM${escapeHTML(order.deposit)}</small><br><strong style="font-size:15px;margin-top:6px;display:inline-block;color:#0f172a;">Bal: RM${escapeHTML(order.balance)}</strong></td><td><button class="status-btn ${statusClass}" onclick="toggleStatus('${order.id}')">${statusVisual}</button></td><td><div class="action-btns" style="flex-direction:column;align-items:stretch;">${waActionButtons}</div></td><td>${mainActions}</td>`;
+            tr.innerHTML = `<td><input type="checkbox" class="order-check" value="${order.id}"></td><td><span class="ref-badge">${escapeHTML(order.refNo)}</span><br><small style="color:#64748b;margin-top:6px;display:inline-block;font-weight:700;">${escapeHTML(order.date)}</small><br>${order.staff?`<span class="staff-badge">👤 ${escapeHTML(order.staff)}</span>`:''}</td><td><strong style="color:#0f172a;">${escapeHTML(order.name)}</strong><br><small style="color:#3b82f6;font-weight:bold;">${escapeHTML(order.phone)}</small><br><div style="margin-top:8px;padding-top:8px;border-top:1px dashed #e2e8f0;">${plateHtml}<strong class="car-model-wrap" style="color:#334155; font-size:13px; display:inline-block; margin-top:4px;">${escapeHTML(order.car||'-')}</strong> <span class="mono-text" style="color:#64748b;font-size:11px;">${order.chassis ? '(' + escapeHTML(order.chassis) + ')' : ''}</span></div></td><td>${partsHtml}<div class="notes-text" style="margin-top:8px;color:#059669;font-weight:600;">${order.remarks ? '📝 Remarks: ' + escapeHTML(order.remarks) : ''}</div></td><td><small style="color:#64748b;">Total: RM${escapeHTML(order.total)}</small><br><small style="color:#64748b;">Paid: RM${escapeHTML(order.deposit)}</small><br><strong style="font-size:15px;margin-top:6px;display:inline-block;color:#0f172a;">Bal: RM${escapeHTML(order.balance)}</strong></td><td><button class="status-btn ${statusClass}" onclick="toggleStatus('${order.id}')">${statusVisual}</button></td><td><div class="action-btns" style="flex-direction:column;align-items:stretch;">${waActionButtons}</div></td><td>${mainActions}</td>`;
             tbody.appendChild(tr);
         });
     }
@@ -2167,7 +2173,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
                 mainActions += `</div><button class="print-btn" onclick="printChecklist('${quote.id}', 'quote')" style="width:100%; margin-top:5px; margin-bottom:5px;">🖨️ Print Checklist</button><button class="print-btn" onclick="saveChecklistPDF('${quote.id}', 'quote')" style="width:100%; margin-top:5px; margin-bottom:5px;">📄 PDF Checklist</button>`;
             }
 
-            tr.innerHTML = `<td><span class="ref-badge">${escapeHTML(quote.refNo)}</span><br><small style="color:#64748b;margin-top:6px;display:inline-block;font-weight:700;">${escapeHTML(quote.date)}</small>${quoteStatusBadge}<br>${quote.staff?`<span class="staff-badge">👤 ${escapeHTML(quote.staff)}</span>`:''}</td><td><strong style="color:#0f172a;">${escapeHTML(quote.name)}</strong><br><small style="color:#3b82f6;font-weight:bold;">${escapeHTML(quote.phone)}</small><br><div style="margin-top:8px;padding-top:8px;border-top:1px dashed #e2e8f0;">${plateHtml}<strong style="color:#334155; font-size:13px; display:inline-block; margin-top:4px;">${escapeHTML(quote.car||'-')}</strong> <span class="mono-text" style="color:#64748b;font-size:12px;">${escapeHTML(quote.chassis||'')}</span></div></td><td>${partsHtml}<div class="notes-text" style="margin-top:8px;color:#059669;font-weight:600;">${quote.remarks ? '📝 Remarks: ' + escapeHTML(quote.remarks) : ''}</div></td><td><strong style="font-size:18px;color:#0f172a;">RM${escapeHTML(quote.total)}</strong></td><td><div class="action-btns">${quote.offlinePending ? '<div style="font-size:12px; color:#ef4444; font-weight:bold;">Waiting Sync</div>' : (quote.phone ? `<a href="https://wa.me/${waPhone(quote.phone)}?text=${encodeURIComponent(msgQ)}" target="_blank" class="wa-btn wa-btn-quote" style="width:100%;">💬 Send Quotation</a>` : '<div style="font-size:12px; color:#94a3b8; font-weight:bold;">No Phone</div>')}</div></td><td>${mainActions}</td>`;
+            tr.innerHTML = `<td><span class="ref-badge">${escapeHTML(quote.refNo)}</span><br><small style="color:#64748b;margin-top:6px;display:inline-block;font-weight:700;">${escapeHTML(quote.date)}</small>${quoteStatusBadge}<br>${quote.staff?`<span class="staff-badge">👤 ${escapeHTML(quote.staff)}</span>`:''}</td><td><strong style="color:#0f172a;">${escapeHTML(quote.name)}</strong><br><small style="color:#3b82f6;font-weight:bold;">${escapeHTML(quote.phone)}</small><br><div style="margin-top:8px;padding-top:8px;border-top:1px dashed #e2e8f0;">${plateHtml}<strong class="car-model-wrap" style="color:#334155; font-size:13px; display:inline-block; margin-top:4px;">${escapeHTML(quote.car||'-')}</strong> <span class="mono-text" style="color:#64748b;font-size:12px;">${escapeHTML(quote.chassis||'')}</span></div></td><td>${partsHtml}<div class="notes-text" style="margin-top:8px;color:#059669;font-weight:600;">${quote.remarks ? '📝 Remarks: ' + escapeHTML(quote.remarks) : ''}</div></td><td><strong style="font-size:18px;color:#0f172a;">RM${escapeHTML(quote.total)}</strong></td><td><div class="action-btns">${quote.offlinePending ? '<div style="font-size:12px; color:#ef4444; font-weight:bold;">Waiting Sync</div>' : (quote.phone ? `<a href="https://wa.me/${waPhone(quote.phone)}?text=${encodeURIComponent(msgQ)}" target="_blank" class="wa-btn wa-btn-quote" style="width:100%;">💬 Send Quotation</a>` : '<div style="font-size:12px; color:#94a3b8; font-weight:bold;">No Phone</div>')}</div></td><td>${mainActions}</td>`;
             tbody.appendChild(tr);
         });
     }
@@ -2339,7 +2345,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
                 mainActions += `</div><button class="print-btn" onclick="printChecklist('${enq.id}', 'enquire')" style="width:100%; margin-top:5px; margin-bottom:5px;">🖨️ Print Enquiry</button><button class="print-btn" onclick="saveChecklistPDF('${enq.id}', 'enquire')" style="width:100%; margin-top:5px; margin-bottom:5px;">📄 PDF Enquiry</button>`;
             }
 
-            tr.innerHTML = `<td><span class="ref-badge">${escapeHTML(enq.refNo)}</span><br><small style="color:#64748b;margin-top:6px;display:inline-block;font-weight:700;">${escapeHTML(enq.date)}</small>${enquiryStatusBadge}<br>${enq.staff?`<span class="staff-badge">👤 ${escapeHTML(enq.staff)}</span>`:''}</td><td><strong style="color:#0f172a;">${escapeHTML(enq.name)}</strong><br><small style="color:#3b82f6;font-weight:bold;">${escapeHTML(enq.phone)}</small><br><div style="margin-top:8px;padding-top:8px;border-top:1px dashed #e2e8f0;">${plateHtml}<strong style="color:#334155; font-size:13px; display:inline-block; margin-top:4px;">${escapeHTML(enq.car||'-')}</strong> <span class="mono-text" style="color:#64748b;font-size:12px;">${escapeHTML(enq.chassis||'')}</span></div></td><td>${partsHtml}<div class="notes-text" style="margin-top:8px;color:#059669;font-weight:600;">${enq.remarks ? '📝 Remarks: ' + escapeHTML(enq.remarks) : ''}</div></td><td><strong style="font-size:18px;color:#0f172a;">RM${escapeHTML(enq.total)}</strong></td><td><div class="action-btns">${enq.offlinePending ? '<div style="font-size:12px; color:#ef4444; font-weight:bold;">Waiting Sync</div>' : (enq.phone ? `<a href="https://wa.me/${waPhone(enq.phone)}?text=${encodeURIComponent(msgE)}" target="_blank" class="wa-btn wa-btn-enq" style="width:100%;">💬 Send Enquiry</a>` : '<div style="font-size:12px; color:#94a3b8; font-weight:bold;">No Phone</div>')}</div></td><td>${mainActions}</td>`;
+            tr.innerHTML = `<td><span class="ref-badge">${escapeHTML(enq.refNo)}</span><br><small style="color:#64748b;margin-top:6px;display:inline-block;font-weight:700;">${escapeHTML(enq.date)}</small>${enquiryStatusBadge}<br>${enq.staff?`<span class="staff-badge">👤 ${escapeHTML(enq.staff)}</span>`:''}</td><td><strong style="color:#0f172a;">${escapeHTML(enq.name)}</strong><br><small style="color:#3b82f6;font-weight:bold;">${escapeHTML(enq.phone)}</small><br><div style="margin-top:8px;padding-top:8px;border-top:1px dashed #e2e8f0;">${plateHtml}<strong class="car-model-wrap" style="color:#334155; font-size:13px; display:inline-block; margin-top:4px;">${escapeHTML(enq.car||'-')}</strong> <span class="mono-text" style="color:#64748b;font-size:12px;">${escapeHTML(enq.chassis||'')}</span></div></td><td>${partsHtml}<div class="notes-text" style="margin-top:8px;color:#059669;font-weight:600;">${enq.remarks ? '📝 Remarks: ' + escapeHTML(enq.remarks) : ''}</div></td><td><strong style="font-size:18px;color:#0f172a;">RM${escapeHTML(enq.total)}</strong></td><td><div class="action-btns">${enq.offlinePending ? '<div style="font-size:12px; color:#ef4444; font-weight:bold;">Waiting Sync</div>' : (enq.phone ? `<a href="https://wa.me/${waPhone(enq.phone)}?text=${encodeURIComponent(msgE)}" target="_blank" class="wa-btn wa-btn-enq" style="width:100%;">💬 Send Enquiry</a>` : '<div style="font-size:12px; color:#94a3b8; font-weight:bold;">No Phone</div>')}</div></td><td>${mainActions}</td>`;
             tbody.appendChild(tr);
         });
     }
@@ -2696,7 +2702,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
             let costHtml = `<td style="text-align:center; font-weight:bold; color:#059669;">RM ${parseFloat(item.unitCost||0).toFixed(2)}</td><td style="text-align:center; font-weight:bold; color:#059669;">RM ${parseFloat(item.totalCost||0).toFixed(2)}</td>`;
             let photoHtml = ''; if (item.photos && item.photos.length > 0) { photoHtml = `<div style="display:flex; gap:4px; flex-wrap:wrap; justify-content:center;">`; item.photos.forEach(p => { const key = registerPhotoPreview(p); photoHtml += `<img src="${safePhotoSrc(p)}" class="photo-thumbnail" onclick="showPhotoByKey('${key}')" style="width:35px;height:35px;border:1px solid #cbd5e1; cursor:pointer;">`; }); photoHtml += `</div>`; } else { photoHtml = `<span style="color:#94a3b8; font-size:11px;">No Photo</span>`; }
             const tr = document.createElement('tr'); tr.style.opacity = status === 'Ordered' ? '0.6' : '1';
-            tr.innerHTML = `<td><small style="color:#64748b; font-weight:bold;">${escapeHTML(item.date)}</small></td><td><strong>${escapeHTML(item.part || '-') }</strong></td><td class="mono-text">${escapeHTML(item.code || '-') }</td><td>${escapeHTML(item.brand || '-') }</td><td>${suppHtml}</td><td>${escapeHTML(item.car || '-') }</td><td style="text-align:center; font-weight:bold;">${escapeHTML(item.onHandQty || '0') }</td><td style="text-align:center; color:#ef4444; font-weight:bold;">${escapeHTML(item.needOrderQty || '1') }</td>${costHtml}<td style="text-align:center;">${photoHtml}</td><td style="text-align:center;">${statusHtml}</td><td><div class="action-btns" style="flex-direction:column;">${actionHtml}</div></td>`; tbody.appendChild(tr);
+            tr.innerHTML = `<td><small style="color:#64748b; font-weight:bold;">${escapeHTML(item.date)}</small></td><td><strong>${escapeHTML(item.part || '-') }</strong></td><td class="mono-text">${escapeHTML(item.code || '-') }</td><td>${escapeHTML(item.brand || '-') }</td><td>${suppHtml}</td><td class="car-model-wrap">${escapeHTML(item.car || '-') }</td><td style="text-align:center; font-weight:bold;">${escapeHTML(item.onHandQty || '0') }</td><td style="text-align:center; color:#ef4444; font-weight:bold;">${escapeHTML(item.needOrderQty || '1') }</td>${costHtml}<td style="text-align:center;">${photoHtml}</td><td style="text-align:center;">${statusHtml}</td><td><div class="action-btns" style="flex-direction:column;">${actionHtml}</div></td>`; tbody.appendChild(tr);
         });
     }
 
@@ -2720,7 +2726,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
                     <td>${escapeHTML(i.code||'-')}</td>
                     <td>${escapeHTML(i.brand||'-')}</td>
                     <td>${escapeHTML(i.supp||'-')}</td>
-                    <td>${escapeHTML(i.car||'-')}</td>
+                    <td class="car-model-wrap">${escapeHTML(i.car||'-')}</td>
                     <td style="text-align:center;">${escapeHTML(i.onHandQty||'0')}</td>
                     <td style="text-align:center;font-weight:bold;">${escapeHTML(i.needOrderQty||'1')}</td>
                     <td style="text-align:right;">RM ${actualUnitCost.toFixed(2)}</td>
@@ -2734,7 +2740,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
                     <td><strong>${escapeHTML(i.part||'-')}</strong></td>
                     <td>${escapeHTML(i.code||'-')}</td>
                     <td>${escapeHTML(i.brand||'-')}</td>
-                    <td>${escapeHTML(i.car||'-')}</td>
+                    <td class="car-model-wrap">${escapeHTML(i.car||'-')}</td>
                     <td style="text-align:center;font-weight:bold;font-size:13px;">${escapeHTML(i.needOrderQty||'1')}</td>
                 </tr>`;
             }
