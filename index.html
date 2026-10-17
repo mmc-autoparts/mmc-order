@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="MMC Portal">
     <link rel="apple-touch-icon" href="logo.png">
-    <title>Malaysia Motor Company - Secure Portal V74.1</title>
+    <title>Malaysia Motor Company - Secure Portal V74.1.1</title>
     <link rel="manifest" href="manifest.json">
     <script>
         if ('serviceWorker' in navigator) {
@@ -16,12 +16,12 @@
             navigator.serviceWorker.addEventListener('controllerchange', () => { if (!refreshing) { window.location.reload(); refreshing = true; }});
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js').then(reg => {
-                    setInterval(() => { console.log("Checking server for V74.1 updates..."); reg.update(); }, 5 * 60 * 1000);
+                    setInterval(() => { console.log("Checking server for V74.1.1 updates..."); reg.update(); }, 5 * 60 * 1000);
                     reg.onupdatefound = () => {
                         const installingWorker = reg.installing;
                         installingWorker.onstatechange = () => {
                             if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                if (confirm("🔄 New system version (V74.1) available! Click OK to apply.")) { installingWorker.postMessage('SKIP_WAITING'); }
+                                if (confirm("🔄 New system version (V74.1.1) available! Click OK to apply.")) { installingWorker.postMessage('SKIP_WAITING'); }
                             }
                         };
                     };
@@ -198,7 +198,7 @@
 <div id="mainApp" class="container">
     <div class="header-flex">
         <div>
-            <h2>Malaysia Motor Company <span class="version-badge">V74.1 Enterprise</span> <span id="adminBadge">👑 Boss View</span></h2>
+            <h2>Malaysia Motor Company <span class="version-badge">V74.1.1 Enterprise</span> <span id="adminBadge">👑 Boss View</span></h2>
             <div style="margin-top:8px;">
                 <span id="networkBadge" class="net-online">🟢 Online (Live Cloud Sync)</span>
             </div>
@@ -370,7 +370,7 @@
             <h3 style="margin-top:0; color:#3730a3; margin-bottom:15px;">Manual Input (Low Stock / Order Request)</h3>
             <div class="restock-grid" style="margin-bottom: 15px;">
                 <div><span class="label-text">Part Description</span><div class="input-wrapper"><input type="text" id="r_part" placeholder="e.g. Brake Pad" autocomplete="off" oninput="handleRestockInput(this)" onfocus="handleRestockInput(this)"><div id="r_autocomplete" class="autocomplete-list" style="display:none;"></div></div></div>
-                <div><span class="label-text">Item Code / OEM No</span><input type="text" id="r_code" placeholder="OEM Code / Search history" autocomplete="off" oninput="this.value=this.value.toUpperCase().replace(/\\s/g,''); mmcLookupRestock(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault(); mmcLookupRestock(this.value)}"><div id="mmcPartLookupResults" style="display:none;background:white;border:1px solid #cbd5e1;border-radius:6px;max-height:230px;overflow:auto;margin-top:5px;position:relative;z-index:3;"></div><div id="mmcPreviousCost" style="font-size:12px;color:#475569;margin-top:5px;" aria-live="polite"></div></div>
+                <div><span class="label-text">Item Code / OEM No</span><input type="text" id="r_code" placeholder="OEM Code / Search history" autocomplete="off" oninput="this.value=this.value.toUpperCase().replace(/\\s/g,''); mmcLookupRestock(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault(); mmcLookupRestock(this.value)}"><div style="font-size:12px;font-weight:700;color:#1d4ed8;margin-top:7px;">🔎 Smart Part Lookup <span style="font-weight:400;color:#64748b;">(type 2+ characters, then SELECT a match)</span></div><div id="mmcPartLookupResults" style="display:none;background:white;border:1px solid #cbd5e1;border-radius:6px;max-height:230px;overflow:auto;margin-top:5px;position:relative;z-index:3;"></div><div id="mmcPreviousCost" style="font-size:12px;color:#475569;margin-top:5px;" aria-live="polite"></div></div>
                 <div><span class="label-text">Brand</span><input type="text" id="r_brand" placeholder="e.g. TRW"></div>
                 <div><span class="label-text">Supplier</span><input type="text" id="r_supp" placeholder="e.g. Emerald" list="supplierList"></div>
                 <div><span class="label-text">Car Model</span><input type="text" id="r_car" placeholder="e.g. Axia"></div>
@@ -419,7 +419,7 @@
     measurementId: "G-CPSC89HTB5"
     };
     
-    // MMC_STARTUP_FAILSAFE V74.1
+    // MMC_STARTUP_FAILSAFE V74.1.1
     // Never leave the user on a blank screen if Firebase/Auth startup is delayed.
     const mmcStartupTimer = setTimeout(() => {
         const loginScreen = document.getElementById('loginScreen');
@@ -867,7 +867,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
     }
 
     // ==========================================
-    // V74.1 iPhone / iPad PRINT / PDF FALLBACK
+    // V74.1.1 iPhone / iPad PRINT / PDF FALLBACK
     // iOS PWA can block or mishandle popup print windows. This fallback opens
     // a same-page printable view with Back and Print buttons.
     // ==========================================
@@ -2503,8 +2503,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
     // RESTOCK SYSTEM
     // ==========================================
 
-    // V74.1: Lookup uses the already-loaded Restock history; no new Firebase
-    // collections, rules, or writes. More history can be loaded with Load Older.
+    // V74.1.1: clear, selectable Smart Part Lookup cards. Uses loaded Restock records.
     let mmcLookupMatches = [];
     function mmcLookupRestock(raw) {
         const panel = document.getElementById('mmcPartLookupResults');
@@ -2521,19 +2520,41 @@ Uploaded ${successCount} item(s) to Cloud.`);
             seen.add(key);
             return true;
         }).slice(0, 12);
+        const heading = document.createElement('div');
+        heading.style.cssText='padding:9px 12px;background:#eff6ff;color:#1e40af;font-weight:700;font-size:13px;border-bottom:1px solid #bfdbfe;';
+        heading.textContent = '🔎 Smart Part Lookup · ' + mmcLookupMatches.length + ' match(es)';
+        panel.appendChild(heading);
         if (!mmcLookupMatches.length) {
             const msg = document.createElement('div');
-            msg.style.cssText='padding:10px;color:#64748b;font-size:12px;';
-            msg.textContent='No match in loaded Restock history. You can enter a new part manually. Load Older Restock Logs to search more records.';
+            msg.style.cssText='padding:12px;color:#64748b;font-size:12px;';
+            msg.textContent='No match in loaded Restock history. Enter a new part manually or load older Restock logs.';
             panel.appendChild(msg);
         } else {
             mmcLookupMatches.forEach((r, index) => {
-                const b = document.createElement('button');
-                b.type='button';
-                b.style.cssText='display:block;width:100%;padding:10px;text-align:left;background:white;color:#0f172a;border:0;border-bottom:1px solid #e2e8f0;cursor:pointer;white-space:normal;';
-                b.textContent=[r.code, r.part||'', 'Brand: '+(r.brand||'-'), 'Car: '+(r.car||'-'), 'Supplier: '+(r.supp||'-'), 'Last recorded cost: RM'+Number(r.unitCost||0).toFixed(2), 'Date: '+(r.date||'-')].join(' | ');
-                b.addEventListener('click', () => mmcSelectRestockHistory(index));
-                panel.appendChild(b);
+                const card = document.createElement('div');
+                card.style.cssText='padding:12px;border-bottom:1px solid #e2e8f0;background:#fff;display:flex;flex-wrap:wrap;align-items:center;gap:10px;justify-content:space-between;';
+                const details = document.createElement('div');
+                details.style.cssText='flex:1;min-width:180px;overflow-wrap:anywhere;';
+                const title = document.createElement('div');
+                title.style.cssText='font-weight:700;color:#0f172a;font-size:14px;';
+                title.textContent = (r.code || '') + ' · ' + (r.part || 'No description');
+                details.appendChild(title);
+                const fields = [ ['Brand',r.brand],['Car Model',r.car],['Supplier',r.supp],['Previous Cost','RM'+Number(r.unitCost||0).toFixed(2)],['Date',r.date] ];
+                fields.forEach(([label,value]) => {
+                    const line = document.createElement('div');
+                    line.style.cssText='font-size:12px;color:#475569;margin-top:3px;';
+                    line.textContent=label+': '+(value||'-');
+                    details.appendChild(line);
+                });
+                const choose = document.createElement('button');
+                choose.type='button';
+                choose.textContent='SELECT';
+                choose.setAttribute('aria-label','Select '+(r.code||'part'));
+                choose.style.cssText='padding:10px 15px;background:#2563eb;color:white;border:0;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;min-height:40px;';
+                choose.addEventListener('click', () => mmcSelectRestockHistory(index));
+                card.appendChild(details);
+                card.appendChild(choose);
+                panel.appendChild(card);
             });
         }
         panel.style.display='block';
