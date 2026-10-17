@@ -1,30 +1,24 @@
-const CACHE_NAME = "mmc-portal-V73-3-1";
+
+const CACHE_NAME = "mmc-portal-V74-1"; // UPDATE THIS EVERY TIME YOU CHANGE THE APP
 
 const APP_SHELL = [
     "./",
-    "./index.html",
-    "./manifest.json",
-    "./logo.png"
+    "./index.html"
 ];
 
-// INSTALL
-self.addEventListener("install", (event) => {
-    event.waitUntil(
+self.addEventListener("install", (e) => {
+    e.waitUntil(
         caches.open(CACHE_NAME)
-            .then((cache) => {
-                console.log("V73.3.1: Caching app shell");
-                return cache.addAll(APP_SHELL);
-            })
+            .then((cache) => cache.addAll(APP_SHELL))
             .then(() => self.skipWaiting())
-            .catch((error) => {
-                console.error("Service Worker install failed:", error);
+            .catch((err) => {
+                console.error("Service Worker install cache failed:", err);
             })
     );
 });
 
-// ACTIVATE
-self.addEventListener("activate", (event) => {
-    event.waitUntil(
+self.addEventListener("activate", (e) => {
+    e.waitUntil(
         caches.keys()
             .then((cacheNames) => {
                 return Promise.all(
@@ -33,7 +27,6 @@ self.addEventListener("activate", (event) => {
                             console.log("Deleting old cache:", cacheName);
                             return caches.delete(cacheName);
                         }
-
                         return Promise.resolve();
                     })
                 );
@@ -42,132 +35,39 @@ self.addEventListener("activate", (event) => {
     );
 });
 
-// FETCH
-self.addEventListener("fetch", (event) => {
-    const request = event.request;
-
-    // Only handle GET requests
-    if (request.method !== "GET") {
-        return;
-    }
-
-    const url = request.url;
-
-    // Do NOT cache Firebase / Google API requests
+self.addEventListener("fetch", (e) => {
     if (
-        url.includes("firebaseio.com") ||
-        url.includes("firebasedatabase.app") ||
-        url.includes("firebasestorage.app") ||
-        url.includes("googleapis.com") ||
-        url.includes("firebaseapp.com") ||
-        url.includes("gstatic.com")
+        e.request.url.includes("firebaseio.com") ||
+        e.request.url.includes("firebaseapp.com") ||
+        e.request.url.includes("googleapis.com") ||
+        e.request.url.includes("gstatic.com")
     ) {
-        event.respondWith(
-            fetch(request).catch(() => {
-                return new Response(
-                    JSON.stringify({
-                        offline: true
-                    }),
-                    {
-                        status: 503,
-                        headers: {
-                            "Content-Type": "application/json"
-                        }
-                    }
-                );
-            })
-        );
-
+        e.respondWith(fetch(e.request));
         return;
     }
 
-    // PAGE NAVIGATION
-    // Network first so the newest MMC Portal version
-    // is received whenever internet is available.
-    if (request.mode === "navigate") {
-        event.respondWith(
-            fetch(request)
+    if (e.request.mode === "navigate") {
+        e.respondWith(
+            fetch(e.request)
                 .then((response) => {
-                    if (response && response.ok) {
-                        const copy = response.clone();
-
-                        caches.open(CACHE_NAME)
-                            .then((cache) => {
-                                cache.put("./index.html", copy);
-                            })
-                            .catch((error) => {
-                                console.warn(
-                                    "Unable to update cached index:",
-                                    error
-                                );
-                            });
-                    }
-
+                    const clonedResponse = response.clone();
+                    caches.open(CACHE_NAME).then((cache) => {
+                        cache.put("./index.html", clonedResponse);
+                    });
                     return response;
                 })
-                .catch(async () => {
-                    const cached =
-                        await caches.match("./index.html") ||
-                        await caches.match("./");
-
-                    if (cached) {
-                        return cached;
-                    }
-
-                    return new Response(
-                        "MMC Portal is currently offline.",
-                        {
-                            status: 503,
-                            headers: {
-                                "Content-Type":
-                                    "text/plain; charset=utf-8"
-                            }
-                        }
-                    );
-                })
+                .catch(() => caches.match("./index.html"))
         );
-
         return;
     }
 
-    // STATIC FILES
-    // Cache first, network fallback.
-    event.respondWith(
-        caches.match(request)
-            .then((cachedResponse) => {
-                if (cachedResponse) {
-                    return cachedResponse;
-                }
-
-                return fetch(request)
-                    .then((networkResponse) => {
-                        if (
-                            networkResponse &&
-                            networkResponse.ok &&
-                            networkResponse.type !== "opaque"
-                        ) {
-                            const copy = networkResponse.clone();
-
-                            caches.open(CACHE_NAME)
-                                .then((cache) => {
-                                    cache.put(request, copy);
-                                })
-                                .catch((error) => {
-                                    console.warn(
-                                        "Unable to cache resource:",
-                                        error
-                                    );
-                                });
-                        }
-
-                        return networkResponse;
-                    });
-            })
+    e.respondWith(
+        caches.match(e.request).then((response) => {
+            return response || fetch(e.request);
+        })
     );
 });
 
-// Allow index.html to activate a newly installed
-// Service Worker immediately.
 self.addEventListener("message", (event) => {
     if (event.data === "SKIP_WAITING") {
         self.skipWaiting();
