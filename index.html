@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="MMC Portal">
     <link rel="apple-touch-icon" href="logo.png">
-    <title>Malaysia Motor Company - Secure Portal V73.3.1</title>
+    <title>Malaysia Motor Company - Secure Portal V74.1</title>
     <link rel="manifest" href="manifest.json">
     <script>
         if ('serviceWorker' in navigator) {
@@ -16,12 +16,12 @@
             navigator.serviceWorker.addEventListener('controllerchange', () => { if (!refreshing) { window.location.reload(); refreshing = true; }});
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js').then(reg => {
-                    setInterval(() => { console.log("Checking server for V73.3.1 updates..."); reg.update(); }, 5 * 60 * 1000);
+                    setInterval(() => { console.log("Checking server for V74.1 updates..."); reg.update(); }, 5 * 60 * 1000);
                     reg.onupdatefound = () => {
                         const installingWorker = reg.installing;
                         installingWorker.onstatechange = () => {
                             if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                if (confirm("🔄 New system version (V73.3.1) available! Click OK to apply.")) { installingWorker.postMessage('SKIP_WAITING'); }
+                                if (confirm("🔄 New system version (V74.1) available! Click OK to apply.")) { installingWorker.postMessage('SKIP_WAITING'); }
                             }
                         };
                     };
@@ -198,7 +198,7 @@
 <div id="mainApp" class="container">
     <div class="header-flex">
         <div>
-            <h2>Malaysia Motor Company <span class="version-badge">V73.3.1 Enterprise</span> <span id="adminBadge">👑 Boss View</span></h2>
+            <h2>Malaysia Motor Company <span class="version-badge">V74.1 Enterprise</span> <span id="adminBadge">👑 Boss View</span></h2>
             <div style="margin-top:8px;">
                 <span id="networkBadge" class="net-online">🟢 Online (Live Cloud Sync)</span>
             </div>
@@ -370,7 +370,7 @@
             <h3 style="margin-top:0; color:#3730a3; margin-bottom:15px;">Manual Input (Low Stock / Order Request)</h3>
             <div class="restock-grid" style="margin-bottom: 15px;">
                 <div><span class="label-text">Part Description</span><div class="input-wrapper"><input type="text" id="r_part" placeholder="e.g. Brake Pad" autocomplete="off" oninput="handleRestockInput(this)" onfocus="handleRestockInput(this)"><div id="r_autocomplete" class="autocomplete-list" style="display:none;"></div></div></div>
-                <div><span class="label-text">Item Code / OEM No</span><input type="text" id="r_code" placeholder="OEM Code" oninput="this.value = this.value.toUpperCase().replace(/\s/g, '')" onkeypress="if(event.key==='Enter') addRestockItem()"></div>
+                <div><span class="label-text">Item Code / OEM No</span><input type="text" id="r_code" placeholder="OEM Code / Search history" autocomplete="off" oninput="this.value=this.value.toUpperCase().replace(/\\s/g,''); mmcLookupRestock(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault(); mmcLookupRestock(this.value)}"><div id="mmcPartLookupResults" style="display:none;background:white;border:1px solid #cbd5e1;border-radius:6px;max-height:230px;overflow:auto;margin-top:5px;position:relative;z-index:3;"></div><div id="mmcPreviousCost" style="font-size:12px;color:#475569;margin-top:5px;" aria-live="polite"></div></div>
                 <div><span class="label-text">Brand</span><input type="text" id="r_brand" placeholder="e.g. TRW"></div>
                 <div><span class="label-text">Supplier</span><input type="text" id="r_supp" placeholder="e.g. Emerald" list="supplierList"></div>
                 <div><span class="label-text">Car Model</span><input type="text" id="r_car" placeholder="e.g. Axia"></div>
@@ -385,7 +385,7 @@
                     <div id="r_gallery" class="row-gallery" style="padding:0; grid-column:unset;"></div>
                 </div>
                 <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
-                    <button class="add-item-btn" id="addRestockBtn" onclick="addRestockItem()" style="height:42px; width:180px; font-size:14px; background-color:#2563eb;">➕ Add to Restock</button>
+                    <button class="add-item-btn" id="addRestockBtn" onclick="addRestockItem()" style="height:42px; width:180px; font-size:14px; background-color:#2563eb;">➕ Add to Restock</button><span id="mmcQuickEntryStatus" style="font-size:12px;color:#166534;" aria-live="polite"></span>
                     <button class="cancel-btn" id="cancelRestockEditBtn" onclick="cancelRestockEdit()" style="height:42px; width:130px; font-size:14px; display:none; background:#64748b; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">Cancel Edit</button>
                 </div>
             </div>
@@ -419,7 +419,7 @@
     measurementId: "G-CPSC89HTB5"
     };
     
-    // MMC_STARTUP_FAILSAFE V73.3.1
+    // MMC_STARTUP_FAILSAFE V74.1
     // Never leave the user on a blank screen if Firebase/Auth startup is delayed.
     const mmcStartupTimer = setTimeout(() => {
         const loginScreen = document.getElementById('loginScreen');
@@ -867,7 +867,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
     }
 
     // ==========================================
-    // V73.3.1 iPhone / iPad PRINT / PDF FALLBACK
+    // V74.1 iPhone / iPad PRINT / PDF FALLBACK
     // iOS PWA can block or mishandle popup print windows. This fallback opens
     // a same-page printable view with Back and Print buttons.
     // ==========================================
@@ -2502,6 +2502,64 @@ Uploaded ${successCount} item(s) to Cloud.`);
     // ==========================================
     // RESTOCK SYSTEM
     // ==========================================
+
+    // V74.1: Lookup uses the already-loaded Restock history; no new Firebase
+    // collections, rules, or writes. More history can be loaded with Load Older.
+    let mmcLookupMatches = [];
+    function mmcLookupRestock(raw) {
+        const panel = document.getElementById('mmcPartLookupResults');
+        if (!panel) return;
+        panel.replaceChildren();
+        const q = String(raw || '').trim().toUpperCase();
+        if (restockEditingId || q.length < 2) { panel.style.display='none'; return; }
+        const seen = new Set();
+        mmcLookupMatches = restockItems.filter(r => {
+            const code = String(r.code || '').trim().toUpperCase();
+            if (!code || !code.includes(q)) return false;
+            const key = [code, String(r.brand||'').trim().toUpperCase(), String(r.supp||'').trim().toUpperCase(), String(r.car||'').trim().toUpperCase()].join('|');
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+        }).slice(0, 12);
+        if (!mmcLookupMatches.length) {
+            const msg = document.createElement('div');
+            msg.style.cssText='padding:10px;color:#64748b;font-size:12px;';
+            msg.textContent='No match in loaded Restock history. You can enter a new part manually. Load Older Restock Logs to search more records.';
+            panel.appendChild(msg);
+        } else {
+            mmcLookupMatches.forEach((r, index) => {
+                const b = document.createElement('button');
+                b.type='button';
+                b.style.cssText='display:block;width:100%;padding:10px;text-align:left;background:white;color:#0f172a;border:0;border-bottom:1px solid #e2e8f0;cursor:pointer;white-space:normal;';
+                b.textContent=[r.code, r.part||'', 'Brand: '+(r.brand||'-'), 'Car: '+(r.car||'-'), 'Supplier: '+(r.supp||'-'), 'Last recorded cost: RM'+Number(r.unitCost||0).toFixed(2), 'Date: '+(r.date||'-')].join(' | ');
+                b.addEventListener('click', () => mmcSelectRestockHistory(index));
+                panel.appendChild(b);
+            });
+        }
+        panel.style.display='block';
+    }
+    function mmcSelectRestockHistory(index) {
+        const r=mmcLookupMatches[index];
+        if (!r || restockEditingId) return;
+        for (const [id, value] of Object.entries({
+            r_code:r.code||'', r_part:r.part||'', r_brand:r.brand||'',
+            r_supp:r.supp||'', r_car:r.car||'', r_unitCost:r.unitCost||''
+        })) {
+            const el=document.getElementById(id);
+            if(el) el.value=value;
+        }
+        // Old quantities and stock are deliberately never copied.
+        document.getElementById('r_onHand').value='';
+        document.getElementById('r_needOrder').value='';
+        // Preserve existing image URLs/base64; uploader handles both types.
+        currentRestockPhotos=Array.isArray(r.photos)?r.photos.slice(0,5):[];
+        renderRestockGalleryUI();
+        calcRestockCost();
+        document.getElementById('mmcPartLookupResults').style.display='none';
+        document.getElementById('mmcPreviousCost').textContent='Previous recorded cost: RM'+Number(r.unitCost||0).toFixed(2)+' | Supplier: '+(r.supp||'-')+' | Date: '+(r.date||'-')+' (reference only; editable)';
+        document.getElementById('r_needOrder').focus();
+    }
+
     function calcRestockCost() {
         const qtyEl = document.getElementById('r_needOrder');
         const costEl = document.getElementById('r_unitCost');
@@ -2525,6 +2583,11 @@ Uploaded ${successCount} item(s) to Cloud.`);
         });
         currentRestockPhotos = [];
         renderRestockGalleryUI();
+        if (document.getElementById('mmcPartLookupResults')) {
+            document.getElementById('mmcPartLookupResults').style.display = 'none';
+            document.getElementById('mmcPartLookupResults').replaceChildren();
+        }
+        if (document.getElementById('mmcPreviousCost')) document.getElementById('mmcPreviousCost').textContent = '';
     }
 
     function setRestockEditMode(item) {
@@ -2626,6 +2689,9 @@ Uploaded ${successCount} item(s) to Cloud.`);
             const newRef = await db.ref('restock').push(payload);
             await writeAuditLog('CREATE_RESTOCK', 'restock', '', newRef.key, { part: payload.part, code: payload.code, supplier: payload.supp, needOrderQty: payload.needOrderQty });
             clearRestockFormFields();
+            const status=document.getElementById('mmcQuickEntryStatus');
+            if(status) status.textContent='✓ Saved. Ready for next Part Number.';
+            document.getElementById('r_code').focus();
         } catch (e) {
             alert("Error: " + (e && e.message ? e.message : e));
         } finally {
