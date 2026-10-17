@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="MMC Portal">
     <link rel="apple-touch-icon" href="logo.png">
-    <title>Malaysia Motor Company - Secure Portal V74.2-B.1 AUTO</title>
+    <title>Malaysia Motor Company - Secure Portal V74.2-C TEST</title>
     <link rel="manifest" href="manifest.json">
     <script>
         if ('serviceWorker' in navigator) {
@@ -16,12 +16,12 @@
             navigator.serviceWorker.addEventListener('controllerchange', () => { if (!refreshing) { window.location.reload(); refreshing = true; }});
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js').then(reg => {
-                    setInterval(() => { console.log("Checking server for V74.2-B.1 AUTO updates..."); reg.update(); }, 5 * 60 * 1000);
+                    setInterval(() => { console.log("Checking server for V74.2-C TEST updates..."); reg.update(); }, 5 * 60 * 1000);
                     reg.onupdatefound = () => {
                         const installingWorker = reg.installing;
                         installingWorker.onstatechange = () => {
                             if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                if (confirm("🔄 New system version (V74.2-B.1 AUTO) available! Click OK to apply.")) { installingWorker.postMessage('SKIP_WAITING'); }
+                                if (confirm("🔄 New system version (V74.2-C TEST) available! Click OK to apply.")) { installingWorker.postMessage('SKIP_WAITING'); }
                             }
                         };
                     };
@@ -198,7 +198,7 @@
 <div id="mainApp" class="container">
     <div class="header-flex">
         <div>
-            <h2>Malaysia Motor Company <span class="version-badge">V74.2-B.1 AUTO Enterprise</span> <span id="adminBadge">👑 Boss View</span></h2>
+            <h2>Malaysia Motor Company <span class="version-badge">V74.2-C TEST Enterprise</span> <span id="adminBadge">👑 Boss View</span></h2>
             <div style="margin-top:8px;">
                 <span id="networkBadge" class="net-online">🟢 Online (Live Cloud Sync)</span>
             </div>
@@ -391,14 +391,14 @@
             </div>
         </div>
 
-        <section id="v742bSupplierPanel" style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:14px;margin-bottom:16px"><h3 style="margin:0 0 10px;color:#1e40af">🏢 Supplier Master &amp; Auto-Add + Boss Review — V74.2-B.1 AUTO</h3><div style="display:flex;gap:8px;flex-wrap:wrap"><input id="v742bSupplierSearch" type="search" placeholder="Search approved suppliers / aliases" oninput="v742bRenderSuppliers()" style="flex:1;min-width:200px;padding:9px"><button type="button" onclick="v742bShowRequest()" style="padding:9px">Add Supplier Now</button><button type="button" onclick="v742bReloadSuppliers()" style="padding:9px">Refresh</button></div><div id="v742bSupplierList" style="margin-top:10px;font-size:13px"></div><div id="v742bRequestForm" style="display:none;margin-top:12px;border-top:1px solid #cbd5e1;padding-top:12px"><label>Proposed Supplier Name <input id="v742bProposedName" maxlength="120" placeholder="Legal company name" style="width:100%;padding:8px;box-sizing:border-box"></label><label>Reason / Details <input id="v742bRequestReason" maxlength="300" placeholder="Why is this a new company?" style="width:100%;padding:8px;box-sizing:border-box"></label><button type="button" onclick="v742bSubmitSupplierRequest()" style="padding:9px;margin-top:8px;background:#1d4ed8;color:white;border:0;border-radius:6px">Add Pending Supplier &amp; Continue</button></div><div id="v742bBossPanel" style="display:none;margin-top:12px;border-top:1px solid #cbd5e1;padding-top:12px"><h4 style="margin:0 0 8px">👑 Boss: Pending Supplier Reviews</h4><div id="v742bPendingRequests"></div><div style="margin-top:10px"><input id="v742bNewOfficial" maxlength="120" placeholder="Official supplier company name" style="padding:9px;min-width:200px"><button type="button" onclick="v742bCreateSupplier()" style="padding:9px">Create Official Supplier</button></div></div><div id="v742bSupplierStatus" role="status" aria-live="polite" style="font-size:12px;color:#475569;margin-top:8px"></div></section>
+        <section id="v742bSupplierPanel" style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:14px;margin-bottom:16px"><h3 style="margin:0 0 10px;color:#1e40af">🏢 Supplier Help — Search / Add New</h3><div style="display:flex;gap:8px;flex-wrap:wrap"><input id="v742bSupplierSearch" type="search" placeholder="Search approved suppliers / aliases" oninput="v742bRenderSuppliers()" style="flex:1;min-width:200px;padding:9px"><button type="button" onclick="v742bShowRequest()" style="padding:9px">Add Supplier Now</button><button type="button" onclick="v742bReloadSuppliers()" style="padding:9px">Refresh</button></div><div id="v742bSupplierList" style="margin-top:10px;font-size:13px"></div><div id="v742bRequestForm" style="display:none;margin-top:12px;border-top:1px solid #cbd5e1;padding-top:12px"><label>Proposed Supplier Name <input id="v742bProposedName" maxlength="120" placeholder="Legal company name" style="width:100%;padding:8px;box-sizing:border-box"></label><label>Reason / Details <input id="v742bRequestReason" maxlength="300" placeholder="Why is this a new company?" style="width:100%;padding:8px;box-sizing:border-box"></label><button type="button" onclick="v742bSubmitSupplierRequest()" style="padding:9px;margin-top:8px;background:#1d4ed8;color:white;border:0;border-radius:6px">Add Pending Supplier &amp; Continue</button></div><details id="v742bBossPanel" style="display:none;margin-top:12px;border-top:1px solid #cbd5e1;padding-top:12px"><summary style="cursor:pointer;font-weight:bold">👑 Boss Supplier Management (click to expand)</summary><div><h4 style="margin:0 0 8px">👑 Boss: Pending Supplier Reviews</h4><div id="v742bPendingRequests"></div><div style="margin-top:10px"><input id="v742bNewOfficial" maxlength="120" placeholder="Official supplier company name" style="padding:9px;min-width:200px"><button type="button" onclick="v742bCreateSupplier()" style="padding:9px">Create Official Supplier</button></div></div></div></details><div id="v742bSupplierStatus" role="status" aria-live="polite" style="font-size:12px;color:#475569;margin-top:8px"></div></section>
         <div class="top-controls" style="background:#f8fafc; padding:15px; border-radius:8px; border:1px solid #e2e8f0; align-items:center;">
-            <button onclick="refreshTabData('restock')" class="sync-btn" style="border-radius:6px;">🔄 Refresh Restock</button><div id="v742aSearchPanel" style="width:100%;padding:12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;margin:8px 0;box-sizing:border-box;"><div style="font-weight:800;color:#1e40af;margin-bottom:7px;">🔎 Universal Restock Search — V74.2-B.1 AUTO</div><div style="display:flex;gap:8px;flex-wrap:wrap;"><input id="v742aQuery" type="search" autocomplete="off" placeholder="Part No / Item / Brand / Supplier / Car Model (multiple words)" oninput="renderRestockTable()" style="flex:1;min-width:230px;padding:10px;border:1px solid #94a3b8;border-radius:6px;"><button type="button" onclick="v742aSearchAllHistory()" id="v742aAllHistoryBtn" style="padding:10px;border-radius:6px;background:#1d4ed8;color:white;border:0;font-weight:bold;">Load All History</button><button type="button" onclick="v742aClearSearch()" style="padding:10px;border:1px solid #94a3b8;border-radius:6px;background:white;">Clear Search</button></div><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:9px;"><label for="v742aScope" style="font-weight:700;font-size:13px;color:#1e40af;">Search In:</label><select id="v742aScope" onchange="v742aChangeScope()" style="padding:9px;border:1px solid #94a3b8;border-radius:6px;"><option value="active">Active List (default)</option><option value="all">All History</option></select><span style="font-size:12px;color:#475569;">All History loads from Firebase when selected.</span></div><div id="v742aSearchStatus" role="status" aria-live="polite" style="font-size:12px;color:#334155;margin-top:7px;">Default: Active List. Choose All History to load older Firebase records.</div></div><select id="rViewFilter" onchange="renderRestockTable()" style="padding:10px; border-radius:6px; font-weight:bold; color:#2563eb; border:1px solid #cbd5e1;"><option value="active">Active List (Not Yet Order)</option><option value="history">History (Ordered)</option><option value="all">All Items</option></select>
+            <button onclick="refreshTabData('restock')" class="sync-btn" style="border-radius:6px;">🔄 Refresh Restock</button><div id="v742aSearchPanel" style="width:100%;padding:12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;margin:8px 0;box-sizing:border-box;"><div style="font-weight:800;color:#1e40af;margin-bottom:7px;">🔎 Universal Restock Search — V74.2-C TEST</div><div style="display:flex;gap:8px;flex-wrap:wrap;"><input id="v742aQuery" type="search" autocomplete="off" placeholder="Part No / Item / Brand / Supplier / Car Model (multiple words)" oninput="renderRestockTable()" style="flex:1;min-width:230px;padding:10px;border:1px solid #94a3b8;border-radius:6px;"><button type="button" onclick="v742aSearchAllHistory()" id="v742aAllHistoryBtn" style="padding:10px;border-radius:6px;background:#1d4ed8;color:white;border:0;font-weight:bold;">Load All History</button><button type="button" onclick="v742aClearSearch()" style="padding:10px;border:1px solid #94a3b8;border-radius:6px;background:white;">Clear Search</button></div><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:9px;"><label for="v742aScope" style="font-weight:700;font-size:13px;color:#1e40af;">Search In:</label><select id="v742aScope" onchange="v742aChangeScope()" style="padding:9px;border:1px solid #94a3b8;border-radius:6px;"><option value="active">Active List (default)</option><option value="all">All History</option></select><span style="font-size:12px;color:#475569;">All History loads from Firebase when selected.</span></div><div id="v742aSearchStatus" role="status" aria-live="polite" style="font-size:12px;color:#334155;margin-top:7px;">Default: Active List. Choose All History to load older Firebase records.</div></div><select id="rViewFilter" onchange="renderRestockTable()" style="padding:10px; border-radius:6px; font-weight:bold; color:#2563eb; border:1px solid #cbd5e1;"><option value="active">Active List (Not Yet Order)</option><option value="history">History (Ordered)</option><option value="all">All Items</option></select>
             <select id="rSuppFilter" onchange="renderRestockTable()" style="padding:10px; border-radius:6px; font-weight:bold; border:1px solid #cbd5e1; background: #fffbeb; color: #b45309;"><option value="all">🔍 All Suppliers</option></select>
             <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;"><span style="font-size:13px; font-weight:bold; color:#475569;">Date From:</span><input type="date" id="rDateFromFilter" onchange="renderRestockTable()" style="padding:10px; border-radius:6px; width:155px; border:1px solid #cbd5e1;"><span style="font-size:13px; font-weight:bold; color:#475569;">To:</span><input type="date" id="rDateToFilter" onchange="renderRestockTable()" style="padding:10px; border-radius:6px; width:155px; border:1px solid #cbd5e1;"><button onclick="clearDateFilter('restock')" style="padding:10px; border-radius:6px; cursor:pointer; border:1px solid #cbd5e1; background:white; font-weight:bold;">Clear</button></div>
             <div style="margin-left:auto; display:flex; gap:10px; flex-wrap:wrap;"><button class="print-btn" onclick="printRestock()" style="padding:10px 15px; border-radius:6px; font-weight:bold; cursor:pointer;">🖨️ Print PO List</button><button class="print-btn" onclick="saveRestockPDF()" style="padding:10px 15px; border-radius:6px; font-weight:bold; cursor:pointer;">📄 Supplier PO (RM0)</button><button class="print-btn boss-restock" onclick="saveRestockBossPDF()" style="display:none; padding:10px 15px; border-radius:6px; font-weight:bold; cursor:pointer; background:#7c3aed;">👑 Boss Cost PO</button><button class="wa-btn" style="background:#25D366; margin:0; padding:10px 15px; border-radius:6px; font-size:13px;" onclick="sendRestockWA('60194482580', 'Hock')">📲 WA Hock</button><button class="wa-btn" style="background:#25D366; margin:0; padding:10px 15px; border-radius:6px; font-size:13px;" onclick="sendRestockWA('60164401970', 'Kelvin')">📲 WA Kelvin</button><button class="complete-btn" onclick="markFilteredOrdered()" style="margin:0; padding:10px 15px; border-radius:6px; font-size:13px;">📦 Mark View as Ordered</button></div>
         </div>
-        <div class="table-responsive"><table><thead id="restockThead"></thead><tbody id="restockTableBody"></tbody></table></div>
+        <div id="v742cTools" style="background:#eef2ff;border:1px solid #c7d2fe;border-radius:8px;padding:12px;margin:12px 0;display:flex;align-items:center;gap:10px;flex-wrap:wrap"><label style="font-weight:700">Display: <select id="v742cGrouping" onchange="renderRestockTable()" style="padding:8px"><option value="normal">Normal List</option><option value="supplier">Group by Supplier</option></select></label><button type="button" onclick="v742cSelectVisible(true)" style="padding:8px">Select Visible</button><button type="button" onclick="v742cSelectVisible(false)" style="padding:8px">Clear Selection</button><button type="button" onclick="v742cGeneratePO('supplier')" style="padding:9px;background:#1d4ed8;color:white;border:0;border-radius:6px">📄 Selected Supplier POs</button><button type="button" class="boss-restock" onclick="v742cGeneratePO('boss')" style="display:none;padding:9px;background:#6d28d9;color:white;border:0;border-radius:6px">👑 Selected Boss POs</button><span id="v742cSelectedCount" role="status" style="font-size:12px;color:#334155">0 selected</span></div><div class="table-responsive"><table><thead id="restockThead"></thead><tbody id="restockTableBody"></tbody></table></div>
         <button class="load-more-btn" onclick="loadMoreRecords('restock')">👇 Load Older Restock Logs (Next 200)</button>
     </div>
 </div>
@@ -420,7 +420,7 @@
     measurementId: "G-CPSC89HTB5"
     };
     
-    // MMC_STARTUP_FAILSAFE V74.2-B.1 AUTO
+    // MMC_STARTUP_FAILSAFE V74.2-C TEST
     // Never leave the user on a blank screen if Firebase/Auth startup is delayed.
     const mmcStartupTimer = setTimeout(() => {
         const loginScreen = document.getElementById('loginScreen');
@@ -868,7 +868,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
     }
 
     // ==========================================
-    // V74.2-B.1 AUTO iPhone / iPad PRINT / PDF FALLBACK
+    // V74.2-C TEST iPhone / iPad PRINT / PDF FALLBACK
     // iOS PWA can block or mishandle popup print windows. This fallback opens
     // a same-page printable view with Back and Print buttons.
     // ==========================================
@@ -1392,7 +1392,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
     }
     function logoutSystem() { auth.signOut(); }
 
-    // V74.2-B.1 AUTO Supplier Master. Only Boss can create/approve mappings (enforced by Firebase rules).
+    // V74.2-C TEST Supplier Master. Only Boss can create/approve mappings (enforced by Firebase rules).
     let v742bSuppliers={}, v742bRequests={}, v742bOwnRequests={}, v742bLoaded=false;
     const v742bNorm=v=>String(v||'').normalize('NFKC').trim().replace(/\s+/g,' ').toLocaleLowerCase();
     const v742bSafe=v=>escapeHTML(String(v||''));
@@ -1507,6 +1507,41 @@ Uploaded ${successCount} item(s) to Cloud.`);
         return {ok:false,message:'Supplier not registered. Click Add Supplier Now; you can then save Restock immediately.'};
     }
 
+    // V74.2-C: display grouping only; never rewrite historical supplier fields.
+    const v742cSelected = new Set();
+    function v742cSupplier(item) {
+        const raw=String(item.supp||'').trim();
+        const pending=String(item.supplierId||'').startsWith('pending:');
+        if(pending) return {key:'pending:'+item.supplierId, name:raw||'Pending supplier', verified:false};
+        let found=null;
+        if(item.supplierId && v742bSuppliers[item.supplierId] && v742bSuppliers[item.supplierId].status!=='inactive') found={id:item.supplierId,...v742bSuppliers[item.supplierId]};
+        if(!found) found=v742bFindSupplier(raw);
+        if(found) return {key:'verified:'+found.id,name:found.officialName,verified:true};
+        // Unknown legacy suppliers must NOT be merged by spelling similarity.
+        return {key:'legacy:'+v742bNorm(raw),name:raw||'Unknown supplier',verified:false};
+    }
+    function v742cSelectedRows() {
+        const ids=new Set(currentRestockView.filter(r=>!r.offlinePending).map(r=>String(r.id)));
+        return currentRestockView.filter(r=>!r.offlinePending && ids.has(String(r.id)) && v742cSelected.has(String(r.id)));
+    }
+    function v742cRefreshCount(){const el=document.getElementById('v742cSelectedCount');if(el)el.textContent=v742cSelectedRows().length+' selected in current view';}
+    function v742cSelectVisible(checked){currentRestockView.filter(r=>!r.offlinePending).forEach(r=>checked?v742cSelected.add(String(r.id)):v742cSelected.delete(String(r.id)));renderRestockTable();}
+    function v742cToggle(id,checked){if(checked)v742cSelected.add(String(id));else v742cSelected.delete(String(id));v742cRefreshCount();}
+    function v742cGeneratePO(mode) {
+        if(mode==='boss'&&!isAdmin)return alert('Boss only.');
+        const selected=v742cSelectedRows();
+        if(!selected.length)return alert('Select at least one Restock item first.');
+        const groups=new Map();
+        for(const item of selected){const supplier=v742cSupplier(item);if(!supplier.verified)return alert('PO blocked: '+supplier.name+' is not verified. Boss must link/approve this supplier first.');if(!groups.has(supplier.key))groups.set(supplier.key,{supplier,items:[]});groups.get(supplier.key).items.push(item);}
+        if(!confirm('Generate '+groups.size+' separate '+(mode==='boss'?'Boss':'Supplier')+' PO(s) for '+selected.length+' selected item(s)?'))return;
+        const previous=currentRestockView;
+        try {for(const group of groups.values()){
+            currentRestockView=group.items;
+            // printRestock uses the existing safe supplier/boss templates, without exposing costs on supplier copies.
+            printRestock('print',mode);
+        }} finally {currentRestockView=previous;}
+        if(groups.size>1)alert('If your browser blocked extra print windows, allow popups and generate each supplier separately.');
+    }
     function forceDataSync(skipOfflineSync = false) {
         db.ref('orders').off();
         db.ref('restock').off();
@@ -2621,7 +2656,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
     // RESTOCK SYSTEM
     // ==========================================
 
-    // V74.2-B.1 AUTO: clear, selectable Smart Part Lookup cards. Uses loaded Restock records.
+    // V74.2-C TEST: clear, selectable Smart Part Lookup cards. Uses loaded Restock records.
     let mmcLookupMatches = [];
     function mmcLookupRestock(raw) {
         const panel = document.getElementById('mmcPartLookupResults');
@@ -2902,7 +2937,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
     function restockMatchesDateRange(item, fromVal, toVal) { return recordMatchesDateRange(item, fromVal, toVal); }
 
 
-    // V74.2-B.1 AUTO: all-history query is explicit; normal typing never downloads the database.
+    // V74.2-C TEST: all-history query is explicit; normal typing never downloads the database.
     let v742aHistory = null;
     let v742aHistoryLoading = false;
     function v742aTokens(text) {
@@ -3023,6 +3058,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
         let theadHTML = `<tr><th style="width:100px;">Date Added</th><th>Part Description</th><th>Item Code / OEM</th><th>Brand</th><th>Supplier <span style="font-size:10px; color:#b45309;">(Editable)</span></th><th>Car Model</th><th style="text-align:center; width: 60px;">On Hand</th><th style="text-align:center; width: 60px;">Order Qty</th>`;
         theadHTML += `<th style="text-align:center;">Unit Cost</th><th style="text-align:center;">Total Cost</th>`;
         theadHTML += `<th style="text-align:center; width: 100px;">Photos</th><th style="text-align:center; width: 100px;">Status</th><th style="text-align:center; width: 80px;">Actions</th></tr>`;
+        theadHTML=theadHTML.replace('<tr>', '<tr><th style="width:45px">Select</th>');
         document.getElementById('restockThead').innerHTML = theadHTML;
         const tbody = document.getElementById('restockTableBody'); tbody.innerHTML = '';
         const view = document.getElementById('rViewFilter').value; const dateFromVal = document.getElementById('rDateFromFilter').value; const dateToVal = document.getElementById('rDateToFilter').value; const suppFilter = document.getElementById('rSuppFilter').value;
@@ -3040,7 +3076,13 @@ Uploaded ${successCount} item(s) to Cloud.`);
         const queryTokens=v742aTokens(document.getElementById('v742aQuery')?.value);
 
         currentRestockView = displayRestockItems.filter(item => { const status = item.status || 'Not Yet Order'; if (scope === 'active' && status === 'Ordered') return false; if (view === 'active' && status === 'Ordered') return false; if (view === 'history' && status !== 'Ordered') return false; if (!restockMatchesDateRange(item, dateFromVal, dateToVal)) return false; if (suppFilter !== 'all' && (item.supp||'').trim() !== suppFilter) return false; if (!v742aMatches(item,queryTokens)) return false; return true; });
+        if(document.getElementById('v742cGrouping')?.value==='supplier') currentRestockView.sort((a,b)=>v742cSupplier(a).name.localeCompare(v742cSupplier(b).name));
+        let lastSupplierKey='';
         currentRestockView.forEach((item, rowIndex) => {
+            if(document.getElementById('v742cGrouping')?.value==='supplier') {
+                const group=v742cSupplier(item);
+                if(group.key!==lastSupplierKey){lastSupplierKey=group.key;const groupRow=document.createElement('tr');const cell=document.createElement('td');cell.colSpan=14;cell.style.cssText='background:#dbeafe;font-weight:800;padding:12px';cell.textContent='🏢 '+group.name+(group.verified?'':' — Unverified / legacy; PO blocked');groupRow.appendChild(cell);tbody.appendChild(groupRow);}
+            }
             const status = item.status || 'Not Yet Order';
             const statusHtml = status === 'Ordered' ? `<span style="padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; background:#d1fae5; color:#047857;">Ordered</span>` : `<span style="padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; background:#fef3c7; color:#b45309;">Not Yet Order</span>`;
             let actionHtml = '';
@@ -3056,8 +3098,9 @@ Uploaded ${successCount} item(s) to Cloud.`);
             let costHtml = `<td style="text-align:center; font-weight:bold; color:#059669;">RM ${parseFloat(item.unitCost||0).toFixed(2)}</td><td style="text-align:center; font-weight:bold; color:#059669;">RM ${parseFloat(item.totalCost||0).toFixed(2)}</td>`;
             let photoHtml = ''; if (item.photos && item.photos.length > 0) { photoHtml = `<div style="display:flex; gap:4px; flex-wrap:wrap; justify-content:center;">`; item.photos.forEach(p => { const key = registerPhotoPreview(p); photoHtml += `<img src="${safePhotoSrc(p)}" class="photo-thumbnail" onclick="showPhotoByKey('${key}')" style="width:35px;height:35px;border:1px solid #cbd5e1; cursor:pointer;">`; }); photoHtml += `</div>`; } else { photoHtml = `<span style="color:#94a3b8; font-size:11px;">No Photo</span>`; }
             const tr = document.createElement('tr'); tr.style.opacity = status === 'Ordered' ? '0.6' : '1';
-            tr.innerHTML = `<td><small style="color:#64748b; font-weight:bold;">${escapeHTML(item.date)}</small></td><td><strong>${escapeHTML(item.part || '-') }</strong></td><td class="mono-text">${escapeHTML(item.code || '-') }</td><td>${escapeHTML(item.brand || '-') }</td><td>${suppHtml}</td><td class="car-model-wrap">${escapeHTML(item.car || '-') }</td><td style="text-align:center; font-weight:bold;">${escapeHTML(item.onHandQty || '0') }</td><td style="text-align:center; color:#ef4444; font-weight:bold;">${escapeHTML(item.needOrderQty || '1') }</td>${costHtml}<td style="text-align:center;">${photoHtml}</td><td style="text-align:center;">${statusHtml}</td><td><div class="action-btns" style="flex-direction:column;">${actionHtml}</div></td>`; tbody.appendChild(tr);
+            tr.innerHTML = `<td><input type="checkbox" aria-label="Select restock item" data-restock-id="${escapeAttr(String(item.id||''))}" ${v742cSelected.has(String(item.id))?'checked':''} ${item.offlinePending?'disabled':''} onchange="v742cToggle(this.dataset.restockId,this.checked)"></td><td><small style="color:#64748b; font-weight:bold;">${escapeHTML(item.date)}</small></td><td><strong>${escapeHTML(item.part || '-') }</strong></td><td class="mono-text">${escapeHTML(item.code || '-') }</td><td>${escapeHTML(item.brand || '-') }</td><td>${suppHtml}</td><td class="car-model-wrap">${escapeHTML(item.car || '-') }</td><td style="text-align:center; font-weight:bold;">${escapeHTML(item.onHandQty || '0') }</td><td style="text-align:center; color:#ef4444; font-weight:bold;">${escapeHTML(item.needOrderQty || '1') }</td>${costHtml}<td style="text-align:center;">${photoHtml}</td><td style="text-align:center;">${statusHtml}</td><td><div class="action-btns" style="flex-direction:column;">${actionHtml}</div></td>`; tbody.appendChild(tr);
         });
+        v742cRefreshCount();
     }
 
     function getRestockHTML(poMode = 'supplier') {
@@ -3102,7 +3145,8 @@ Uploaded ${successCount} item(s) to Cloud.`);
 
         const filterTitle = showActualCosts ? 'BOSS COST PURCHASE ORDER' : 'SUPPLIER PURCHASE ORDER';
         const suppFilter = document.getElementById('rSuppFilter').value;
-        const supplierName = suppFilter && suppFilter !== 'all' ? suppFilter : 'All Suppliers';
+        const selectedGroupNames=[...new Set(currentRestockView.map(r=>v742cSupplier(r).name))];
+        const supplierName = selectedGroupNames.length===1 ? selectedGroupNames[0] : (suppFilter && suppFilter !== 'all' ? suppFilter : 'All Suppliers');
         const fromVal = document.getElementById('rDateFromFilter').value;
         const toVal = document.getElementById('rDateToFilter').value;
         const dateFilter = fromVal || toVal ? `${fromVal || 'Start'} to ${toVal || 'Today'}` : 'All Dates';
