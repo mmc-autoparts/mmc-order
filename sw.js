@@ -1,74 +1,3280 @@
-const CACHE_NAME = "mmc-portal-V74.2-C"; // UPDATE THIS EVERY TIME YOU CHANGE THE APP
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="MMC Portal">
+    <link rel="apple-touch-icon" href="logo.png">
+    <title>Malaysia Motor Company - Secure Portal V75</title>
+    <link rel="manifest" href="manifest.json">
+    <script>
+        if ('serviceWorker' in navigator) {
+            let refreshing = false;
+            navigator.serviceWorker.addEventListener('controllerchange', () => { if (!refreshing) { window.location.reload(); refreshing = true; }});
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').then(reg => {
+                    setInterval(() => { console.log("Checking server for V75 updates..."); reg.update(); }, 5 * 60 * 1000);
+                    reg.onupdatefound = () => {
+                        const installingWorker = reg.installing;
+                        installingWorker.onstatechange = () => {
+                            if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                if (confirm("🔄 New system version (V75) available! Click OK to apply.")) { installingWorker.postMessage('SKIP_WAITING'); }
+                            }
+                        };
+                    };
+                }).catch(err => console.log('Service Worker failed', err));
+            });
+        }
+    </script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+    <style>
+        body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; background-color: #f1f5f9; margin: 0; padding: 20px; color: #334155; padding-bottom: 200px;}
+        #loginScreen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); z-index: 9999; display: flex; justify-content: center; align-items: center; padding: 20px;}
+        .login-box { background: white; padding: 50px 40px; border-radius: 16px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); text-align: center; max-width: 420px; width: 100%;}
+        .login-logo { width: 80px; height: 80px; margin-bottom: 20px; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);}
+        .login-box h3 { margin-top: 0; color: #0f172a; margin-bottom: 5px; font-size: 26px; font-weight: 900; letter-spacing: -0.5px;}
+        .subtitle { color: #64748b; font-size: 14px; margin-bottom: 30px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;}
+        .login-field { display: flex; align-items: center; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; margin-bottom: 15px; overflow: hidden; transition: all 0.2s;}
+        .login-field:focus-within { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2); }
+        .login-field label { background: transparent; color: #475569; font-weight: bold; font-size: 14px; padding: 14px; width: 85px; text-align: left; border-right: 1px solid #cbd5e1; margin: 0;}
+        .login-input { border: none; padding: 14px; font-size: 16px; flex: 1; outline: none; width: 100%; background: transparent;}
+        button { transition: transform 0.1s ease, box-shadow 0.2s ease, background-color 0.2s ease; }
+        button:active { transform: scale(0.97); }
+        .login-btn { background-color: #2563eb; color: white; border: none; padding: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; width: 100%; font-size: 16px; margin-top: 10px; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);}
+        .login-btn:hover { background-color: #1d4ed8; box-shadow: 0 6px 8px -1px rgba(37, 99, 235, 0.4);}
+        .error-msg { color: #ef4444; font-size: 13px; margin-top: -5px; margin-bottom: 15px; display: none; font-weight: bold; }
+        #mainApp { display: none; }
+        .container { max-width: 1800px; width: calc(100% - 24px); margin: auto; background: white; padding: 25px 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; position:relative;}
+        .header-flex { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 15px; flex-wrap:wrap; gap:15px;}
+        h2 { color: #0f172a; margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.5px;}
+        .version-badge { font-size: 12px; background: #e2e8f0; color: #475569; padding: 3px 8px; border-radius: 12px; vertical-align: middle; margin-left: 8px; font-weight: bold; }
+        .logout-btn { background-color: #ef4444; color: white; border: none; padding: 10px 18px; border-radius: 6px; cursor: pointer; font-weight: bold; box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);}
+        .sync-btn { background-color: #f8fafc; color: #334155; border: 1px solid #cbd5e1; padding: 10px 18px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-right: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);}
+        #networkBadge { font-size: 12px; padding: 4px 10px; border-radius: 12px; vertical-align: middle; margin-left: 10px; font-weight: bold; transition: all 0.3s; }
+        .net-online { background-color: #10b981; color: white; box-shadow: 0 0 10px rgba(16,185,129,0.4); }
+        .net-offline { background-color: #ef4444; color: white; box-shadow: 0 0 10px rgba(239,68,68,0.4); animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+        .cash-dashboard { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 15px 20px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.3); }
+        .cash-stat { text-align: center; }
+        .cash-stat h4 { margin: 0 0 5px 0; font-size: 12px; text-transform: uppercase; opacity: 0.9; }
+        .cash-stat div { font-size: 20px; font-weight: 800; }
+        .tabs-nav { display: flex; gap: 10px; margin-bottom: 25px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; flex-wrap: wrap;}
+        .tab-btn { background: transparent; border: none; padding: 10px 20px; font-size: 16px; font-weight: bold; color: #64748b; cursor: pointer; border-radius: 6px; }
+        .tab-btn.active { background: #e0e7ff; color: #4338ca; box-shadow: inset 0 -3px 0 #4338ca; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .form-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 18px; margin-bottom: 15px; }
+        input:not(.login-input), select { padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; width: 100%; box-sizing: border-box; color:#0f172a; transition: border-color 0.2s, box-shadow 0.2s;}
+        input:focus, select:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+        .full-width { grid-column: 1 / -1; }
+        .label-text { color: #64748b; font-size: 12px; font-weight: 700; display: block; margin-bottom: 6px; text-transform: uppercase;}
+        .input-wrapper { position: relative; width: 100%; }
+        .autocomplete-list { position: absolute; top: 100%; left: 0; z-index: 1000; background: white; border: 1px solid #cbd5e1; border-radius: 6px; max-height: 250px; overflow-y: auto; width: 100%; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+        .autocomplete-item { padding: 10px 12px; cursor: pointer; border-bottom: 1px solid #f1f5f9; font-size: 13px; line-height: 1.4; transition: background 0.1s;}
+        .autocomplete-item:hover { background: #e2e8f0; }
+        .items-wrapper { border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden; background: #fff;}
+        .items-header-bar { display: flex; justify-content: space-between; align-items: center; padding: 12px 18px; background-color: #f8fafc; border-bottom: 1px solid #cbd5e1;}
+        .items-header-bar h3 { margin: 0; font-size: 16px; color: #0f172a;}
+        .add-item-btn { background-color: #10b981; color: white; border: none; padding: 8px 16px; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 13px; box-shadow: 0 2px 4px rgba(16,185,129,0.2);}
+        .pos-table-header { display: grid; grid-template-columns: 35px 2fr 1.5fr 1fr 1fr 50px 80px 90px 110px 70px 40px; gap: 6px; background: #e2e8f0; padding: 10px 12px; border-bottom: 1px solid #cbd5e1; font-weight: 700; font-size: 11px; color: #475569; text-transform: uppercase;}
+        .pos-table-row { display: grid; grid-template-columns: 35px 2fr 1.5fr 1fr 1fr 50px 80px 90px 110px 70px 40px; gap: 6px; padding: 8px 12px; border-bottom: 1px solid #f1f5f9; align-items: start;}
+        .pos-table-row:hover { background-color: #f8fafc; } 
+        .row-num { font-size: 14px; color: #64748b; display: flex; align-items: center; justify-content: center; height: 38px; font-weight: 700;}
+        .pos-input { border: 1px solid #cbd5e1 !important; padding: 8px 6px !important; height: 38px; border-radius: 4px !important;}
+        .readonly-input { background-color: #f1f5f9; color: #0f172a; font-weight: 700;}
+        .remove-row-btn { color: #ef4444; background: #fee2e2; border: 1px solid #fecaca; height: 38px; width: 100%; border-radius: 4px; font-weight: bold; cursor: pointer;}
+        .photo-upload-btn { display: flex; align-items: center; justify-content: center; gap: 5px; background: #f8fafc; border: 1px solid #cbd5e1; height: 38px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 700; transition: background 0.2s;}
+        .photo-upload-btn:hover { background: #e2e8f0; }
+        .row-gallery { grid-column: 2 / -1; display: flex; gap: 8px; flex-wrap: wrap; padding-top: 6px; }
+        .photo-thumbnail { width: 48px; height: 48px; object-fit: cover; border-radius: 4px; cursor: pointer; border: 1px solid #cbd5e1; box-shadow: 0 2px 4px rgba(0,0,0,0.05);}
+        .photo-wrapper { position: relative; display: inline-block; }
+        .remove-single-btn { position: absolute; top: -6px; right: -6px; background: #ef4444; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 10px; font-weight: bold; cursor: pointer; z-index: 2;}
+        .rotate-single-btn { position: absolute; top: -6px; left: -6px; background: #f59e0b; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; font-weight: bold; cursor: pointer; z-index: 2;}
+        .mobile-grid-3 { display: contents; } 
+        .mobile-label { display: none; font-size: 11px; color: #64748b; font-weight: 700; margin-bottom: 4px; text-transform: uppercase;}
+        .sticky-footer { position: sticky; bottom: 0; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding: 15px 20px; z-index: 50; display: flex; align-items: flex-end; gap: 15px; flex-wrap: wrap; }
+        .finance-group { display: flex; gap: 12px; flex: 2; }
+        .finance-group > div { flex: 1; }
+        .button-group { display: flex; gap: 12px; flex: 1; min-width: 250px;}
+        button.main-save-btn { background-color: #2563eb; color: white; border: none; padding: 14px; font-weight: bold; border-radius: 6px; cursor: pointer; width: 100%; font-size: 16px; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);}
+        button.main-save-btn:hover { background-color: #1d4ed8; }
+        button.main-save-btn:disabled { background-color: #94a3b8; cursor: not-allowed; box-shadow: none;}
+        button.main-save-quote { background-color: #8b5cf6; color: white; border: none; padding: 14px; font-weight: bold; border-radius: 6px; cursor: pointer; width: 100%; font-size: 16px; box-shadow: 0 4px 6px -1px rgba(139, 92, 246, 0.3);}
+        button.main-save-quote:hover { background-color: #7c3aed; }
+        button.main-save-quote:disabled { background-color: #a78bfa; cursor: not-allowed; box-shadow: none;}
+        button.main-save-enq { background-color: #0284c7; color: white; border: none; padding: 14px; font-weight: bold; border-radius: 6px; cursor: pointer; width: 100%; font-size: 16px; box-shadow: 0 4px 6px -1px rgba(2, 132, 199, 0.3);}
+        button.main-save-enq:hover { background-color: #0369a1; }
+        button.main-save-enq:disabled { background-color: #7dd3fc; cursor: not-allowed; box-shadow: none;}
+        button.cancel-btn { background-color: #64748b; color: white; border: none; padding: 14px; font-weight: bold; border-radius: 6px; cursor: pointer; width: 30%; font-size: 16px; display: none;}
+        .top-controls { display: flex; gap: 12px; align-items: center; margin-top: 45px; margin-bottom: 18px; flex-wrap:wrap;}
+        .search-bar { padding: 12px 15px; width: 300px; border-radius: 20px; border: 1px solid #cbd5e1; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);}
+        #exportBtn { background-color: #059669; color: white; border: none; padding: 12px 18px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-left: auto; display: none; box-shadow: 0 2px 4px rgba(5, 150, 105, 0.2);}
+        .table-responsive { width: 100%; overflow-x: auto; border-radius: 8px; border: 1px solid #e2e8f0; background: white; margin-bottom: 15px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);}
+        table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 1050px; }
+        th, td { padding: 14px 16px; border-bottom: 1px solid #e2e8f0; text-align: left; vertical-align: middle;}
+        th { background-color: #f8fafc; color: #334155; font-weight: 700; border-bottom: 2px solid #cbd5e1; text-transform: uppercase; font-size: 12px;}
+        tbody tr { transition: background-color 0.15s ease; }
+        tbody tr:hover { background-color: #f1f5f9; } 
+        .status-btn { padding: 8px 12px; border: none; border-radius: 20px; font-weight: 700; font-size: 12px; width: 100%; margin-bottom: 6px;}
+        .status-waiting { background-color: #fef3c7; color: #b45309; border: 1px solid #fde68a;}
+        .status-arrived { background-color: #d1fae5; color: #047857; border: 1px solid #a7f3d0;}
+        .status-completed { background-color: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0;}
+        .status-offline { background-color: #fee2e2; color: #ef4444; border: 1px dashed #ef4444; animation: pulse 2s infinite; cursor: not-allowed; }
+        .action-btns { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap;}
+        .action-btns button { border: none; cursor: pointer; font-size: 12px; padding: 8px 10px; border-radius: 4px; font-weight: 700; flex: 1; min-width: 60px;}
+        .delete-btn { color: #ef4444; background: #fee2e2; }
+        .edit-btn { color: #2563eb; background: #dbeafe; }
+        .complete-btn { color: #059669; background: #d1fae5; }
+        .copy-btn { color: #fff; background: #64748b; }
+        .convert-btn { color: #fff; background: #3b82f6; width: 100%; margin-bottom: 5px; box-shadow: 0 2px 4px rgba(59,130,246,0.3);}
+        .convert-btn-alt { color: #fff; background: #8b5cf6; width: 100%; margin-bottom: 5px; box-shadow: 0 2px 4px rgba(139,92,246,0.3);}
+        .print-btn { color: #334155; background: #f1f5f9; border: 1px solid #cbd5e1;}
+        .load-more-btn { width: 100%; background: #f1f5f9; border: 2px dashed #cbd5e1; color: #475569; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-bottom: 20px; transition: all 0.2s;}
+        .load-more-btn:hover { background: #e2e8f0; border-color: #94a3b8; color:#0f172a;}
+        .wa-btn { color: #fff; text-decoration: none; padding: 8px; border-radius: 4px; font-weight: 700; display: block; text-align: center; font-size: 12px; margin-bottom: 6px; cursor: pointer; border: none; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: transform 0.1s;}
+        .wa-btn:active { transform: scale(0.95); }
+        .wa-btn-receipt { background-color: #0ea5e9; }
+        .wa-btn-arrived { background-color: #22c55e; }
+        .wa-btn-cancel { background-color: #ef4444; }
+        .wa-btn-quote { background-color: #8b5cf6; }
+        .wa-btn-enq { background-color: #0284c7; }
+        .wa-btn-remind { background-color: #eab308; } 
+        .ref-badge { background-color: #e2e8f0; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-weight: 700; color: #334155; white-space: nowrap; display: inline-block;}
+        .staff-badge { background-color: #dbeafe; color: #1d4ed8; border: 1px solid #bfdbfe; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; display: inline-block; margin-top: 6px; }
+        .table-item-list { margin: 0; padding-left: 15px; }
+        .table-item-list li { margin-bottom: 8px; border-bottom: 1px dashed #e2e8f0; padding-bottom: 8px;}
+        .restock-grid { display: flex; flex-wrap: wrap; gap: 12px; }
+        .restock-grid > div { flex: 1 1 130px; }
+        #photoModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.9); z-index: 1000; text-align: center; cursor: pointer; backdrop-filter: blur(5px); }
+        #modalImg { max-width: 90%; max-height: 90%; margin-top: 5vh; border-radius: 8px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);}
+        #historyModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.85); z-index: 3000; align-items: center; justify-content: center; backdrop-filter: blur(5px);}
+        #historyContent { background: white; padding: 30px; border-radius: 12px; width: 95%; max-width: 600px; max-height: 80vh; overflow-y: auto; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);}
+        #historyContent h3 { margin-top:0; color:#4338ca; border-bottom:2px solid #e0e7ff; padding-bottom:10px;}
+        #adminBadge { display: none; background: #10b981; color: white; padding: 5px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; margin-left: 10px; box-shadow: 0 2px 4px rgba(16,185,129,0.3);}
+        #adminTools { display: none; background: linear-gradient(to right, #fef08a, #fde047); padding: 10px 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #f59e0b; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; box-shadow: 0 4px 6px -1px rgba(245, 158, 11, 0.1);}
+        #deleteRequestAlert { display:none; width:100%; background:#fff7ed; border:2px solid #ef4444; color:#991b1b; padding:12px 15px; border-radius:8px; font-weight:800; cursor:pointer; align-items:center; justify-content:space-between; gap:10px; }
+        #deleteRequestAlert:hover { background:#ffedd5; }
+        .delete-count-badge { display:none; min-width:22px; height:22px; padding:0 7px; border-radius:999px; background:#fff; color:#991b1b; align-items:center; justify-content:center; font-size:12px; margin-left:6px; }
+        @media (max-width: 800px) {
+            body { padding: 5px; } .container { padding: 15px; }
+            .header-flex { flex-direction: column; gap: 12px; align-items:flex-start;}
+            .form-grid { display: flex; flex-direction: column; gap: 15px; }
+            .finance-group { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+            .pos-table-header { display: none; }
+            .pos-table-row { display: flex; flex-direction: column; gap: 10px; border: 2px solid #bfdbfe; border-radius: 8px; padding: 15px; margin: 10px 0;}
+            .mobile-label { display: block; } .row-num { display: none; }
+            .mobile-grid-3 { display: grid; grid-template-columns: 1fr 1.5fr 1.5fr; gap: 10px; }
+            .mobile-grid-3 > div { display: flex; flex-direction: column; }
+            .top-controls { flex-direction: column; align-items: stretch;}
+        }
+    </style>
+</head>
+<body>
 
-const APP_SHELL = [
-    "./",
-    "./index.html"
-];
+<div id="loginScreen">
+    <div class="login-box" id="normalLoginBox" style="display:block;">
+        <img src="logo.png" alt="MMC Logo" class="login-logo" onerror="this.style.display='none'">
+        <h3>MMC Portal Login</h3>
+        <p class="subtitle">Secure Enterprise Access</p>
+        <div class="login-field"><label>Username</label><input type="text" id="authEmail" class="login-input" placeholder="e.g. staff" onkeydown="if(event.key==='Enter') document.getElementById('authPassword').focus()"></div>
+        <div class="login-field"><label>Password</label><input type="password" id="authPassword" class="login-input" placeholder="••••••••" onkeydown="if(event.key==='Enter') loginSystem()"></div>
+        <div id="loginError" class="error-msg">Login failed. Please check credentials.</div>
+        <button class="login-btn" id="loginBtnTrigger" onclick="loginSystem()">Secure Login</button>
+    </div>
+    <div class="login-box" id="deviceLockBox" style="display:none; border: 2px solid #ef4444;">
+        <h3 style="color:#ef4444;">🚫 Access Denied</h3>
+        <p style="color: #64748b; font-size: 14px; margin-bottom: 25px;">This device is not registered to Malaysia Motor Company. Only authorized company devices can access the portal.</p>
+        <button class="login-btn" style="background:#f59e0b;" onclick="authorizeDevice()">🔑 Register Device (Boss Only)</button>
+    </div>
+</div>
 
-self.addEventListener("install", (e) => {
-    e.waitUntil(
-        caches.open(CACHE_NAME)
-            .then((cache) => cache.addAll(APP_SHELL))
-            .then(() => self.skipWaiting())
-            .catch((err) => {
-                console.error("Service Worker install cache failed:", err);
-            })
-    );
-});
+<div id="mainApp" class="container">
+    <div class="header-flex">
+        <div>
+            <h2>Malaysia Motor Company <span class="version-badge">V75 Enterprise</span> <span id="adminBadge">👑 Boss View</span></h2>
+            <div style="margin-top:8px;">
+                <span id="networkBadge" class="net-online">🟢 Online (Live Cloud Sync)</span>
+            </div>
+        </div>
+        <div style="display:flex; gap:10px;">
+            <button class="sync-btn" onclick="forceDataSync()">🔄 Sync Cloud</button>
+            <button class="logout-btn" onclick="logoutSystem()">🔒 Logout</button>
+        </div>
+    </div>
 
-self.addEventListener("activate", (e) => {
-    e.waitUntil(
-        caches.keys()
-            .then((cacheNames) => {
-                return Promise.all(
-                    cacheNames.map((cacheName) => {
-                        if (cacheName !== CACHE_NAME) {
-                            console.log("Deleting old cache:", cacheName);
-                            return caches.delete(cacheName);
-                        }
-                        return Promise.resolve();
-                    })
+    <div id="adminTools">
+        <div style="color: #b45309; font-weight: 800; font-size: 15px;">🛡️ System Admin Tools</div>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <button onclick="manageStaff()" style="background:#2563eb; color:white; border:none; padding:10px 15px; border-radius:6px; font-weight:bold; cursor:pointer; box-shadow: 0 2px 4px rgba(37,99,235,0.2);">👥 Manage Staff List</button>
+            <button onclick="backupDatabase()" style="background:#b45309; color:white; border:none; padding:10px 15px; border-radius:6px; font-weight:bold; cursor:pointer; box-shadow: 0 2px 4px rgba(180,83,9,0.2);">💾 Backup Database</button>
+            <label style="background:#b45309; color:white; border:none; padding:10px 15px; border-radius:6px; font-weight:bold; cursor:pointer; box-shadow: 0 2px 4px rgba(180,83,9,0.2);">📂 Restore Backup<input type="file" id="restoreFileInput" accept=".json" style="display:none;" onchange="restoreDatabase(event)"></label>
+            <button onclick="checkPendingCount()" style="background:#0f766e; color:white; border:none; padding:10px 15px; border-radius:6px; font-weight:bold; cursor:pointer; box-shadow: 0 2px 4px rgba(15,118,110,0.2);">🔎 Check Pending</button>
+            <button onclick="clearLocalOfflineQueue()" style="background:#dc2626; color:white; border:none; padding:10px 15px; border-radius:6px; font-weight:bold; cursor:pointer; box-shadow: 0 2px 4px rgba(220,38,38,0.2);">🧹 Clear Local Queue</button>
+            <button onclick="backupAndResetRecords()" style="background:#7f1d1d; color:white; border:none; padding:10px 15px; border-radius:6px; font-weight:bold; cursor:pointer; box-shadow: 0 2px 4px rgba(127,29,29,0.25);">⚠️ Backup & Reset Records</button>
+            <button onclick="manageDeviceApprovals()" style="background:#312e81; color:white; border:none; padding:10px 15px; border-radius:6px; font-weight:bold; cursor:pointer; box-shadow: 0 2px 4px rgba(49,46,129,0.25);">🛡️ Device Approval</button>
+            <button onclick="viewAuditLog()" style="background:#111827; color:white; border:none; padding:10px 15px; border-radius:6px; font-weight:bold; cursor:pointer; box-shadow: 0 2px 4px rgba(17,24,39,0.25);">📜 Audit Log</button>
+            <button id="deleteRequestsBtn" onclick="viewDeleteRequests()" style="background:#991b1b; color:white; border:none; padding:10px 15px; border-radius:6px; font-weight:bold; cursor:pointer; box-shadow: 0 2px 4px rgba(153,27,27,0.25);">🗑️ Delete Requests <span id="deleteRequestCountBadge" class="delete-count-badge">0</span></button>
+        </div>
+        <button id="deleteRequestAlert" onclick="viewDeleteRequests()" type="button"><span>⚠️ Staff delete requests are waiting for your review</span><span id="deleteRequestAlertCount">0 Pending</span></button>
+    </div>
+
+    <div class="tabs-nav">
+        <button class="tab-btn active" id="tabBtnOrder" onclick="switchTab('ordersTab', this)">📝 Preorder</button>
+        <button class="tab-btn" id="tabBtnQuote" onclick="switchTab('quoteTab', this)">📄 Quotation</button>
+        <button class="tab-btn" id="tabBtnEnquire" onclick="switchTab('enquireTab', this)">💬 Enquiry</button>
+        <button class="tab-btn" id="tabBtnRestock" onclick="switchTab('restockTab', this)">📦 Restock Register</button>
+    </div>
+    
+    <div id="ordersTab" class="tab-content active">
+        <div id="cashDashboard" class="cash-dashboard" style="display:none;">
+            <div class="cash-stat"><h4>Today's Deposits</h4><div id="todayDepositVal">RM 0.00</div></div>
+            <div style="font-size:24px; opacity:0.5;">+</div>
+            <div class="cash-stat"><h4>Cleared Balances</h4><div id="todayBalanceVal">RM 0.00</div></div>
+            <div style="font-size:24px; opacity:0.5;">=</div>
+            <div class="cash-stat"><h4>Total Cash In</h4><div id="todayTotalCash">RM 0.00</div></div>
+        </div>
+
+        <div style="background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 25px;">
+            <div class="form-grid">
+                <div><span class="label-text">Customer Name</span><input type="text" id="custName" placeholder="Name" list="customerList" oninput="checkCRM('name', 'custPhone', 'carPlate', 'custName', 'carModel', 'chassisNumber')"></div>
+                <div><span class="label-text">WhatsApp Number</span><input type="text" id="custPhone" placeholder="60123456789" oninput="checkCRM('phone', 'custPhone', 'carPlate', 'custName', 'carModel', 'chassisNumber')"></div>
+                <div><span class="label-text">Car Plate No.</span><div style="display:flex; gap:5px;"><input type="text" id="carPlate" placeholder="e.g. JDT1234" oninput="this.value = this.value.toUpperCase().replace(/\s/g, ''); checkCRM('plate', 'custPhone', 'carPlate', 'custName', 'carModel', 'chassisNumber')"><button type="button" onclick="showPlateHistory('carPlate')" style="background:#4338ca; color:white; border:none; border-radius:6px; padding:0 12px; cursor:pointer; font-weight:bold;" title="Deep Cloud Search">🔍</button></div></div>
+                <div><span class="label-text">Car Model</span><input type="text" id="carModel" placeholder="e.g. Honda Civic"></div>
+                <div><span class="label-text">Chassis No.</span><input type="text" id="chassisNumber" placeholder="e.g. FC1" oninput="this.value = this.value.toUpperCase().replace(/\s/g, '')"></div>
+            </div>
+            
+            <div class="items-wrapper full-width" style="margin-bottom:0; border-color: #cbd5e1; border-bottom-left-radius:0; border-bottom-right-radius:0; border-bottom:none;">
+                <div class="items-header-bar"><h3>📋 Order Items List</h3><button type="button" class="add-item-btn" onclick="addNewItemBlock()">➕ Add Row</button></div>
+                <div class="pos-table-header"><div style="text-align:center;">No.</div><div>Part Desc</div><div>Item Code</div><div>Brand</div><div>Supplier</div><div>QTY</div><div>U.Price</div><div>Total</div><div>ETA</div><div style="text-align:center;">Photos</div><div style="text-align:center;">Del</div></div>
+                <div id="dynamicItemsContainer"></div>
+            </div>
+
+            <div class="sticky-footer full-width" style="margin:0; background:rgba(248, 250, 252, 0.95); border-left:1px solid #cbd5e1; border-right:1px solid #cbd5e1; border-bottom:1px solid #cbd5e1; border-top:none; border-radius:0 0 8px 8px;">
+                <div class="finance-group">
+                    <div><span class="label-text">Handled By</span><select id="orderByStaff" style="padding:10px;"><option value="">-- Select --</option></select></div>
+                    <div><span class="label-text">Remarks</span><input type="text" id="remarks" placeholder="Optional notes..." style="padding:10px;"></div>
+                    <div><span class="label-text">Grand Total (RM)</span><input type="number" id="totalPrice" placeholder="0.00" readonly class="readonly-input" style="padding:10px;"></div>
+                    <div><span class="label-text">Deposit (RM)</span><input type="number" id="deposit" placeholder="0.00" oninput="calcBalance()" style="padding:10px;"></div>
+                    <div><span class="label-text">Balance (RM)</span><input type="number" id="balance" placeholder="0.00" readonly class="readonly-input" style="padding:10px; color:#ef4444;"></div>
+                </div>
+                <div class="button-group"><button class="main-save-btn" id="mainBtn" onclick="saveOrUpdateOrder()">💾 Save & Sync</button><button class="cancel-btn" id="cancelBtn" onclick="cancelEdit()">Cancel</button></div>
+            </div>
+        </div>
+
+        <div class="top-controls">
+            <button onclick="refreshTabData('order')" class="sync-btn" style="border-radius:20px;">🔄 Refresh Orders</button><input type="text" id="searchInput" class="search-bar" placeholder="🔍 Search Name, Plate, Code, Remark, Staff..." oninput="renderTable()">
+            <select id="viewFilter" onchange="renderTable()" style="font-weight: bold; color: #2563eb; padding: 12px; border-radius: 20px;"><option value="active">Active Orders Only</option><option value="history">Completed History</option><option value="all">All Records</option></select>
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;"><span style="font-size:13px; font-weight:bold; color:#475569;">Date From:</span><input type="date" id="orderDateFromFilter" onchange="renderTable()" style="padding:12px; border-radius:20px; width:145px; border:1px solid #cbd5e1;"><span style="font-size:13px; font-weight:bold; color:#475569;">To:</span><input type="date" id="orderDateToFilter" onchange="renderTable()" style="padding:12px; border-radius:20px; width:145px; border:1px solid #cbd5e1;"><button onclick="clearDateFilter('order')" style="padding:12px; border-radius:20px; cursor:pointer; border:1px solid #cbd5e1; background:white; font-weight:bold;">Clear</button></div>
+            <button onclick="markSelectedArrived()" class="complete-btn" style="padding:12px 18px; border-radius:20px; cursor:pointer; border:none; font-weight:bold;">✅ Mark Selected Arrived</button>
+            <button id="exportBtn" class="export-btn" onclick="exportCSV()" style="padding:12px; border-radius:20px;">📥 Export Excel</button>
+        </div>
+
+        <div class="table-responsive">
+            <table>
+                <thead><tr><th style="width:30px;"><input type="checkbox" id="selectAllOrders" onchange="toggleAllOrderChecks(this)"></th><th style="width:110px;">Doc No.</th><th style="width:180px;">Customer / Car</th><th>Ordered Parts Details</th><th style="width:130px;">Financials</th><th style="width:100px;">Status</th><th style="width:160px; text-align:center;">WhatsApp Notify</th><th style="width:110px; text-align:center;">Actions</th></tr></thead>
+                <tbody id="orderTableBody"></tbody>
+            </table>
+        </div>
+        <button class="load-more-btn" onclick="loadMoreRecords('order')">👇 Load Older Orders (Next 200)</button>
+    </div>
+
+    <div id="quoteTab" class="tab-content">
+        <div style="background: #faf5ff; padding: 20px; border-radius: 8px; border: 1px solid #e9d5ff; margin-bottom: 25px;">
+            <div class="form-grid">
+                <div><span class="label-text">Customer Name</span><input type="text" id="qCustName" placeholder="Name" list="customerList" oninput="checkCRM('name', 'qCustPhone', 'qCarPlate', 'qCustName', 'qCarModel', 'qChassisNumber')"></div>
+                <div><span class="label-text">WhatsApp Number</span><input type="text" id="qCustPhone" placeholder="60123456789" oninput="checkCRM('phone', 'qCustPhone', 'qCarPlate', 'qCustName', 'qCarModel', 'qChassisNumber')"></div>
+                <div><span class="label-text">Car Plate No.</span><div style="display:flex; gap:5px;"><input type="text" id="qCarPlate" placeholder="e.g. JDT1234" oninput="this.value = this.value.toUpperCase().replace(/\s/g, ''); checkCRM('plate', 'qCustPhone', 'qCarPlate', 'qCustName', 'qCarModel', 'qChassisNumber')"><button type="button" onclick="showPlateHistory('qCarPlate')" style="background:#4338ca; color:white; border:none; border-radius:6px; padding:0 12px; cursor:pointer; font-weight:bold;" title="Deep Cloud Search">🔍</button></div></div>
+                <div><span class="label-text">Car Model</span><input type="text" id="qCarModel" placeholder="e.g. Honda Civic"></div>
+                <div><span class="label-text">Chassis No.</span><input type="text" id="qChassisNumber" placeholder="e.g. FC1" oninput="this.value = this.value.toUpperCase().replace(/\s/g, '')"></div>
+            </div>
+            
+            <div class="items-wrapper full-width" style="margin-bottom:0; border-color: #d8b4fe; border-bottom-left-radius:0; border-bottom-right-radius:0; border-bottom:none;">
+                <div class="items-header-bar" style="background-color: #f3e8ff; border-color: #d8b4fe;"><h3>📄 Quotation Items List</h3><button type="button" class="add-item-btn" style="background:#8b5cf6;" onclick="addQItemBlock()">➕ Add Row</button></div>
+                <div class="pos-table-header"><div style="text-align:center;">No.</div><div>Part Desc</div><div>Item Code</div><div>Brand</div><div>Supplier</div><div>QTY</div><div>U.Price</div><div>Total</div><div>ETA</div><div style="text-align:center;">Photos</div><div style="text-align:center;">Del</div></div>
+                <div id="qDynamicItemsContainer"></div>
+            </div>
+
+            <div class="sticky-footer full-width" style="margin:0; background:rgba(250, 245, 255, 0.95); border-left:1px solid #d8b4fe; border-right:1px solid #d8b4fe; border-bottom:1px solid #d8b4fe; border-top:none; border-radius:0 0 8px 8px;">
+                <div class="finance-group">
+                    <div><span class="label-text">Quoted By Staff</span><select id="qOrderByStaff" style="padding:10px;"><option value="">-- Select --</option></select></div>
+                    <div><span class="label-text">Remarks</span><input type="text" id="qRemarks" placeholder="Optional notes..." style="padding:10px;"></div>
+                    <div><span class="label-text">Quotation Grand Total (RM)</span><input type="number" id="qTotalPrice" placeholder="0.00" class="readonly-input" readonly style="padding:10px; color:#6d28d9;"></div>
+                </div>
+                <div class="button-group"><button class="main-save-quote" id="qMainBtn" onclick="saveOrUpdateQuote()">💾 Save Quotation</button><button class="cancel-btn" id="qCancelBtn" onclick="cancelQEdit()">Cancel Edit</button></div>
+            </div>
+        </div>
+
+        <div class="top-controls">
+            <button onclick="refreshTabData('quote')" class="sync-btn" style="border-radius:20px;">🔄 Refresh Quotes</button><input type="text" id="qSearchInput" class="search-bar" placeholder="🔍 Search Name, Plate, Code, Remark, Staff..." oninput="renderQTable()"><select id="qViewFilter" onchange="renderQTable()" style="font-weight: bold; color: #8b5cf6; padding: 12px; border-radius: 20px;"><option value="active">Active Quotations Only</option><option value="history">Completed History</option><option value="all">All Records</option></select>
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;"><span style="font-size:13px; font-weight:bold; color:#475569;">Date From:</span><input type="date" id="quoteDateFromFilter" onchange="renderQTable()" style="padding:12px; border-radius:20px; width:145px; border:1px solid #cbd5e1;"><span style="font-size:13px; font-weight:bold; color:#475569;">To:</span><input type="date" id="quoteDateToFilter" onchange="renderQTable()" style="padding:12px; border-radius:20px; width:145px; border:1px solid #cbd5e1;"><button onclick="clearDateFilter('quote')" style="padding:12px 18px; border-radius:20px; cursor:pointer; border:1px solid #cbd5e1; background:white; font-weight:bold;">Clear</button></div>
+        </div>
+
+        <div class="table-responsive">
+            <table>
+                <thead><tr><th style="width:110px;">Quote No.</th><th style="width:180px;">Customer / Car</th><th>Quoted Parts Details</th><th style="width:130px;">Total Amount</th><th style="width:160px; text-align:center;">WhatsApp Send</th><th style="width:110px; text-align:center;">Actions</th></tr></thead>
+                <tbody id="quoteTableBody"></tbody>
+            </table>
+        </div>
+        <button class="load-more-btn" onclick="loadMoreRecords('quote')">👇 Load Older Quotes (Next 200)</button>
+    </div>
+
+    <div id="enquireTab" class="tab-content">
+        <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; border: 1px solid #bae6fd; margin-bottom: 25px;">
+            <div class="form-grid">
+                <div><span class="label-text">Customer Name</span><input type="text" id="eCustName" placeholder="Name" list="customerList" oninput="checkCRM('name', 'eCustPhone', 'eCarPlate', 'eCustName', 'eCarModel', 'eChassisNumber')"></div>
+                <div><span class="label-text">WhatsApp Number</span><input type="text" id="eCustPhone" placeholder="60123456789" oninput="checkCRM('phone', 'eCustPhone', 'eCarPlate', 'eCustName', 'eCarModel', 'eChassisNumber')"></div>
+                <div><span class="label-text">Car Plate No.</span><div style="display:flex; gap:5px;"><input type="text" id="eCarPlate" placeholder="e.g. JDT1234" oninput="this.value = this.value.toUpperCase().replace(/\s/g, ''); checkCRM('plate', 'eCustPhone', 'eCarPlate', 'eCustName', 'eCarModel', 'eChassisNumber')"><button type="button" onclick="showPlateHistory('eCarPlate')" style="background:#4338ca; color:white; border:none; border-radius:6px; padding:0 12px; cursor:pointer; font-weight:bold;" title="Deep Cloud Search">🔍</button></div></div>
+                <div><span class="label-text">Car Model</span><input type="text" id="eCarModel" placeholder="e.g. Honda Civic"></div>
+                <div><span class="label-text">Chassis No.</span><input type="text" id="eChassisNumber" placeholder="e.g. FC1" oninput="this.value = this.value.toUpperCase().replace(/\s/g, '')"></div>
+            </div>
+            
+            <div class="items-wrapper full-width" style="margin-bottom:0; border-color: #bae6fd; border-bottom-left-radius:0; border-bottom-right-radius:0; border-bottom:none;">
+                <div class="items-header-bar" style="background-color: #e0f2fe; border-color: #bae6fd;"><h3>💬 Enquiry Items List</h3><button type="button" class="add-item-btn" style="background:#0284c7;" onclick="addEItemBlock()">➕ Add Row</button></div>
+                <div class="pos-table-header"><div style="text-align:center;">No.</div><div>Part Desc</div><div>Item Code</div><div>Brand</div><div>Supplier</div><div>QTY</div><div>U.Price</div><div>Total</div><div>ETA</div><div style="text-align:center;">Photos</div><div style="text-align:center;">Del</div></div>
+                <div id="eDynamicItemsContainer"></div>
+            </div>
+
+            <div class="sticky-footer full-width" style="margin:0; background:rgba(240, 249, 255, 0.95); border-left:1px solid #bae6fd; border-right:1px solid #bae6fd; border-bottom:1px solid #bae6fd; border-top:none; border-radius:0 0 8px 8px;">
+                <div class="finance-group">
+                    <div><span class="label-text">Handled By</span><select id="eOrderByStaff" style="padding:10px;"><option value="">-- Select --</option></select></div>
+                    <div><span class="label-text">Remarks</span><input type="text" id="eRemarks" placeholder="Optional notes..." style="padding:10px;"></div>
+                    <div><span class="label-text">Estimated Total (RM)</span><input type="number" id="eTotalPrice" placeholder="0.00" class="readonly-input" readonly style="padding:10px; color:#0369a1;"></div>
+                </div>
+                <div class="button-group"><button class="main-save-enq" id="eMainBtn" onclick="saveOrUpdateEnquire()">💾 Save Enquiry</button><button class="cancel-btn" id="eCancelBtn" onclick="cancelEEdit()">Cancel Edit</button></div>
+            </div>
+        </div>
+
+        <div class="top-controls">
+            <button onclick="refreshTabData('enquire')" class="sync-btn" style="border-radius:20px;">🔄 Refresh Enquiries</button><input type="text" id="eSearchInput" class="search-bar" placeholder="🔍 Search Name, Plate, Code, Remark, Staff..." oninput="renderETable()"><select id="eViewFilter" onchange="renderETable()" style="font-weight: bold; color: #0284c7; padding: 12px; border-radius: 20px;"><option value="active">Active Enquiries Only</option><option value="history">Completed History</option><option value="all">All Records</option></select>
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;"><span style="font-size:13px; font-weight:bold; color:#475569;">Date From:</span><input type="date" id="enquireDateFromFilter" onchange="renderETable()" style="padding:12px; border-radius:20px; width:145px; border:1px solid #cbd5e1;"><span style="font-size:13px; font-weight:bold; color:#475569;">To:</span><input type="date" id="enquireDateToFilter" onchange="renderETable()" style="padding:12px; border-radius:20px; width:145px; border:1px solid #cbd5e1;"><button onclick="clearDateFilter('enquire')" style="padding:12px 18px; border-radius:20px; cursor:pointer; border:1px solid #cbd5e1; background:white; font-weight:bold;">Clear</button></div>
+        </div>
+
+        <div class="table-responsive">
+            <table>
+                <thead><tr><th style="width:110px;">Enq No.</th><th style="width:180px;">Customer / Car</th><th>Enquired Parts Details</th><th style="width:130px;">Total Amount</th><th style="width:160px; text-align:center;">WhatsApp Send</th><th style="width:110px; text-align:center;">Actions</th></tr></thead>
+                <tbody id="enquireTableBody"></tbody>
+            </table>
+        </div>
+        <button class="load-more-btn" onclick="loadMoreRecords('enquire')">👇 Load Older Enquiries (Next 200)</button>
+    </div>
+
+    <div id="restockTab" class="tab-content">
+        <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 25px;">
+            <h3 style="margin-top:0; color:#3730a3; margin-bottom:15px;">Manual Input (Low Stock / Order Request)</h3>
+            <div class="restock-grid" style="margin-bottom: 15px;">
+                <div><span class="label-text">Part Description</span><div class="input-wrapper"><input type="text" id="r_part" placeholder="e.g. Brake Pad" autocomplete="off" oninput="handleRestockInput(this)" onfocus="handleRestockInput(this)"><div id="r_autocomplete" class="autocomplete-list" style="display:none;"></div></div></div>
+                <div><span class="label-text">Item Code / OEM No</span><input type="text" id="r_code" placeholder="OEM Code / Search history" autocomplete="off" oninput="this.value=this.value.toUpperCase().replace(/\\s/g,''); mmcLookupRestock(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault(); mmcLookupRestock(this.value)}"><div style="font-size:12px;font-weight:700;color:#1d4ed8;margin-top:7px;">🔎 Smart Part Lookup <span style="font-weight:400;color:#64748b;">(type 2+ characters, then SELECT a match)</span></div><div id="mmcPartLookupResults" style="display:none;background:white;border:1px solid #cbd5e1;border-radius:6px;max-height:230px;overflow:auto;margin-top:5px;position:relative;z-index:3;"></div><div id="mmcPreviousCost" style="font-size:12px;color:#475569;margin-top:5px;" aria-live="polite"></div></div>
+                <div><span class="label-text">Brand</span><input type="text" id="r_brand" placeholder="e.g. TRW"></div>
+                <div><span class="label-text">Supplier (approved or pending)</span><input type="text" id="r_supp" placeholder="Search or enter supplier name" list="supplierList" oninput="v742bSupplierHint();v75RenderSupplierMatches()" onblur="v742bSupplierHint()"><div id="v75SupplierMatches" role="listbox" style="display:none;margin-top:5px"></div><div id="v742bSupplierHint" style="font-size:12px;color:#475569;margin-top:4px" aria-live="polite"></div><button type="button" onclick="v742bShowRequest()" style="font-size:12px;margin-top:5px;padding:5px 8px;border-radius:5px;border:1px solid #64748b;background:white">+ Add Supplier Now</button></div>
+                <div><span class="label-text">Car Model</span><input type="text" id="r_car" placeholder="e.g. Axia"></div>
+                <div><span class="label-text">On Hand Qty</span><input type="number" id="r_onHand" placeholder="0"></div>
+                <div><span class="label-text">Order Qty</span><input type="number" id="r_needOrder" placeholder="1"></div>
+                <div><span class="label-text">Unit Cost (RM)</span><input type="number" id="r_unitCost" min="0" step="0.01" placeholder="0.00" oninput="sanitizeNonNegativeInput(this); calcRestockCost()"></div>
+                <div><span class="label-text">Total Cost (RM)</span><input type="number" id="r_totalCost" min="0" step="0.01" placeholder="0.00" readonly class="readonly-input"></div>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px dashed #cbd5e1; padding-top:15px; flex-wrap:wrap; gap:10px;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <label class="photo-upload-btn" style="width: auto; padding: 0 15px; height:42px; background:white;">📷 Take/Upload <span id="r_count">0</span>/5<input type="file" accept="image/*" multiple capture="environment" onchange="processRestockPhotos(event)" style="display:none;"></label>
+                    <div id="r_gallery" class="row-gallery" style="padding:0; grid-column:unset;"></div>
+                </div>
+                <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                    <button class="add-item-btn" id="addRestockBtn" onclick="addRestockItem()" style="height:42px; width:180px; font-size:14px; background-color:#2563eb;">➕ Add to Restock</button><span id="mmcQuickEntryStatus" style="font-size:12px;color:#166534;" aria-live="polite"></span>
+                    <button class="cancel-btn" id="cancelRestockEditBtn" onclick="cancelRestockEdit()" style="height:42px; width:130px; font-size:14px; display:none; background:#64748b; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">Cancel Edit</button>
+                </div>
+            </div>
+        </div>
+
+        <section id="v75SupplierRequestPanel" style="display:none;margin:8px 0 16px;padding:12px;border:1px solid #bfdbfe;border-radius:8px;background:#eff6ff"><h4 style="margin:0 0 8px">+ New Supplier (Pending Boss Review)</h4><div id="v742bRequestForm" style="display:none;margin-top:12px;border-top:1px solid #cbd5e1;padding-top:12px"><label>Proposed Supplier Name <input id="v742bProposedName" maxlength="120" placeholder="Legal company name" style="width:100%;padding:8px;box-sizing:border-box"></label><label>Reason / Details <input id="v742bRequestReason" maxlength="300" placeholder="Why is this a new company?" style="width:100%;padding:8px;box-sizing:border-box"></label><button type="button" onclick="v742bSubmitSupplierRequest()" style="padding:9px;margin-top:8px;background:#1d4ed8;color:white;border:0;border-radius:6px">Add Pending Supplier &amp; Continue</button></div><button type="button" onclick="v75HideRequest()" style="margin:8px 0;padding:6px 10px">Cancel</button><div id="v742bSupplierStatus" role="status" aria-live="polite" style="font-size:12px;color:#475569;margin-top:8px"></div></section>
+        <section id="v75BossSupplierManagement" style="display:none;margin:12px 0;padding:12px;border:1px solid #cbd5e1;border-radius:8px;background:#f8fafc"><details id="v742bBossPanel" style="display:none;margin-top:12px;border-top:1px solid #cbd5e1;padding-top:12px"><summary style="cursor:pointer;font-weight:bold">👑 Boss Supplier Management (click to expand)</summary><div><h4 style="margin:0 0 8px">👑 Boss: Pending Supplier Reviews</h4><div id="v742bPendingRequests"></div><div style="margin-top:10px"><input id="v742bNewOfficial" maxlength="120" placeholder="Official supplier company name" style="padding:9px;min-width:200px"><button type="button" onclick="v742bCreateSupplier()" style="padding:9px">Create Official Supplier</button></div></div></details><div id="v742bSupplierList" style="margin-top:10px;font-size:13px"></div></section>
+        <div class="top-controls" style="background:#f8fafc; padding:15px; border-radius:8px; border:1px solid #e2e8f0; align-items:center;">
+            <button onclick="refreshTabData('restock')" class="sync-btn" style="border-radius:6px;">🔄 Refresh Restock</button><div id="v742aSearchPanel" style="width:100%;padding:12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;margin:8px 0;box-sizing:border-box;"><div style="font-weight:800;color:#1e40af;margin-bottom:7px;">🔎 Universal Restock Search — V75</div><div style="display:flex;gap:8px;flex-wrap:wrap;"><input id="v742aQuery" type="search" autocomplete="off" placeholder="Part No / Item / Brand / Supplier / Car Model (multiple words)" oninput="renderRestockTable()" style="flex:1;min-width:230px;padding:10px;border:1px solid #94a3b8;border-radius:6px;"><button type="button" onclick="v742aSearchAllHistory()" id="v742aAllHistoryBtn" style="padding:10px;border-radius:6px;background:#1d4ed8;color:white;border:0;font-weight:bold;">Load All History</button><button type="button" onclick="v742aClearSearch()" style="padding:10px;border:1px solid #94a3b8;border-radius:6px;background:white;">Clear Search</button></div><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:9px;"><label for="v742aScope" style="font-weight:700;font-size:13px;color:#1e40af;">Search In:</label><select id="v742aScope" onchange="v742aChangeScope()" style="padding:9px;border:1px solid #94a3b8;border-radius:6px;"><option value="active">Active List (default)</option><option value="all">All History</option></select><span style="font-size:12px;color:#475569;">All History loads from Firebase when selected.</span></div><div id="v742aSearchStatus" role="status" aria-live="polite" style="font-size:12px;color:#334155;margin-top:7px;">Default: Active List. Choose All History to load older Firebase records.</div></div><select id="rViewFilter" onchange="renderRestockTable()" style="padding:10px; border-radius:6px; font-weight:bold; color:#2563eb; border:1px solid #cbd5e1;"><option value="active">Active List (Not Yet Order)</option><option value="history">History (Ordered)</option><option value="all">All Items</option></select>
+            <select id="rSuppFilter" onchange="renderRestockTable()" style="padding:10px; border-radius:6px; font-weight:bold; border:1px solid #cbd5e1; background: #fffbeb; color: #b45309;"><option value="all">🔍 All Suppliers</option></select>
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;"><span style="font-size:13px; font-weight:bold; color:#475569;">Date From:</span><input type="date" id="rDateFromFilter" onchange="renderRestockTable()" style="padding:10px; border-radius:6px; width:155px; border:1px solid #cbd5e1;"><span style="font-size:13px; font-weight:bold; color:#475569;">To:</span><input type="date" id="rDateToFilter" onchange="renderRestockTable()" style="padding:10px; border-radius:6px; width:155px; border:1px solid #cbd5e1;"><button onclick="clearDateFilter('restock')" style="padding:10px; border-radius:6px; cursor:pointer; border:1px solid #cbd5e1; background:white; font-weight:bold;">Clear</button></div>
+            <div style="margin-left:auto; display:flex; gap:10px; flex-wrap:wrap;"><button class="print-btn" onclick="printRestock()" style="padding:10px 15px; border-radius:6px; font-weight:bold; cursor:pointer;">🖨️ Print PO List</button><button class="print-btn" onclick="saveRestockPDF()" style="padding:10px 15px; border-radius:6px; font-weight:bold; cursor:pointer;">📄 Supplier PO (RM0)</button><button class="print-btn boss-restock" onclick="saveRestockBossPDF()" style="display:none; padding:10px 15px; border-radius:6px; font-weight:bold; cursor:pointer; background:#7c3aed;">👑 Boss Cost PO</button><button class="wa-btn" style="background:#25D366; margin:0; padding:10px 15px; border-radius:6px; font-size:13px;" onclick="sendRestockWA('60194482580', 'Hock')">📲 WA Hock</button><button class="wa-btn" style="background:#25D366; margin:0; padding:10px 15px; border-radius:6px; font-size:13px;" onclick="sendRestockWA('60164401970', 'Kelvin')">📲 WA Kelvin</button><button class="complete-btn" onclick="markFilteredOrdered()" style="margin:0; padding:10px 15px; border-radius:6px; font-size:13px;">📦 Mark View as Ordered</button></div>
+        </div>
+        <div id="v742cTools" style="background:#eef2ff;border:1px solid #c7d2fe;border-radius:8px;padding:12px;margin:12px 0;display:flex;align-items:center;gap:10px;flex-wrap:wrap"><label style="font-weight:700">Display: <select id="v742cGrouping" onchange="renderRestockTable()" style="padding:8px"><option value="normal">Normal List</option><option value="supplier">Group by Supplier</option></select></label><button type="button" onclick="v742cSelectVisible(true)" style="padding:8px">Select Visible</button><button type="button" onclick="v742cSelectVisible(false)" style="padding:8px">Clear Selection</button><button type="button" onclick="v742cGeneratePO('supplier')" style="padding:9px;background:#1d4ed8;color:white;border:0;border-radius:6px">📄 Selected Supplier POs</button><button type="button" class="boss-restock" onclick="v742cGeneratePO('boss')" style="display:none;padding:9px;background:#6d28d9;color:white;border:0;border-radius:6px">👑 Selected Boss POs</button><span id="v742cSelectedCount" role="status" style="font-size:12px;color:#334155">0 selected</span></div><div class="table-responsive"><table><thead id="restockThead"></thead><tbody id="restockTableBody"></tbody></table></div>
+        <button class="load-more-btn" onclick="loadMoreRecords('restock')">👇 Load Older Restock Logs (Next 200)</button>
+    </div>
+</div>
+
+<div id="photoModal" onclick="closePhoto()"><img id="modalImg" src=""><div style="color:white; margin-top:15px; font-weight:bold; letter-spacing:1px;">Click anywhere to close</div></div>
+<div id="historyModal"><div id="historyContent"></div></div>
+
+<datalist id="customerList"></datalist><datalist id="supplierList"></datalist>
+
+<script>
+    const firebaseConfig = {
+    apiKey: "AIzaSyDdTc6A67sqq1D5vMRWI1q-bhGsSd5DQBs",
+    authDomain: "malaysia-motor-preorder.firebaseapp.com",
+    databaseURL: "https://malaysia-motor-preorder-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "malaysia-motor-preorder",
+    storageBucket: "malaysia-motor-preorder.firebasestorage.app",
+    messagingSenderId: "409637154704",
+    appId: "1:409637154704:web:ac1ed4603fb62bd0258d15",
+    measurementId: "G-CPSC89HTB5"
+    };
+    
+    // MMC_STARTUP_FAILSAFE V75
+    // Never leave the user on a blank screen if Firebase/Auth startup is delayed.
+    const mmcStartupTimer = setTimeout(() => {
+        const loginScreen = document.getElementById('loginScreen');
+        const normalLoginBox = document.getElementById('normalLoginBox');
+        const status = document.getElementById('startupStatus');
+        if (loginScreen) loginScreen.style.display = 'flex';
+        if (normalLoginBox) normalLoginBox.style.display = 'block';
+        if (status) {
+            status.textContent = navigator.onLine
+                ? 'Cloud connection is taking longer than expected. You can retry login or refresh.'
+                : 'Device is offline. Connect to internet for login.';
+            status.style.color = '#b45309';
+        }
+    }, 8000);
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth(); const db = firebase.database(); const storage = firebase.storage(); 
+    const BOSS_EMAIL = "admin@mmc.com"; 
+
+    let orders = [], quotes = [], enquiries = [], restockItems = [], currentRestockView = []; 
+    let productDictionary = [], customerDictionary = [];
+    let editingId = null, qEditingId = null, eEditingId = null;
+    let isDataLoaded = false, isAdmin = false; 
+    let itemMapIdCounter = 0, itemPhotosMap = {}; 
+    let qItemMapIdCounter = 0, qItemPhotosMap = {}; 
+    let eItemMapIdCounter = 0, eItemPhotosMap = {}; 
+    let currentRestockPhotos = []; 
+    let restockEditingId = null; 
+    let deleteRequestWatchCallback = null;
+    let staffList = ['Hock', 'Kelvin', 'Nana', 'Adi', 'Khairul', 'Sani', 'Lun']; 
+    let orderLimit = 200, quoteLimit = 200, enquireLimit = 200, restockLimit = 200;
+
+    const smartSearchDefaults = ["Honda Chassis SNA / Civic", "Honda Chassis TMO / City", "Honda Chassis FC / Civic", "125D31R Battery (Right Terminal)", "125D31L Battery (Left Terminal)", "5W-30 Fully Synthetic Engine Oil", "0W-20 Advanced Engine Oil"];
+
+    window.handlePartInput = function(inputEl, rowId) {
+        const val = inputEl.value.toLowerCase().trim(); const listEl = document.getElementById('autocomplete_' + rowId); listEl.innerHTML = '';
+        if (val.length < 2) { listEl.style.display = 'none'; return; }
+        let matches = [];
+        smartSearchDefaults.forEach(def => { if (def.toLowerCase().includes(val)) { matches.push({ part: def, partNo: '', brand: '', supplier: '', price: '' }); }});
+        productDictionary.forEach(p => { if (!matches.find(m => m.part === p.part && m.partNo === p.partNo) && (p.part.toLowerCase().includes(val) || (p.partNo && p.partNo.toLowerCase().includes(val)))) { matches.push(p); }});
+        matches = matches.slice(0, 10); 
+        if (matches.length === 0) { listEl.style.display = 'none'; return; }
+        matches.forEach(m => {
+            const div = document.createElement('div'); div.className = 'autocomplete-item';
+            div.innerHTML = `<strong style="color:#0f172a;">${escapeHTML(m.part)}</strong> <span style="color:#64748b; font-size:11px;">${m.partNo ? `[${escapeHTML(m.partNo)}]` : ''} ${m.brand ? `Brd:${escapeHTML(m.brand)}` : ''}</span> <strong style="color:#10b981; float:right;">${m.price ? `RM${escapeHTML(m.price)}` : ''}</strong>`;
+            div.onclick = () => {
+                inputEl.value = m.part; listEl.style.display = 'none'; const row = document.getElementById(rowId);
+                if(row) {
+                    if(m.partNo) row.querySelector('.i-partNo').value = m.partNo; if(m.brand) row.querySelector('.i-brand').value = m.brand;
+                    if(m.supplier) row.querySelector('.i-supplier').value = m.supplier; if(m.price && !row.querySelector('.i-unitPrice').value) row.querySelector('.i-unitPrice').value = m.price;
+                    if(rowId.startsWith('q_')) calcQRowTotal(rowId); else if(rowId.startsWith('e_')) calcERowTotal(rowId); else calcRowTotal(rowId);
+                }
+            }; listEl.appendChild(div);
+        }); listEl.style.display = 'block';
+    };
+
+    window.handleRestockInput = function(inputEl) {
+        const val = inputEl.value.toLowerCase().trim(); const listEl = document.getElementById('r_autocomplete'); listEl.innerHTML = '';
+        if (val.length < 2) { listEl.style.display = 'none'; return; }
+        let matches = productDictionary.filter(p => p.part.toLowerCase().includes(val) || (p.partNo && p.partNo.toLowerCase().includes(val))).slice(0, 10);
+        if (matches.length === 0) { listEl.style.display = 'none'; return; }
+        matches.forEach(m => {
+            const div = document.createElement('div'); div.className = 'autocomplete-item';
+            div.innerHTML = `<strong style="color:#0f172a;">${escapeHTML(m.part)}</strong> <span style="color:#64748b; font-size:11px;">${m.partNo ? `[${escapeHTML(m.partNo)}]` : ''} ${m.brand ? `Brd:${escapeHTML(m.brand)}` : ''}</span>`;
+            div.onclick = () => {
+                inputEl.value = m.part; listEl.style.display = 'none';
+                if(m.partNo && !document.getElementById('r_code').value) document.getElementById('r_code').value = m.partNo;
+                if(m.brand && !document.getElementById('r_brand').value) document.getElementById('r_brand').value = m.brand;
+                if(m.supplier && !document.getElementById('r_supp').value) document.getElementById('r_supp').value = m.supplier;
+            }; listEl.appendChild(div);
+        }); listEl.style.display = 'block';
+    };
+
+    document.addEventListener('click', function(e) { if (!e.target.classList.contains('i-part') && e.target.id !== 'r_part') { document.querySelectorAll('.autocomplete-list').forEach(el => el.style.display = 'none'); }});
+
+    async function uploadBase64ToStorage(base64Array) {
+        let uploadedUrls = [];
+        if (!Array.isArray(base64Array)) return uploadedUrls;
+
+        for (let idx = 0; idx < base64Array.length; idx++) {
+            const b64 = base64Array[idx];
+            if (!b64) continue;
+
+            // V73: Only keep existing secure Firebase/HTTPS photo URLs.
+            // Do not allow http:// or arbitrary data:image types such as SVG.
+            if (typeof b64 === 'string' && b64.startsWith('https://')) {
+                uploadedUrls.push(b64);
+                continue;
+            }
+
+            // V73: Only upload safe raster base64 image types.
+            // Blocks data:image/svg+xml and malformed data URLs before Firebase Storage upload.
+            if (
+                typeof b64 !== 'string' ||
+                !/^data:image\/(png|jpe?g|webp|gif);base64,/i.test(b64)
+            ) {
+                console.warn('Skipped invalid photo data:', b64);
+                continue;
+            }
+
+            const fileRef = storage.ref('order_photos/' + Date.now() + '_' + Math.floor(Math.random() * 100000) + '.jpg');
+            try {
+                await withTimeout(
+                    fileRef.putString(b64, 'data_url'),
+                    30000,
+                    `Photo ${idx + 1} upload timeout. Please check internet/Firebase Storage and try again.`
                 );
-            })
-            .then(() => self.clients.claim())
-    );
-});
-
-self.addEventListener("fetch", (e) => {
-    if (
-        e.request.url.includes("firebaseio.com") ||
-        e.request.url.includes("firebaseapp.com") ||
-        e.request.url.includes("googleapis.com") ||
-        e.request.url.includes("gstatic.com")
-    ) {
-        e.respondWith(fetch(e.request));
-        return;
+                const url = await withTimeout(
+                    fileRef.getDownloadURL(),
+                    15000,
+                    `Photo ${idx + 1} URL timeout. Please try again.`
+                );
+                uploadedUrls.push(url);
+            } catch (err) {
+                console.error('Photo upload failed:', err);
+                throw new Error(err && err.message ? err.message : 'Photo upload failed.');
+            }
+        }
+        return uploadedUrls;
     }
 
-    if (e.request.mode === "navigate") {
-        e.respondWith(
-            fetch(e.request)
-                .then((response) => {
-                    const clonedResponse = response.clone();
-                    caches.open(CACHE_NAME).then((cache) => {
-                        cache.put("./index.html", clonedResponse);
-                    });
-                    return response;
-                })
-                .catch(() => caches.match("./index.html"))
-        );
-        return;
+    function rotatePhotoBase64(base64data, callback) {
+        const img = new Image(); img.onload = function() {
+            const canvas = document.createElement('canvas'); canvas.width = img.height; canvas.height = img.width; const ctx = canvas.getContext('2d');
+            ctx.translate(canvas.width / 2, canvas.height / 2); ctx.rotate(90 * Math.PI / 180); ctx.drawImage(img, -img.width / 2, -img.height / 2); callback(canvas.toDataURL('image/jpeg', 0.8));
+        }; img.src = base64data;
     }
 
-    e.respondWith(
-        caches.match(e.request).then((response) => {
-            return response || fetch(e.request);
-        })
-    );
-});
-
-self.addEventListener("message", (event) => {
-    if (event.data === "SKIP_WAITING") {
-        self.skipWaiting();
+    window.rotateImage = function(itemId, index, listType) {
+        let targetMap = listType === 'quote' ? qItemPhotosMap : (listType === 'enquire' ? eItemPhotosMap : itemPhotosMap);
+        let targetRender = listType === 'quote' ? renderQGalleryUI : (listType === 'enquire' ? renderEGalleryUI : renderGalleryUI);
+        rotatePhotoBase64(targetMap[itemId][index], (newBase64) => { targetMap[itemId][index] = newBase64; targetRender(itemId); });
     }
-});
+
+    // ==========================================
+    // V73 OFFLINE ENGINE - Auth Ready + Better Error + Safer Photo Sync
+    // ==========================================
+    const netBadge = document.getElementById('networkBadge');
+
+    let offlineDB = null;
+    let offlineRecords = [];
+    let isSyncingOffline = false;
+
+    function updateNetworkStatus() {
+        const pending = offlineRecords && offlineRecords.length ? ` | Pending: ${offlineRecords.length}` : '';
+        if (navigator.onLine) {
+            netBadge.innerText = '🟢 Online (Live Cloud Sync)' + pending;
+            netBadge.className = 'net-online';
+            checkOfflineQueue();
+        } else {
+            netBadge.innerText = '🔴 Offline (Saving Local)' + pending;
+            netBadge.className = 'net-offline';
+        }
+    }
+
+    window.addEventListener('online', updateNetworkStatus);
+    window.addEventListener('offline', updateNetworkStatus);
+
+    const dbReq = indexedDB.open("MMC_OfflineDB", 1);
+
+    dbReq.onupgradeneeded = function(e) {
+        offlineDB = e.target.result;
+        if (!offlineDB.objectStoreNames.contains('offlineData')) {
+            offlineDB.createObjectStore('offlineData', { keyPath: 'tempId' });
+        }
+    };
+
+    dbReq.onsuccess = function(e) {
+        offlineDB = e.target.result;
+        refreshOfflineRecords();
+        updateNetworkStatus();
+    };
+
+    dbReq.onerror = function() {
+        alert("⚠️ Offline database failed to open. Offline saving may not work on this device.");
+    };
+
+    function refreshOfflineRecords() {
+        if (!offlineDB) return;
+
+        const tx = offlineDB.transaction('offlineData', 'readonly');
+        const req = tx.objectStore('offlineData').getAll();
+
+        req.onsuccess = function() {
+            offlineRecords = req.result || [];
+            if (typeof renderTable === 'function') renderTable();
+            if (typeof renderQTable === 'function') renderQTable();
+            if (typeof renderETable === 'function') renderETable();
+            if (typeof renderRestockTable === 'function') renderRestockTable();
+            updateNetworkStatus();
+        };
+
+        req.onerror = function() {
+            console.warn("Unable to read offline records.");
+        };
+    }
+
+    function saveToOfflineQueue(type, payload) {
+        if (!offlineDB) {
+            alert("⚠️ Offline memory is still loading. Please try again in a few seconds.");
+            return;
+        }
+
+        const tempId = 'off_' + Date.now().toString() + '_' + Math.floor(Math.random() * 1000);
+
+        payload.tempId = tempId;
+        payload.dataType = type;
+        payload.offlinePending = true;
+
+        if (!payload.date) payload.date = getStandardDateStr();
+        if (!payload.timestamp) payload.timestamp = Date.now();
+
+        if (type === 'order') payload.status = 'offline';
+        if (type === 'restock' && !payload.status) payload.status = 'Not Yet Order';
+
+        const tx = offlineDB.transaction('offlineData', 'readwrite');
+        tx.objectStore('offlineData').put(payload);
+
+        tx.oncomplete = function() {
+            refreshOfflineRecords();
+
+            alert("⚠️ No Internet Connection!\n\nSaved to this device as OFFLINE PENDING.\nIt will upload to cloud automatically when internet reconnects.");
+
+            if (type === 'order') {
+                cancelEdit();
+            } else if (type === 'quote') {
+                cancelQEdit();
+            } else if (type === 'enquire') {
+                cancelEEdit();
+            } else if (type === 'restock') {
+                ['r_part','r_code','r_brand','r_supp','r_car','r_onHand','r_needOrder','r_unitCost','r_totalCost'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.value = '';
+                });
+                currentRestockPhotos = [];
+                renderRestockGalleryUI();
+            }
+        };
+
+        tx.onerror = function() {
+            alert("❌ Offline save failed. Please try again.");
+        };
+    }
+
+
+    function getOfflineQueueItems() {
+        return new Promise((resolve, reject) => {
+            if (!offlineDB) return resolve([]);
+            const tx = offlineDB.transaction('offlineData', 'readonly');
+            const req = tx.objectStore('offlineData').getAll();
+            req.onsuccess = () => resolve(req.result || []);
+            req.onerror = () => reject(req.error || new Error('Unable to read offline queue.'));
+        });
+    }
+
+    function deleteOfflineQueueItem(tempId) {
+        return new Promise((resolve, reject) => {
+            if (!offlineDB || !tempId) return resolve();
+            const tx = offlineDB.transaction('offlineData', 'readwrite');
+            tx.objectStore('offlineData').delete(tempId);
+            tx.oncomplete = () => resolve();
+            tx.onerror = () => reject(tx.error || new Error('Unable to clear uploaded offline item.'));
+        });
+    }
+
+    function clearOfflineQueueStore() {
+        return new Promise((resolve, reject) => {
+            if (!offlineDB) return resolve();
+            const tx = offlineDB.transaction('offlineData', 'readwrite');
+            tx.objectStore('offlineData').clear();
+            tx.oncomplete = () => resolve();
+            tx.onerror = () => reject(tx.error || new Error('Unable to clear offline queue.'));
+        });
+    }
+
+    async function checkOfflineQueue() {
+        if (!navigator.onLine || !offlineDB || isSyncingOffline) return;
+
+        // V73: do not loop forever before login; sync will run again after login/refresh/online event.
+        if (!auth.currentUser) {
+            console.warn('Offline sync skipped: Firebase auth user not ready yet.');
+            isSyncingOffline = false;
+            return;
+        }
+
+        isSyncingOffline = true;
+
+        const tx = offlineDB.transaction('offlineData', 'readonly');
+        const req = tx.objectStore('offlineData').getAll();
+
+        req.onsuccess = async function() {
+            const items = req.result || [];
+
+            if (items.length === 0) {
+                isSyncingOffline = false;
+                return;
+            }
+
+            alert(`🔄 Internet Restored!
+Uploading ${items.length} offline item(s) to Cloud...`);
+
+            let successCount = 0;
+
+            try {
+                for (let rawItem of items) {
+                    let item = JSON.parse(JSON.stringify(rawItem));
+                    const type = item.dataType;
+                    const tempId = rawItem.tempId;
+
+                    delete item.dataType;
+                    delete item.tempId;
+                    delete item.id;
+                    delete item.offlinePending;
+
+                    if (item.items) {
+                        for (let i = 0; i < item.items.length; i++) {
+                            if (item.items[i].photos && item.items[i].photos.length > 0) {
+                                item.items[i].photos = await uploadBase64ToStorage(item.items[i].photos);
+                            }
+                        }
+                    }
+
+                    if (type === 'restock' && item.photos && item.photos.length > 0) {
+                        item.photos = await uploadBase64ToStorage(item.photos);
+                    }
+
+                    if (item.editId) {
+                        const targetId = item.editId;
+                        delete item.editId;
+                        if (type === 'order') await db.ref('orders/' + targetId).update(item);
+                        else if (type === 'quote') await db.ref('quotations/' + targetId).update(item);
+                        else if (type === 'enquire') await db.ref('enquiries/' + targetId).update(item);
+                    } else {
+                        if (type === 'order') {
+                            const snap = await db.ref('orderCounter').transaction(cv => (cv || 1000) + 1);
+                            item.refNo = 'MMC-' + snap.snapshot.val();
+                            item.status = 'waiting';
+                            await db.ref('orders').push(item);
+                        } else if (type === 'quote') {
+                            const snap = await db.ref('quoteCounter').transaction(cv => (cv || 1000) + 1);
+                            item.refNo = 'QT-' + snap.snapshot.val();
+                            await db.ref('quotations').push(item);
+                        } else if (type === 'enquire') {
+                            const snap = await db.ref('enquireCounter').transaction(cv => (cv || 1000) + 1);
+                            item.refNo = 'ENQ-' + snap.snapshot.val();
+                            await db.ref('enquiries').push(item);
+                        } else if (type === 'restock') {
+                            await db.ref('restock').push(item);
+                        }
+                    }
+
+                    // V71 safety: remove each local pending item immediately after successful cloud upload.
+                    // This prevents duplicate uploads if the next pending item fails halfway.
+                    await deleteOfflineQueueItem(tempId);
+                    successCount++;
+                    refreshOfflineRecords();
+                }
+
+                refreshOfflineRecords();
+                forceDataSync(true);
+                alert(`✅ Offline sync completed!
+Uploaded ${successCount} item(s) to Cloud.`);
+                isSyncingOffline = false;
+
+            } catch (error) {
+                console.error('Sync Error:', error);
+                refreshOfflineRecords();
+                alert(
+                    '❌ Offline sync failed.\n\n' +
+                    'Uploaded before failure: ' + successCount + ' item(s).\n' +
+                    'Reason: ' + (error && error.message ? error.message : error) + '\n\n' +
+                    'Only the remaining unsynced data is still kept in this device and will retry when online.'
+                );
+                isSyncingOffline = false;
+            }
+        };
+
+        req.onerror = function() {
+            isSyncingOffline = false;
+        };
+    }
+
+    function getStandardDateStr(dateObj = new Date()) {
+        const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        let d = dateObj.getDate().toString().padStart(2, '0'); let m = months[dateObj.getMonth()]; let y = dateObj.getFullYear(); return `${d} ${m} ${y}`;
+    }
+
+    // ==========================================
+    // V73 DEVICE APPROVAL SYSTEM - Plan B
+    // Device must be approved AND linked to the correct staff email.
+    // ==========================================
+    const DEVICE_AUTH_KEY = "mmc_authorized_device_v1"; // Old MMC888 local key kept for admin migration/emergency only.
+    const DEVICE_ID_KEY = "mmc_device_id_v70";
+    const DEVICE_NAME_KEY = "mmc_device_name_v70";
+    let currentDeviceId = null;
+    let currentDeviceName = null;
+    let isDeviceApproved = false;
+
+    function escapeHTML(value) {
+        return String(value == null ? '' : value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function escapeAttr(value) {
+        return escapeHTML(value).replace(/`/g, '&#96;');
+    }
+
+    function safePhotoSrc(src) {
+        const s = String(src || '');
+        if (s.startsWith('http://') || s.startsWith('https://')) return escapeAttr(s);
+        if (/^data:image\/(png|jpe?g|webp|gif);base64,/i.test(s)) return escapeAttr(s);
+        return '';
+    }
+
+    function plainText(value) {
+        return String(value == null ? '' : value).replace(/[\u0000-\u001F\u007F]/g, ' ').trim();
+    }
+
+    function waPhone(value) {
+        return String(value == null ? '' : value).replace(/[^0-9]/g, '');
+    }
+
+    function csvCell(value) {
+        let v = String(value == null ? '' : value);
+        if (/^[=+\-@]/.test(v)) v = "'" + v;
+        return '"' + v.replace(/"/g, '""') + '"';
+    }
+
+    const photoPreviewStore = {};
+    let photoPreviewCounter = 0;
+    function registerPhotoPreview(src) {
+        const raw = String(src || '');
+        if (!(raw.startsWith('http://') || raw.startsWith('https://') || /^data:image\/(png|jpe?g|webp|gif);base64,/i.test(raw))) return '';
+        const key = 'ph_' + (++photoPreviewCounter);
+        photoPreviewStore[key] = raw;
+        return key;
+    }
+    function showPhotoByKey(key) {
+        const src = photoPreviewStore[key];
+        if (src) showPhoto(src);
+    }
+
+    // ==========================================
+    // V75 iPhone / iPad PRINT / PDF FALLBACK
+    // iOS PWA can block or mishandle popup print windows. This fallback opens
+    // a same-page printable view with Back and Print buttons.
+    // ==========================================
+    function isIOSPrintFallbackDevice() {
+        const ua = navigator.userAgent || '';
+        const platform = navigator.platform || '';
+        const isIPhoneOrIPod = /iPhone|iPod/i.test(ua);
+        const isIPadUA = /iPad/i.test(ua);
+        // iPadOS 13+ may identify itself as Macintosh.
+        const isModernIPad = platform === 'MacIntel' && navigator.maxTouchPoints > 1;
+        return isIPhoneOrIPod || isIPadUA || isModernIPad;
+    }
+
+    function ensurePrintableViewShell() {
+        if (!document.getElementById('mmcPrintableStyle')) {
+            const style = document.createElement('style');
+            style.id = 'mmcPrintableStyle';
+            style.textContent = `
+                #printableView {
+                    display: none;
+                    position: fixed;
+                    inset: 0;
+                    z-index: 99999;
+                    background: #ffffff;
+                    color: #111827;
+                    overflow: auto;
+                    -webkit-overflow-scrolling: touch;
+                }
+                #printableToolbar {
+                    position: sticky;
+                    top: 0;
+                    z-index: 100000;
+                    background: #0f172a;
+                    color: #ffffff;
+                    padding: 12px;
+                    display: flex;
+                    gap: 8px;
+                    align-items: center;
+                    flex-wrap: wrap;
+                    box-shadow: 0 2px 10px rgba(15,23,42,0.25);
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+                }
+                #printableToolbar button {
+                    border: none;
+                    border-radius: 8px;
+                    padding: 10px 14px;
+                    font-weight: 800;
+                    cursor: pointer;
+                }
+                #printableBackBtn { background: #64748b; color: white; }
+                #printablePrintBtn { background: #2563eb; color: white; }
+                #printableHint {
+                    font-size: 12px;
+                    line-height: 1.35;
+                    color: #e2e8f0;
+                    flex: 1 1 260px;
+                }
+                #printablePage {
+                    padding: 12px;
+                    background: white;
+                }
+                @media print {
+                    body.printable-mode > *:not(#printableView) {
+                        display: none !important;
+                    }
+                    #printableView {
+                        display: block !important;
+                        position: static !important;
+                        inset: auto !important;
+                        overflow: visible !important;
+                        background: white !important;
+                    }
+                    #printableToolbar { display: none !important; }
+                    #printablePage { padding: 0 !important; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        let view = document.getElementById('printableView');
+        if (!view) {
+            view = document.createElement('div');
+            view.id = 'printableView';
+            view.innerHTML = `
+                <div id="printableToolbar">
+                    <button type="button" id="printableBackBtn">⬅ Back</button>
+                    <button type="button" id="printablePrintBtn">🖨️ Print / Save PDF</button>
+                    <div id="printableHint">iPhone/iPad compatible mode: use Print / Save PDF above. If iOS does not open the print sheet, use Safari Share → Print.</div>
+                </div>
+                <div id="printablePage"></div>
+            `;
+            document.body.appendChild(view);
+            document.getElementById('printableBackBtn').addEventListener('click', closePrintableView);
+            document.getElementById('printablePrintBtn').addEventListener('click', function() {
+                setTimeout(() => window.print(), 100);
+            });
+        }
+        return view;
+    }
+
+    function openPrintableView(html, titleText = 'Printable View') {
+        const view = ensurePrintableViewShell();
+        const page = document.getElementById('printablePage');
+        if (!view.dataset.originalDocumentTitle) {
+            view.dataset.originalDocumentTitle = document.title;
+        }
+        document.title = String(titleText || 'Printable View');
+        let safeTitle = escapeHTML(titleText || 'Printable View');
+        let styles = '';
+        let bodyHTML = html;
+
+        try {
+            const doc = new DOMParser().parseFromString(String(html || ''), 'text/html');
+            safeTitle = escapeHTML(doc.title || titleText || 'Printable View');
+            styles = Array.from(doc.head.querySelectorAll('style')).map(s => s.textContent || '').join('\n');
+            bodyHTML = doc.body ? doc.body.innerHTML : String(html || '');
+        } catch (err) {
+            console.warn('Printable parse fallback:', err);
+        }
+
+        page.innerHTML = `
+            <style>${styles}</style>
+            <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; padding:8px 4px 0; color:#475569; font-size:12px;">${safeTitle}</div>
+            <div class="printable-document">${bodyHTML}</div>
+        `;
+        view.style.display = 'block';
+        document.body.classList.add('printable-mode');
+        window.scrollTo(0, 0);
+    }
+
+    function closePrintableView() {
+        const view = document.getElementById('printableView');
+        if (view) {
+            view.style.display = 'none';
+            if (view.dataset.originalDocumentTitle) {
+                document.title = view.dataset.originalDocumentTitle;
+                delete view.dataset.originalDocumentTitle;
+            }
+        }
+        document.body.classList.remove('printable-mode');
+    }
+
+    function openPrintWindowOrPrintableView(html, titleText = 'Printable View', outputMode = 'print') {
+        if (isIOSPrintFallbackDevice()) {
+            openPrintableView(html, titleText);
+            return;
+        }
+
+        if (outputMode === 'pdf') {
+            alert("PDF export will open the print screen. Please choose 'Save as PDF' or 'Print to PDF'.");
+        }
+
+        const p = window.open('', '_blank');
+        if (!p || p.closed || typeof p.closed === 'undefined') {
+            openPrintableView(html, titleText);
+            return;
+        }
+        p.document.write(html);
+        p.document.close();
+        p.focus();
+        setTimeout(() => {
+            try { p.print(); p.close(); }
+            catch (err) { console.warn('Popup print failed, opening printable view:', err); openPrintableView(html, titleText); }
+        }, 350);
+    }
+
+
+    // ==========================================
+    // V73 SAFETY HELPERS - Non-negative numbers + Audit Log
+    // ==========================================
+    function toNonNegativeNumber(value, fallback = 0) {
+        const n = parseFloat(value);
+        if (isNaN(n)) return fallback;
+        return Math.max(0, n);
+    }
+
+    function sanitizeNonNegativeInput(el) {
+        if (!el || el.type !== 'number') return;
+        if (el.value === '') return;
+        const n = parseFloat(el.value);
+        if (!isNaN(n) && n < 0) el.value = '0';
+    }
+
+    function enforceNumberInputSafety() {
+        document.querySelectorAll('input[type="number"]').forEach(input => {
+            input.setAttribute('min', '0');
+            input.setAttribute('inputmode', 'decimal');
+        });
+    }
+
+    document.addEventListener('input', function(e) {
+        if (e.target && e.target.matches && e.target.matches('input[type="number"]')) {
+            sanitizeNonNegativeInput(e.target);
+        }
+    }, true);
+
+    document.addEventListener('change', function(e) {
+        if (e.target && e.target.matches && e.target.matches('input[type="number"]')) {
+            sanitizeNonNegativeInput(e.target);
+        }
+    }, true);
+
+    window.addEventListener('load', enforceNumberInputSafety);
+
+    function getAuditActorInfo() {
+        return {
+            email: auth && auth.currentUser ? auth.currentUser.email : 'unknown',
+            deviceId: currentDeviceId || getOrCreateDeviceId(),
+            deviceName: currentDeviceName || getDeviceName(),
+            userAgent: navigator.userAgent || ''
+        };
+    }
+
+    async function writeAuditLog(action, moduleName, refNo, recordId, details = {}) {
+        try {
+            if (!auth || !auth.currentUser || !navigator.onLine) return;
+            const actor = getAuditActorInfo();
+            await db.ref('auditLogs').push({
+                action: action,
+                module: moduleName,
+                refNo: refNo || '',
+                recordId: recordId || '',
+                details: details || {},
+                email: actor.email,
+                deviceId: actor.deviceId,
+                deviceName: actor.deviceName,
+                userAgent: actor.userAgent,
+                localTime: new Date().toISOString(),
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            });
+        } catch (err) {
+            console.warn('Audit log write skipped:', err);
+        }
+    }
+
+    function formatAuditTime(ts, localTime) {
+        if (ts) return new Date(ts).toLocaleString('en-GB');
+        if (localTime) return new Date(localTime).toLocaleString('en-GB');
+        return '-';
+    }
+
+    async function viewAuditLog() {
+        if (!isAdmin) return alert('Admin only.');
+        document.getElementById('historyContent').innerHTML = `<h3>📜 Audit Log</h3><p>Loading latest activity...</p>`;
+        document.getElementById('historyModal').style.display = 'flex';
+        try {
+            const snap = await db.ref('auditLogs').orderByChild('timestamp').limitToLast(80).once('value');
+            const logs = [];
+            snap.forEach(child => logs.push({ id: child.key, ...child.val() }));
+            logs.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
+            let html = `<h3>📜 Audit Log</h3><p style="font-size:12px;color:#64748b;">Latest ${logs.length} activity record(s). This helps Boss check who changed what and from which device.</p>`;
+            if (logs.length === 0) {
+                html += `<p style="font-size:13px;color:#64748b;">No audit log yet.</p>`;
+            } else {
+                logs.forEach(log => {
+                    html += `<div style="border:1px solid #e2e8f0;background:#f8fafc;border-radius:8px;padding:10px;margin-bottom:8px;font-size:12px;line-height:1.5;word-break:break-word;">
+                        <strong style="color:#0f172a;">${escapeHTML(log.action || '-')}</strong> <span style="color:#64748b;">(${escapeHTML(log.module || '-')})</span><br>
+                        Ref: <b>${escapeHTML(log.refNo || '-')}</b> | By: <b>${escapeHTML(log.email || '-')}</b><br>
+                        Device: ${escapeHTML(log.deviceName || '-')}<br>
+                        Time: ${escapeHTML(formatAuditTime(log.timestamp, log.localTime))}<br>
+                        <small style="color:#64748b;">Details: ${escapeHTML(JSON.stringify(log.details || {}))}</small>
+                    </div>`;
+                });
+            }
+            html += `<button onclick="document.getElementById('historyModal').style.display='none'" style="padding:12px;width:100%;background:#64748b;color:white;border:none;border-radius:6px;font-weight:bold;cursor:pointer;">Close</button>`;
+            document.getElementById('historyContent').innerHTML = html;
+        } catch (err) {
+            document.getElementById('historyContent').innerHTML = `<h3>📜 Audit Log</h3><p style="color:#ef4444;font-weight:bold;">Unable to load audit log: ${escapeHTML(err && err.message ? err.message : err)}</p><button onclick="document.getElementById('historyModal').style.display='none'" style="padding:10px;width:100%;">Close</button>`;
+        }
+    }
+
+    function getOrCreateDeviceId() {
+        let id = localStorage.getItem(DEVICE_ID_KEY);
+        if (!id) {
+            if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+                id = 'device_' + window.crypto.randomUUID();
+            } else {
+                id = 'device_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 12);
+            }
+            localStorage.setItem(DEVICE_ID_KEY, id);
+        }
+        currentDeviceId = id;
+        return id;
+    }
+
+    function getDeviceName() {
+        let name = localStorage.getItem(DEVICE_NAME_KEY);
+        if (!name) {
+            const ua = navigator.userAgent || '';
+            let platform = 'Company Device';
+            if (/iPad/i.test(ua)) platform = 'iPad';
+            else if (/iPhone/i.test(ua)) platform = 'iPhone';
+            else if (/Android/i.test(ua)) platform = 'Android Device';
+            else if (/Windows/i.test(ua)) platform = 'Windows PC';
+            else if (/Macintosh|Mac OS/i.test(ua)) platform = 'Mac';
+            name = platform + ' - ' + new Date().toLocaleDateString('en-GB');
+            localStorage.setItem(DEVICE_NAME_KEY, name);
+        }
+        currentDeviceName = name;
+        return name;
+    }
+
+    function showNormalLogin() {
+        const normalBox = document.getElementById('normalLoginBox');
+        const lockBox = document.getElementById('deviceLockBox');
+        if (normalBox) normalBox.style.display = 'block';
+        if (lockBox) lockBox.style.display = 'none';
+        document.getElementById('loginScreen').style.display = 'flex';
+        document.getElementById('mainApp').style.display = 'none';
+    }
+
+    function showDevicePendingScreen(userEmail, reasonText) {
+        const deviceId = getOrCreateDeviceId();
+        const deviceName = getDeviceName();
+        const normalBox = document.getElementById('normalLoginBox');
+        const lockBox = document.getElementById('deviceLockBox');
+        if (normalBox) normalBox.style.display = 'none';
+        if (lockBox) {
+            lockBox.style.display = 'block';
+            lockBox.innerHTML = `
+                <h3 style="color:#ef4444;">🚫 Device Not Approved</h3>
+                <p style="color:#64748b; font-size:14px; line-height:1.5; margin-bottom:18px;">
+                    This computer/iPad is not approved for this staff account yet.<br>
+                    Please ask Boss/Admin to approve this device.
+                </p>
+                <div style="text-align:left; background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px; padding:12px; font-size:12px; color:#334155; margin-bottom:15px; word-break:break-all;">
+                    <strong>Login Email:</strong> ${escapeHTML(userEmail || '-')}<br>
+                    <strong>Device Name:</strong> ${escapeHTML(deviceName)}<br>
+                    <strong>Device ID:</strong> ${escapeHTML(deviceId)}<br>
+                    <strong>Status:</strong> ${escapeHTML(reasonText || 'Pending Boss Approval')}
+                </div>
+                <button class="login-btn" onclick="logoutSystem()" style="background:#64748b; margin-bottom:10px;">Logout</button>
+                ${(userEmail || '').toLowerCase() === BOSS_EMAIL.toLowerCase() ? '<button class="login-btn" style="background:#f59e0b;" onclick="bossEmergencyApproveDevice()">🔑 Boss Emergency Approve This Device</button>' : ''}
+            `;
+        }
+        document.getElementById('loginScreen').style.display = 'flex';
+        document.getElementById('mainApp').style.display = 'none';
+    }
+
+    async function createDeviceRequest(user) {
+        const deviceId = getOrCreateDeviceId();
+        const deviceName = getDeviceName();
+        const payload = {
+            deviceId: deviceId,
+            deviceName: deviceName,
+            requestedEmail: user.email,
+            status: 'pending',
+            userAgent: navigator.userAgent || '',
+            requestedAt: firebase.database.ServerValue.TIMESTAMP,
+            lastSeen: firebase.database.ServerValue.TIMESTAMP
+        };
+        try {
+            await db.ref('deviceRequests/' + deviceId).update(payload);
+        } catch (err) {
+            console.warn('Device request could not be written. Check Firebase rules for deviceRequests.', err);
+        }
+    }
+
+    async function approveCurrentAdminDevice() {
+        const user = auth.currentUser;
+        if (!user || user.email.toLowerCase() !== BOSS_EMAIL.toLowerCase()) return false;
+        const deviceId = getOrCreateDeviceId();
+        const deviceName = getDeviceName();
+        await db.ref('approvedDevices/' + deviceId).set({
+            deviceId: deviceId,
+            deviceName: deviceName,
+            allowedEmail: user.email,
+            approved: true,
+            blocked: false,
+            approvedBy: user.email,
+            approvedAt: firebase.database.ServerValue.TIMESTAMP,
+            lastSeen: firebase.database.ServerValue.TIMESTAMP,
+            note: 'Boss/admin device approved by MMC888 emergency migration.'
+        });
+        await db.ref('deviceRequests/' + deviceId).update({ status: 'approved', approvedAt: firebase.database.ServerValue.TIMESTAMP, approvedBy: user.email });
+        localStorage.setItem(DEVICE_AUTH_KEY, 'true');
+        isDeviceApproved = true;
+        return true;
+    }
+
+    async function authorizeDevice() {
+        // Legacy MMC888 button kept so old Register Device button does not throw ReferenceError.
+        // For V73 security, only Boss/Admin can emergency-approve the current device after login.
+        if (auth && auth.currentUser && auth.currentUser.email && auth.currentUser.email.toLowerCase() === BOSS_EMAIL.toLowerCase()) {
+            return bossEmergencyApproveDevice();
+        }
+        alert('Please login as Boss/Admin first, then use emergency device approval.');
+    }
+
+    async function bossEmergencyApproveDevice() {
+        const user = auth.currentUser;
+        if (!user || user.email.toLowerCase() !== BOSS_EMAIL.toLowerCase()) {
+            alert('Please login as Boss/Admin first.');
+            return;
+        }
+        const pin = prompt('Enter Master PIN to approve this Boss device:');
+        if (!pin) return;
+        if (btoa(pin) !== 'TU1DODg4') {
+            alert('❌ Incorrect PIN.');
+            return;
+        }
+        try {
+            await approveCurrentAdminDevice();
+            alert('✅ Boss device approved. Reloading system now.');
+            window.location.reload();
+        } catch (err) {
+            alert('❌ Unable to approve this device: ' + (err && err.message ? err.message : err));
+        }
+    }
+
+    async function verifyDeviceAccess(user) {
+        const deviceId = getOrCreateDeviceId();
+        getDeviceName();
+
+        try {
+            const snap = await db.ref('approvedDevices/' + deviceId).once('value');
+            const device = snap.val();
+            const userEmail = (user.email || '').toLowerCase();
+            const allowedEmail = device && device.allowedEmail ? String(device.allowedEmail).toLowerCase() : '';
+
+            if (device && device.approved === true && device.blocked !== true && (allowedEmail === '*' || allowedEmail === userEmail)) {
+                await db.ref('approvedDevices/' + deviceId).update({
+                    lastSeen: firebase.database.ServerValue.TIMESTAMP,
+                    lastLoginEmail: user.email
+                });
+                isDeviceApproved = true;
+                return true;
+            }
+
+            // Boss/Admin migration path: existing MMC888 approved boss device can approve itself once.
+            if (userEmail === BOSS_EMAIL.toLowerCase() && localStorage.getItem(DEVICE_AUTH_KEY) === 'true') {
+                await approveCurrentAdminDevice();
+                return true;
+            }
+
+            await createDeviceRequest(user);
+
+            if (device && device.blocked === true) {
+                showDevicePendingScreen(user.email, 'Blocked by Boss/Admin');
+            } else if (device && allowedEmail && allowedEmail !== '*' && allowedEmail !== userEmail) {
+                showDevicePendingScreen(user.email, 'This device is approved for another staff: ' + device.allowedEmail);
+            } else {
+                showDevicePendingScreen(user.email, 'Pending Boss Approval');
+            }
+            isDeviceApproved = false;
+            return false;
+        } catch (err) {
+            console.error('Device approval check failed:', err);
+            showDevicePendingScreen(user.email, 'Device check failed: ' + (err && err.message ? err.message : err));
+            isDeviceApproved = false;
+            return false;
+        }
+    }
+
+    async function showMainAppForUser(user) {
+        isAdmin = (user.email.toLowerCase() === BOSS_EMAIL.toLowerCase());
+        document.getElementById('exportBtn').style.display = isAdmin ? 'block' : 'none';
+        document.getElementById('adminBadge').style.display = isAdmin ? 'inline-block' : 'none';
+        document.getElementById('adminTools').style.display = isAdmin ? 'flex' : 'none';
+        document.getElementById('cashDashboard').style.display = isAdmin ? 'flex' : 'none';
+        document.querySelectorAll('.boss-restock').forEach(el => el.style.display = isAdmin ? 'block' : 'none');
+        document.getElementById('v75BossSupplierManagement').style.display=isAdmin?'block':'none';
+        document.getElementById('v742bBossPanel').style.display=isAdmin?'block':'none';
+        v742bReloadSuppliers();
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('mainApp').style.display = 'block';
+        document.getElementById('loginError').style.display = 'none';
+        document.getElementById('loginBtnTrigger').innerText = 'Secure Login';
+        forceDataSync();
+        loadStaffConfig();
+        if (isAdmin) startDeleteRequestWatch();
+        else stopDeleteRequestWatch();
+        if (!isDataLoaded) {
+            addNewItemBlock();
+            addQItemBlock();
+            addEItemBlock();
+            isDataLoaded = true;
+        }
+    }
+
+    function switchTab(tabId, btnElement) {
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        btnElement.classList.add('active');
+    }
+
+    auth.onAuthStateChanged(async (user) => {
+        clearTimeout(mmcStartupTimer);
+        const startupStatus = document.getElementById('startupStatus');
+        if (startupStatus) startupStatus.textContent = '';
+
+        if (user) {
+            const approved = await verifyDeviceAccess(user);
+            if (!approved) return;
+            await showMainAppForUser(user);
+        } else {
+            stopDeleteRequestWatch();
+            isDeviceApproved = false;
+            isAdmin = false;
+            orders = [];
+            restockItems = [];
+            quotes = [];
+            enquiries = [];
+            productDictionary = [];
+            customerDictionary = [];
+            db.ref('orders').off();
+            db.ref('restock').off();
+            db.ref('quotations').off();
+            db.ref('enquiries').off();
+            db.ref('settings/staff').off();
+            db.ref('deviceRequests').off();
+            db.ref('approvedDevices').off();
+            showNormalLogin();
+        }
+    });
+
+    function loginSystem() {
+        let email = document.getElementById('authEmail').value.trim(); if (email !== '' && !email.includes('@')) email = email + '@mmc.com';
+        const password = document.getElementById('authPassword').value; const btn = document.getElementById('loginBtnTrigger'); btn.innerText = "Connecting..."; 
+        auth.signInWithEmailAndPassword(email, password).catch(() => { document.getElementById('loginError').style.display = 'block'; btn.innerText = "Secure Login"; });
+    }
+    function logoutSystem() { auth.signOut(); }
+
+    // V75 Supplier Master. Only Boss can create/approve mappings (enforced by Firebase rules).
+    let v742bSuppliers={}, v742bRequests={}, v742bOwnRequests={}, v742bLoaded=false;
+    const v742bNorm=v=>String(v||'').normalize('NFKC').trim().replace(/\s+/g,' ').toLocaleLowerCase();
+    const v742bSafe=v=>escapeHTML(String(v||''));
+    function v742bStatus(message) { const e=document.getElementById('v742bSupplierStatus'); if(e)e.textContent=message; }
+    function v742bFindSupplier(name) {
+        const needle=v742bNorm(name); if(!needle)return null;
+        for(const [id,s] of Object.entries(v742bSuppliers)) {
+            if(s.status==='inactive')continue;
+            if([s.officialName,...(Array.isArray(s.aliases)?s.aliases:[])].some(a=>v742bNorm(a)===needle))return {id,...s};
+        }
+        return null;
+    }
+    function v742bSuggestions(name) {
+        const q=v742bNorm(name); if(!q)return [];
+        return Object.entries(v742bSuppliers).filter(([id,s])=>s.status!=='inactive' && [s.officialName,...(Array.isArray(s.aliases)?s.aliases:[])].some(a=>v742bNorm(a).includes(q))).slice(0,8);
+    }
+    function v742bSupplierHint() {
+        const name=document.getElementById('r_supp')?.value||'';
+        const hint=document.getElementById('v742bSupplierHint'); if(!hint)return;
+        const match=v742bFindSupplier(name);
+        if(match)hint.textContent='✓ Approved: '+match.officialName;
+        else if(v742bPendingSupplier(name))hint.textContent='⚠ Pending Boss Review — Restock allowed, formal PO blocked.';
+        else if(name.trim()) {
+            const matches=v742bSuggestions(name);
+            hint.textContent=matches.length?'Possible match: '+matches.map(x=>x[1].officialName).join(', ')+' — choose official name':'New supplier: click Add Supplier Now to continue without waiting for Boss.';
+        } else hint.textContent='Choose existing supplier or add a pending supplier. Old history is preserved.';
+    }
+    function v742bRenderSuppliers() {
+        const target=document.getElementById('v742bSupplierList');if(!target)return;
+        const q=v742bNorm(document.getElementById('v742bSupplierSearch')?.value);
+        const matches=Object.entries(v742bSuppliers).filter(([id,s])=>s.status!=='inactive'&&(!q||[s.officialName,...(Array.isArray(s.aliases)?s.aliases:[])].some(a=>v742bNorm(a).includes(q))));
+        target.innerHTML=matches.length?matches.slice(0,50).map(([id,s])=>'<div style="padding:6px 0;border-bottom:1px solid #e2e8f0"><strong>'+v742bSafe(s.officialName)+'</strong> <small>('+v742bSafe((s.aliases||[]).join(', '))+')</small> <button type="button" data-supplier-id="'+v742bSafe(id)+'" onclick="v742bPickSupplier(this.dataset.supplierId)">SELECT</button>'+(isAdmin?' <button type="button" data-supplier-id="'+v742bSafe(id)+'" onclick="v742bAddAlias(this.dataset.supplierId)">+ Alias</button>':'')+'</div>').join(''):'<small>No approved suppliers match. Existing legacy names are not automatically merged.</small>';
+    }
+    function v742bPickSupplier(id) {const s=v742bSuppliers[id];if(!s)return;document.getElementById('r_supp').value=s.officialName;v742bSupplierHint();v75RenderSupplierMatches();document.getElementById('r_supp').focus();}
+    function v75HideRequest(){document.getElementById('v75SupplierRequestPanel').style.display='none';document.getElementById('v742bRequestForm').style.display='none';}
+    function v742bShowRequest() {
+        const name=document.getElementById('r_supp').value.trim();
+        const exact=v742bFindSupplier(name);
+        if(exact){v742bPickSupplier(exact.id);return alert('Existing supplier selected: '+exact.officialName);}
+        const matches=v742bSuggestions(name);
+        if(matches.length && !confirm('Possible existing supplier: '+matches.map(x=>x[1].officialName).join(', ')+'. Create a NEW pending supplier instead?'))return;
+        document.getElementById('v75SupplierRequestPanel').style.display='block';
+        document.getElementById('v742bRequestForm').style.display='block';
+        document.getElementById('v742bProposedName').value=name;
+        document.getElementById('v742bProposedName').focus();
+    }
+    function v75RenderSupplierMatches(){
+        const target=document.getElementById('v75SupplierMatches');if(!target)return;
+        const input=document.getElementById('r_supp');
+        const matches=v742bSuggestions(input?.value||'');
+        target.style.display=matches.length?'block':'none';
+        target.innerHTML=matches.map(([id,s])=>'<button type="button" style="display:block;width:100%;text-align:left;padding:9px;margin:3px 0;border:1px solid #cbd5e1;border-radius:6px;background:white;cursor:pointer" data-supplier-id="'+v742bSafe(id)+'" onclick="v742bPickSupplier(this.dataset.supplierId)"><strong>'+v742bSafe(s.officialName)+'</strong> <small>'+v742bSafe((s.aliases||[]).join(', '))+'</small> — SELECT</button>').join('');
+    }
+    async function v742bReloadSuppliers() {
+        if(!auth.currentUser)return;
+        try {
+            const snap=await db.ref('supplierMaster').once('value');v742bSuppliers=snap.val()||{};v742bLoaded=true;
+            v742bRenderSuppliers();v742bSupplierHint();v75RenderSupplierMatches();
+            if(isAdmin) {const req=await db.ref('supplierRequests').once('value');v742bRequests=req.val()||{};v742bOwnRequests=v742bRequests;v742bRenderRequests();}
+            else {const req=await db.ref('supplierRequests').orderByChild('requestedBy').equalTo(auth.currentUser.email).once('value');v742bOwnRequests=req.val()||{};}
+            v742bStatus('Supplier list refreshed. '+Object.keys(v742bSuppliers).length+' suppliers.');
+        }catch(e){v742bLoaded=false;v742bStatus('Supplier Master unavailable: '+e.message+'. New supplier saving disabled.');}
+    }
+    async function v742bSubmitSupplierRequest() {
+        if(!navigator.onLine)return alert('Internet required for supplier approval request.');
+        const name=document.getElementById('v742bProposedName').value.trim();const reason=document.getElementById('v742bRequestReason').value.trim();
+        if(name.length<2||name.length>120)return alert('Enter supplier name (2–120 characters).');
+        if(v742bFindSupplier(name))return alert('Already approved. Please SELECT the existing supplier.');
+        if(Object.values(v742bOwnRequests).some(r=>r.status==='pending' && v742bNorm(r.proposedName)===v742bNorm(name)))return alert('You already added this pending supplier. Enter its name in Restock to continue.');
+        const similar=v742bSuggestions(name);
+        if(similar.length && !confirm('Possible existing suppliers: '+similar.map(x=>x[1].officialName).join(', ')+'.\nConfirm this is a DIFFERENT company and create pending supplier?'))return;
+        if(!confirm('Create pending supplier "'+name+'" now? You can continue Restock while Boss reviews.'))return;
+        try {const ref=await db.ref('supplierRequests').push({proposedName:name,reason,requestedBy:auth.currentUser.email,status:'pending',createdAt:firebase.database.ServerValue.TIMESTAMP});
+            v742bOwnRequests[ref.key]={proposedName:name,reason,requestedBy:auth.currentUser.email,status:'pending'};
+            document.getElementById('r_supp').value=name;v742bSupplierHint();
+            v742bStatus('Pending supplier created. You may save Restock now; Boss will review later.');v75HideRequest();
+            if(isAdmin)await v742bReloadSuppliers();
+        }catch(e){alert('Request failed: '+e.message);}
+    }
+    function v742bRenderRequests() {
+        const target=document.getElementById('v742bPendingRequests');if(!target)return;
+        const entries=Object.entries(v742bRequests).filter(([id,r])=>r.status==='pending');
+        target.innerHTML=entries.length?entries.map(([id,r])=>'<div style="border:1px solid #cbd5e1;padding:9px;margin:5px 0;border-radius:6px"><strong>'+v742bSafe(r.proposedName)+'</strong> <small>by '+v742bSafe(r.requestedBy)+'</small><div>'+v742bSafe(r.reason)+'</div><button type="button" data-request-id="'+v742bSafe(id)+'" onclick="v742bApproveRequest(this.dataset.requestId)">Approve New</button> <button type="button" data-request-id="'+v742bSafe(id)+'" onclick="v742bLinkRequest(this.dataset.requestId)">Link Existing</button> <button type="button" data-request-id="'+v742bSafe(id)+'" onclick="v742bRejectRequest(this.dataset.requestId)">Reject</button></div>').join(''):'<small>No pending requests.</small>';
+    }
+    async function v742bCreateSupplier() {
+        if(!isAdmin)return;const name=document.getElementById('v742bNewOfficial').value.trim();
+        if(name.length<2||name.length>120)return alert('Enter official name.');
+        if(v742bFindSupplier(name))return alert('Supplier already exists.');
+        if(!confirm('Create official supplier '+name+'?'))return;
+        try{await db.ref('supplierMaster').push({officialName:name,aliases:[],status:'active',createdBy:auth.currentUser.email,createdAt:firebase.database.ServerValue.TIMESTAMP});document.getElementById('v742bNewOfficial').value='';await v742bReloadSuppliers();}catch(e){alert(e.message);}
+    }
+    async function v742bApproveRequest(id) {
+        if(!isAdmin)return;const r=v742bRequests[id];if(!r||r.status!=='pending')return;
+        if(v742bFindSupplier(r.proposedName))return alert('Supplier already exists. Use Link Existing.');
+        if(!confirm('Approve as NEW official supplier: '+r.proposedName+'?'))return;
+        try {const ref=db.ref('supplierMaster').push();const updates={};updates['supplierMaster/'+ref.key]={officialName:r.proposedName,aliases:[],status:'active',createdBy:auth.currentUser.email,createdAt:firebase.database.ServerValue.TIMESTAMP};updates['supplierRequests/'+id+'/status']='approved';updates['supplierRequests/'+id+'/supplierId']=ref.key;updates['supplierRequests/'+id+'/approvedBy']=auth.currentUser.email;updates['supplierRequests/'+id+'/reviewedAt']=firebase.database.ServerValue.TIMESTAMP;await db.ref().update(updates);await v742bReloadSuppliers();}catch(e){alert('Approval failed: '+e.message);}
+    }
+    async function v742bLinkRequest(id) {
+        if(!isAdmin)return;const r=v742bRequests[id];if(!r||r.status!=='pending')return;
+        const name=prompt('Enter EXISTING approved official supplier name for '+r.proposedName+':');if(!name)return;
+        const found=v742bFindSupplier(name);if(!found)return alert('Supplier not found. Create or choose an existing official name.');
+        if(v742bFindSupplier(r.proposedName))return alert('This alias already belongs to a supplier.');
+        if(!confirm('Confirm SAME legal company? Link '+r.proposedName+' to '+found.officialName+'?'))return;
+        try{const aliases=Array.isArray(found.aliases)?found.aliases.slice():[];if(!aliases.some(a=>v742bNorm(a)===v742bNorm(r.proposedName)))aliases.push(r.proposedName);
+            const updates={};updates['supplierMaster/'+found.id+'/aliases']=aliases;updates['supplierRequests/'+id+'/status']='linked';updates['supplierRequests/'+id+'/supplierId']=found.id;updates['supplierRequests/'+id+'/approvedBy']=auth.currentUser.email;updates['supplierRequests/'+id+'/reviewedAt']=firebase.database.ServerValue.TIMESTAMP;await db.ref().update(updates);await v742bReloadSuppliers();}catch(e){alert(e.message);}
+    }
+    async function v742bRejectRequest(id) {if(!isAdmin)return;const r=v742bRequests[id];if(!r||r.status!=='pending')return;if(!confirm('Reject '+r.proposedName+'?'))return;try{await db.ref('supplierRequests/'+id).update({status:'rejected',approvedBy:auth.currentUser.email,reviewedAt:firebase.database.ServerValue.TIMESTAMP});await v742bReloadSuppliers();}catch(e){alert(e.message);}}
+    async function v742bAddAlias(id) {
+        if(!isAdmin)return;const s=v742bSuppliers[id];if(!s)return;const alias=prompt('Add alias for '+s.officialName+':');if(!alias||alias.trim().length<2||alias.length>120)return;
+        if(v742bFindSupplier(alias))return alert('Name/alias already registered.');
+        if(!confirm('Confirmed same legal company? Add '+alias+' as alias for '+s.officialName+'?'))return;
+        try{await db.ref('supplierMaster/'+id+'/aliases').set([...(s.aliases||[]),alias.trim()]);await v742bReloadSuppliers();}catch(e){alert(e.message);}
+    }
+    function v742bPendingSupplier(name) {
+        const needle=v742bNorm(name);
+        return Object.entries(v742bOwnRequests).find(([id,r])=>r.status==='pending'&&v742bNorm(r.proposedName)===needle);
+    }
+    function v742bValidateSupplier(name, previousName) {
+        if(!name.trim())return {ok:false,message:'Select an approved supplier.'};
+        if(!v742bLoaded)return {ok:false,message:'Supplier Master has not loaded. Refresh suppliers and try again.'};
+        const match=v742bFindSupplier(name);
+        if(match)return {ok:true,name:match.officialName,id:match.id};
+        const pending=v742bPendingSupplier(name);
+        if(pending)return {ok:true,name:pending[1].proposedName,id:'pending:'+pending[0],pending:true};
+        // Legacy record edits retain their existing supplier without forced migration.
+        if(previousName && v742bNorm(name)===v742bNorm(previousName))return {ok:true,name:previousName,id:null,legacy:true};
+        // Preserve existing historical supplier spellings when adding known legacy stock.
+        const knownLegacy=restockItems.some(r=>v742bNorm(r.supp)===v742bNorm(name));
+        if(knownLegacy)return {ok:false,message:'Legacy supplier name found. Please select an approved supplier or Add Supplier Now for Boss review.'};
+        return {ok:false,message:'Supplier not registered. Click Add Supplier Now; you can then save Restock immediately.'};
+    }
+
+    // V75: display grouping only; never rewrite historical supplier fields.
+    const v742cSelected = new Set();
+    let v75PrintingSupplierName = null;
+    function v742cSupplier(item) {
+        const raw=String(item.supp||'').trim();
+        const pending=String(item.supplierId||'').startsWith('pending:');
+        if(pending) return {key:'pending:'+item.supplierId, name:raw||'Pending supplier', verified:false};
+        let found=null;
+        if(item.supplierId && v742bSuppliers[item.supplierId] && v742bSuppliers[item.supplierId].status!=='inactive') found={id:item.supplierId,...v742bSuppliers[item.supplierId]};
+        if(!found) found=v742bFindSupplier(raw);
+        if(found) return {key:'verified:'+found.id,name:found.officialName,verified:true};
+        // Unknown legacy suppliers must NOT be merged by spelling similarity.
+        return {key:'legacy:'+v742bNorm(raw),name:raw||'Unknown supplier',verified:false};
+    }
+    function v742cSelectedRows() {
+        const ids=new Set(currentRestockView.filter(r=>!r.offlinePending).map(r=>String(r.id)));
+        return currentRestockView.filter(r=>!r.offlinePending && ids.has(String(r.id)) && v742cSelected.has(String(r.id)));
+    }
+    function v742cRefreshCount(){const el=document.getElementById('v742cSelectedCount');if(el)el.textContent=v742cSelectedRows().length+' selected in current view';}
+    function v742cSelectVisible(checked){currentRestockView.filter(r=>!r.offlinePending).forEach(r=>checked?v742cSelected.add(String(r.id)):v742cSelected.delete(String(r.id)));renderRestockTable();}
+    function v742cToggle(id,checked){if(checked)v742cSelected.add(String(id));else v742cSelected.delete(String(id));v742cRefreshCount();}
+    function v742cGeneratePO(mode) {
+        if(mode==='boss'&&!isAdmin)return alert('Boss only.');
+        const selected=v742cSelectedRows();
+        if(!selected.length)return alert('Select at least one Restock item first.');
+        const groups=new Map();
+        for(const item of selected){const supplier=v742cSupplier(item);if(!supplier.verified)return alert('PO blocked: '+supplier.name+' is not verified. Boss must link/approve this supplier first.');if(!groups.has(supplier.key))groups.set(supplier.key,{supplier,items:[]});groups.get(supplier.key).items.push(item);}
+        if(!confirm('Generate '+groups.size+' separate '+(mode==='boss'?'Boss':'Supplier')+' PO(s) for '+selected.length+' selected item(s)?'))return;
+        const previous=currentRestockView;
+        try {for(const group of groups.values()){
+            currentRestockView=group.items;
+            v75PrintingSupplierName=group.supplier.name;
+            // printRestock uses the existing safe supplier/boss templates, without exposing costs on supplier copies.
+            printRestock('print',mode);
+        }} finally {currentRestockView=previous;v75PrintingSupplierName=null;}
+        if(groups.size>1)alert('If your browser blocked extra print windows, allow popups and generate each supplier separately.');
+    }
+    function forceDataSync(skipOfflineSync = false) {
+        db.ref('orders').off();
+        db.ref('restock').off();
+        db.ref('quotations').off();
+        db.ref('enquiries').off();
+
+        loadDatabaseData();
+        loadRestockData();
+        loadQuoteData();
+        loadEnquireData();
+
+        if (!skipOfflineSync && navigator.onLine && typeof checkOfflineQueue === 'function') {
+            checkOfflineQueue();
+        }
+    }
+
+
+    // ==========================================
+    // V73 STABILITY HELPERS - Refresh + Recover + Timeout
+    // ==========================================
+    function resetProcessingButtons() {
+        const buttonMap = [
+            ['mainBtn', '💾 Save & Sync'],
+            ['qMainBtn', '💾 Save Quotation'],
+            ['eMainBtn', '💾 Save Enquiry'],
+            ['addRestockBtn', restockEditingId ? '✅ Update Restock' : '➕ Add to Restock']
+        ];
+        buttonMap.forEach(([id, text]) => {
+            const btn = document.getElementById(id);
+            if (btn) { btn.disabled = false; if ((btn.innerText || '').includes('Processing') || (btn.innerText || '').includes('Uploading') || (btn.innerText || '').includes('⏳')) btn.innerText = text; }
+        });
+    }
+
+    function refreshTabData(type) {
+        resetProcessingButtons();
+        if (type === 'order') { db.ref('orders').off(); loadDatabaseData(); renderTable(); }
+        else if (type === 'quote') { db.ref('quotations').off(); loadQuoteData(); renderQTable(); }
+        else if (type === 'enquire') { db.ref('enquiries').off(); loadEnquireData(); renderETable(); }
+        else if (type === 'restock') { db.ref('restock').off(); loadRestockData(); renderRestockTable(); }
+        else { forceDataSync(); }
+        if (navigator.onLine && typeof checkOfflineQueue === 'function') checkOfflineQueue();
+        alert('✅ Data refreshed. If any button was stuck, it has been recovered.');
+    }
+
+    function withTimeout(promise, ms, errorMessage) {
+        return Promise.race([
+            promise,
+            new Promise((_, reject) => setTimeout(() => reject(new Error(errorMessage)), ms))
+        ]);
+    }
+    
+    function loadStaffConfig() { db.ref('settings/staff').on('value', snap => { if(snap.val()) staffList = snap.val(); renderStaffDropdowns(); }); }
+    function renderStaffDropdowns() {
+        let html = '<option value="">-- Select --</option>'; staffList.forEach(s => { html += `<option value="${escapeAttr(s)}">${escapeHTML(s)}</option>`; });
+        let oVal = document.getElementById('orderByStaff').value; let qVal = document.getElementById('qOrderByStaff').value; let eVal = document.getElementById('eOrderByStaff').value;
+        document.getElementById('orderByStaff').innerHTML = html; document.getElementById('qOrderByStaff').innerHTML = html; document.getElementById('eOrderByStaff').innerHTML = html;
+        if(staffList.includes(oVal)) document.getElementById('orderByStaff').value = oVal; if(staffList.includes(qVal)) document.getElementById('qOrderByStaff').value = qVal; if(staffList.includes(eVal)) document.getElementById('eOrderByStaff').value = eVal;
+    }
+    function manageStaff() {
+        if(!isAdmin) return; let input = prompt("👥 Manage Staff List (separate names by comma):", staffList.join(', '));
+        if(input !== null) { db.ref('settings/staff').set(input.split(',').map(s => s.trim()).filter(s => s)); writeAuditLog('MANAGE_STAFF_LIST', 'settings', '', '', { staffList: input }); alert("✅ Staff list updated instantly across all devices!"); }
+    }
+
+
+    async function manageDeviceApprovals() {
+        if (!isAdmin) return alert('Admin only.');
+        document.getElementById('historyModal').style.display = 'flex';
+        document.getElementById('historyContent').innerHTML = '<h3>🛡️ Device Approval</h3><p>Loading device list...</p>';
+
+        try {
+            const [reqSnap, approvedSnap] = await Promise.all([
+                db.ref('deviceRequests').once('value'),
+                db.ref('approvedDevices').once('value')
+            ]);
+            const requests = reqSnap.val() || {};
+            const approved = approvedSnap.val() || {};
+            const pendingIds = Object.keys(requests).filter(id => !approved[id] || approved[id].approved !== true || approved[id].blocked === true);
+            const approvedIds = Object.keys(approved);
+
+            let html = `<h3>🛡️ Device Approval</h3>
+                <p style="font-size:12px;color:#64748b;line-height:1.5;">Approve each computer/iPad for a specific staff email. Staff cannot use the system from unapproved devices.</p>
+                <button onclick="manageDeviceApprovals()" style="background:#2563eb;color:white;border:none;padding:8px 12px;border-radius:6px;font-weight:bold;margin-bottom:10px;cursor:pointer;">🔄 Refresh</button>
+                <button onclick="document.getElementById('historyModal').style.display='none'" style="background:#64748b;color:white;border:none;padding:8px 12px;border-radius:6px;font-weight:bold;margin-bottom:10px;margin-left:6px;cursor:pointer;">Close</button>`;
+
+            html += `<h4 style="color:#b45309;border-top:1px solid #e2e8f0;padding-top:12px;">Pending / Blocked Devices</h4>`;
+            if (pendingIds.length === 0) {
+                html += `<p style="font-size:13px;color:#64748b;">No pending devices.</p>`;
+            } else {
+                pendingIds.forEach(id => {
+                    const r = requests[id] || {};
+                    const a = approved[id] || {};
+                    html += `<div style="border:1px solid #fde68a;background:#fffbeb;border-radius:8px;padding:10px;margin-bottom:10px;font-size:12px;line-height:1.5;word-break:break-word;">
+                        <strong>${escapeHTML(r.deviceName || a.deviceName || 'Unknown Device')}</strong><br>
+                        Email Request: <b>${escapeHTML(r.requestedEmail || '-')}</b><br>
+                        Device ID: ${escapeHTML(id)}<br>
+                        Status: <b>${escapeHTML(a.blocked ? 'Blocked' : (r.status || 'pending'))}</b><br>
+                        <button onclick="approveDeviceFromPanel('${id}')" style="background:#10b981;color:white;border:none;padding:7px 10px;border-radius:5px;font-weight:bold;margin-top:8px;cursor:pointer;">✅ Approve</button>
+                        <button onclick="blockDeviceFromPanel('${id}')" style="background:#ef4444;color:white;border:none;padding:7px 10px;border-radius:5px;font-weight:bold;margin-top:8px;margin-left:5px;cursor:pointer;">🚫 Block</button>
+                        <button onclick="removeDeviceFromPanel('${id}')" style="background:#64748b;color:white;border:none;padding:7px 10px;border-radius:5px;font-weight:bold;margin-top:8px;margin-left:5px;cursor:pointer;">🗑 Remove</button>
+                    </div>`;
+                });
+            }
+
+            html += `<h4 style="color:#047857;border-top:1px solid #e2e8f0;padding-top:12px;">Approved Devices</h4>`;
+            if (approvedIds.length === 0) {
+                html += `<p style="font-size:13px;color:#64748b;">No approved devices yet.</p>`;
+            } else {
+                approvedIds.forEach(id => {
+                    const a = approved[id] || {};
+                    html += `<div style="border:1px solid #bbf7d0;background:#f0fdf4;border-radius:8px;padding:10px;margin-bottom:10px;font-size:12px;line-height:1.5;word-break:break-word;opacity:${a.blocked ? '0.6' : '1'};">
+                        <strong>${escapeHTML(a.deviceName || 'Unknown Device')}</strong> ${a.blocked ? '<span style="color:#ef4444;font-weight:bold;">(Blocked)</span>' : ''}<br>
+                        Allowed Email: <b>${escapeHTML(a.allowedEmail || '-')}</b><br>
+                        Device ID: ${escapeHTML(id)}<br>
+                        Last Login: ${escapeHTML(a.lastLoginEmail || '-')}<br>
+                        Last Seen: ${escapeHTML(formatAuditTime(a.lastSeen, ''))}<br>
+                        <button onclick="renameDeviceFromPanel('${id}')" style="background:#2563eb;color:white;border:none;padding:7px 10px;border-radius:5px;font-weight:bold;margin-top:8px;cursor:pointer;">✏️ Rename</button>
+                        <button onclick="changeDeviceEmailFromPanel('${id}')" style="background:#7c3aed;color:white;border:none;padding:7px 10px;border-radius:5px;font-weight:bold;margin-top:8px;margin-left:5px;cursor:pointer;">👤 Change Email</button>
+                        <button onclick="blockDeviceFromPanel('${id}')" style="background:#ef4444;color:white;border:none;padding:7px 10px;border-radius:5px;font-weight:bold;margin-top:8px;margin-left:5px;cursor:pointer;">🚫 Block</button>
+                        <button onclick="removeDeviceFromPanel('${id}')" style="background:#64748b;color:white;border:none;padding:7px 10px;border-radius:5px;font-weight:bold;margin-top:8px;margin-left:5px;cursor:pointer;">🗑 Remove</button>
+                    </div>`;
+                });
+            }
+
+            document.getElementById('historyContent').innerHTML = html;
+        } catch (err) {
+            document.getElementById('historyContent').innerHTML = `<h3>🛡️ Device Approval</h3><p style="color:#ef4444;font-weight:bold;">Unable to load devices: ${escapeHTML(err && err.message ? err.message : err)}</p><button onclick="document.getElementById('historyModal').style.display='none'" style="padding:10px;width:100%;">Close</button>`;
+        }
+    }
+
+    async function approveDeviceFromPanel(deviceId) {
+        if (!isAdmin) return alert('Admin only.');
+        const reqSnap = await db.ref('deviceRequests/' + deviceId).once('value');
+        const req = reqSnap.val() || {};
+        const defaultEmail = req.requestedEmail || '';
+        const allowedEmail = prompt('Approve this device for which staff email?\nUse exact login email, e.g. nana@mmc.com', defaultEmail);
+        if (!allowedEmail) return;
+        const deviceName = prompt('Device name for Boss reference:', req.deviceName || 'Company Device') || (req.deviceName || 'Company Device');
+        await db.ref('approvedDevices/' + deviceId).set({
+            deviceId: deviceId,
+            deviceName: deviceName,
+            allowedEmail: allowedEmail.trim().toLowerCase(),
+            approved: true,
+            blocked: false,
+            requestedEmail: defaultEmail,
+            approvedBy: auth.currentUser.email,
+            approvedAt: firebase.database.ServerValue.TIMESTAMP,
+            lastSeen: firebase.database.ServerValue.TIMESTAMP
+        });
+        await db.ref('deviceRequests/' + deviceId).update({ status: 'approved', approvedBy: auth.currentUser.email, approvedAt: firebase.database.ServerValue.TIMESTAMP });
+        await writeAuditLog('APPROVE_DEVICE', 'devices', '', deviceId, { allowedEmail: allowedEmail.trim().toLowerCase(), deviceName: deviceName });
+        alert('✅ Device approved for ' + allowedEmail);
+        manageDeviceApprovals();
+    }
+
+    async function blockDeviceFromPanel(deviceId) {
+        if (!isAdmin) return alert('Admin only.');
+        if (!confirm('Block this device? It will not be able to use the system.')) return;
+        await db.ref('approvedDevices/' + deviceId).update({ blocked: true, approved: false, blockedBy: auth.currentUser.email, blockedAt: firebase.database.ServerValue.TIMESTAMP });
+        await db.ref('deviceRequests/' + deviceId).update({ status: 'blocked', blockedBy: auth.currentUser.email, blockedAt: firebase.database.ServerValue.TIMESTAMP });
+        await writeAuditLog('BLOCK_DEVICE', 'devices', '', deviceId, {});
+        manageDeviceApprovals();
+    }
+
+    async function removeDeviceFromPanel(deviceId) {
+        if (!isAdmin) return alert('Admin only.');
+        if (!confirm('Remove this device record? If the staff opens again, it will request approval again.')) return;
+        await db.ref('approvedDevices/' + deviceId).remove();
+        await db.ref('deviceRequests/' + deviceId).remove();
+        await writeAuditLog('REMOVE_DEVICE', 'devices', '', deviceId, {});
+        manageDeviceApprovals();
+    }
+
+    async function renameDeviceFromPanel(deviceId) {
+        if (!isAdmin) return alert('Admin only.');
+        const snap = await db.ref('approvedDevices/' + deviceId).once('value');
+        const device = snap.val() || {};
+        const name = prompt('New device name:', device.deviceName || 'Company Device');
+        if (!name) return;
+        await db.ref('approvedDevices/' + deviceId).update({ deviceName: name.trim() });
+        await db.ref('deviceRequests/' + deviceId).update({ deviceName: name.trim() });
+        await writeAuditLog('RENAME_DEVICE', 'devices', '', deviceId, { deviceName: name.trim() });
+        manageDeviceApprovals();
+    }
+
+    async function changeDeviceEmailFromPanel(deviceId) {
+        if (!isAdmin) return alert('Admin only.');
+        const snap = await db.ref('approvedDevices/' + deviceId).once('value');
+        const device = snap.val() || {};
+        const email = prompt('Allowed staff email for this device:', device.allowedEmail || '');
+        if (!email) return;
+        await db.ref('approvedDevices/' + deviceId).update({ allowedEmail: email.trim().toLowerCase(), updatedBy: auth.currentUser.email, updatedAt: firebase.database.ServerValue.TIMESTAMP });
+        await writeAuditLog('CHANGE_DEVICE_EMAIL', 'devices', '', deviceId, { allowedEmail: email.trim().toLowerCase() });
+        manageDeviceApprovals();
+    }
+
+    function calculateDailyCash() {
+        if(!isAdmin) return; let today = getStandardDateStr(); let todayDeposit = 0; let todayBalance = 0;
+        orders.forEach(o => { if(o.date === today && o.deposit) todayDeposit += parseFloat(o.deposit); if(o.status === 'completed' && o.completedDate === today && o.balance) todayBalance += parseFloat(o.balance); });
+        document.getElementById('todayDepositVal').innerText = 'RM ' + todayDeposit.toFixed(2); document.getElementById('todayBalanceVal').innerText = 'RM ' + todayBalance.toFixed(2); document.getElementById('todayTotalCash').innerText = 'RM ' + (todayDeposit + todayBalance).toFixed(2);
+    }
+
+    async function showPlateHistory(inputId) {
+        let plate = document.getElementById(inputId).value.trim().toUpperCase().replace(/\s/g, ''); if(!plate) return alert("Please enter a Car Plate Number first.");
+        document.getElementById('historyContent').innerHTML = `<h3 style="color:#b45309; text-align:center;">🔍 Deep Searching Cloud for ${escapeHTML(plate)}...</h3><p style="text-align:center;">Please wait while we check all historical records.</p>`; document.getElementById('historyModal').style.display = 'flex';
+        let historyHtml = `<h3>📖 Digital Service Book: <span style="color:#b45309">${escapeHTML(plate)}</span></h3><ul style="text-align:left; padding-left:15px; margin-bottom:20px;">`; let foundAny = false;
+        try {
+            const snapshot = await db.ref('orders').orderByChild('plate').equalTo(plate).once('value'); const historyOrders = []; snapshot.forEach(child => { historyOrders.push({ id: child.key, ...child.val() }); }); historyOrders.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
+            historyOrders.forEach(o => { foundAny = true; (o.items||[]).forEach(i => { historyHtml += `<li style="margin-bottom:10px; border-bottom:1px dashed #e2e8f0; padding-bottom:10px;"><b style="color:#475569; display:inline-block; width:110px;">${escapeHTML(o.date)}</b> <strong style="color:#0f172a;">${escapeHTML(i.part)}</strong> ${i.partNo ? `[${escapeHTML(i.partNo)}]` : ''} <span style="color:#10b981; font-weight:bold;">(RM${parseFloat(i.unitPrice||0).toFixed(2)})</span> <br><span style="color:#64748b; font-size:11px; margin-left:110px;">Ref: ${escapeHTML(o.refNo)} | Qty: ${escapeHTML(i.qty||1)} | ${o.status==='completed'?'✅ Done':'⏳ Pending'}</span></li>`; }); });
+        } catch (error) {}
+        if(!foundAny) historyHtml += '<li style="color:#ef4444; font-weight:bold;">No purchase history found for this car plate.</li>';
+        historyHtml += `</ul><button onclick="document.getElementById('historyModal').style.display='none'" style="padding:12px; width:100%; background:#ef4444; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer; font-size:15px;">Close History</button>`; document.getElementById('historyContent').innerHTML = historyHtml;
+    }
+
+    function checkCRM(type, phoneId, plateId, nameId, carId, chassisId) {
+        let phoneEl = document.getElementById(phoneId); let plateEl = document.getElementById(plateId); let nameEl = document.getElementById(nameId); let carEl = document.getElementById(carId); let chasEl = document.getElementById(chassisId); let found = null;
+        if (type === 'phone') { let phoneVal = phoneEl.value.replace(/[^0-9]/g, ''); if (phoneVal.length < 8) return; found = orders.find(o => o.phone === phoneVal) || quotes.find(q => q.phone === phoneVal) || enquiries.find(e => e.phone === phoneVal); } 
+        else if (type === 'plate') { let plateVal = plateEl.value.trim().toUpperCase().replace(/\s/g, ''); if (plateVal.length < 3) return; found = orders.find(o => o.plate && o.plate.replace(/\s/g, '').toUpperCase() === plateVal) || quotes.find(q => q.plate && q.plate.replace(/\s/g, '').toUpperCase() === plateVal) || enquiries.find(e => e.plate && e.plate.replace(/\s/g, '').toUpperCase() === plateVal); } 
+        else if (type === 'name') { let nameVal = nameEl.value.trim().toUpperCase(); if (nameVal.length < 3) return; found = orders.find(o => o.name && o.name.toUpperCase() === nameVal) || quotes.find(q => q.name && q.name.toUpperCase() === nameVal) || enquiries.find(e => e.name && e.name.toUpperCase() === nameVal); }
+        if (found) {
+            if (type !== 'name' && !nameEl.value && found.name) nameEl.value = found.name; if (!carEl.value && found.car) carEl.value = found.car;
+            if (!chasEl.value && found.chassis) chasEl.value = found.chassis; if (type !== 'phone' && !phoneEl.value && found.phone) phoneEl.value = found.phone;
+            if (type !== 'plate' && !plateEl.value && found.plate) plateEl.value = found.plate;
+        }
+    }
+
+    function buildDictionaries() {
+        let pDict = {}; let sSet = new Set();
+        const scanItems = (itemsArray) => { (itemsArray || []).forEach(i => { if(i.part && i.part.trim() !== '') { let key = (i.part.trim() + '_' + (i.partNo || '')).toUpperCase(); if(!pDict[key]) pDict[key] = { part: i.part, partNo: i.partNo, brand: i.brand, supplier: i.supplier, price: i.unitPrice }; } }); };
+        orders.forEach(o => scanItems(o.items)); quotes.forEach(q => scanItems(q.items)); enquiries.forEach(e => scanItems(e.items));
+        restockItems.forEach(r => { if(r.part && r.part.trim() !== '') { let key = (r.part.trim() + '_' + (r.code || '')).toUpperCase(); if(!pDict[key]) pDict[key] = { part: r.part, partNo: r.code, brand: r.brand, supplier: r.supp, price: '' }; } if(r.supp && r.supp.trim() !== '') sSet.add(r.supp.trim()); });
+        productDictionary = Object.values(pDict); 
+        
+        let cDict = {};
+        orders.forEach(o => { if(o.name && o.name.trim() !== '') cDict[o.name.trim().toUpperCase()] = o; }); quotes.forEach(q => { if(q.name && q.name.trim() !== '') cDict[q.name.trim().toUpperCase()] = q; }); enquiries.forEach(e => { if(e.name && e.name.trim() !== '') cDict[e.name.trim().toUpperCase()] = e; });
+        customerDictionary = Object.values(cDict); let cList = document.getElementById('customerList'); cList.innerHTML = '';
+        customerDictionary.forEach(c => { let opt = document.createElement('option'); opt.value = c.name; cList.appendChild(opt); });
+
+        let sList = document.getElementById('supplierList'); sList.innerHTML = ''; let filterSelect = document.getElementById('rSuppFilter'); let currentFilterVal = filterSelect.value;
+        filterSelect.innerHTML = '<option value="all">🔍 All Suppliers</option>';
+        Array.from(sSet).sort().forEach(s => { let opt = document.createElement('option'); opt.value = s; sList.appendChild(opt); filterSelect.innerHTML += `<option value="${escapeAttr(s)}">${escapeHTML(s)}</option>`; }); filterSelect.value = currentFilterVal || 'all';
+    }
+
+    // V71 UPDATE: Cloud loading stays standard; offline pending records are merged inside render functions
+    function loadDatabaseData() { db.ref('orders').orderByChild('timestamp').limitToLast(orderLimit).on('value', (snapshot) => { orders = []; snapshot.forEach(child => { orders.push({ id: child.key, ...child.val() }); }); orders.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0)); buildDictionaries(); renderTable(); calculateDailyCash(); }); }
+    function loadQuoteData() { db.ref('quotations').orderByChild('timestamp').limitToLast(quoteLimit).on('value', (snapshot) => { quotes = []; snapshot.forEach(child => { quotes.push({ id: child.key, ...child.val() }); }); quotes.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0)); buildDictionaries(); renderQTable(); }); }
+    function loadEnquireData() { db.ref('enquiries').orderByChild('timestamp').limitToLast(enquireLimit).on('value', (snapshot) => { enquiries = []; snapshot.forEach(child => { enquiries.push({ id: child.key, ...child.val() }); }); enquiries.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0)); buildDictionaries(); renderETable(); }); }
+    function loadRestockData() { db.ref('restock').orderByChild('timestamp').limitToLast(restockLimit).on('value', (snapshot) => { restockItems = []; snapshot.forEach(child => { restockItems.push({ id: child.key, ...child.val() }); }); restockItems.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0)); if(v742aHistory) { v742aHistory=null; const scopeEl=document.getElementById('v742aScope'); if(scopeEl) scopeEl.value='active'; v742aSetStatus('Restock changed. Switched to Active List; reload All History if needed.'); } buildDictionaries(); renderRestockTable(); }); }
+    
+    function loadMoreRecords(type) {
+        if(type === 'order') { orderLimit += 200; db.ref('orders').off(); loadDatabaseData(); } else if(type === 'quote') { quoteLimit += 200; db.ref('quotations').off(); loadQuoteData(); } else if(type === 'enquire') { enquireLimit += 200; db.ref('enquiries').off(); loadEnquireData(); } else if(type === 'restock') { restockLimit += 200; db.ref('restock').off(); loadRestockData(); }
+    }
+
+    async function backupDatabase() {
+        if(!isAdmin) return; const snap = await db.ref('/').once('value'); const data = snap.val();
+        const jsonStr = JSON.stringify(data, null, 2); const blob = new Blob([jsonStr], {type: "application/json"}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+        a.download = `MMC_Database_Backup_${new Date().toLocaleDateString('en-GB').replace(/\//g, '-')}.json`; document.body.appendChild(a); a.click(); document.body.removeChild(a); await writeAuditLog('BACKUP_DATABASE', 'admin', '', '', {});
+    }
+    function restoreDatabase(event) {
+        if(!isAdmin) return; const file = event.target.files[0]; if(!file) return;
+        if(!confirm("⚠️ WARNING! Restoring will OVERWRITE the current live cloud database with this file. Are you absolutely sure?")) { event.target.value = ''; return; }
+        const reader = new FileReader();
+        reader.onload = async function(e) {
+            try { const jsonData = JSON.parse(e.target.result); if(jsonData && (jsonData.orders || jsonData.restock || jsonData.orderCounter || jsonData.quotations)) { await db.ref('/').set(jsonData); await writeAuditLog('RESTORE_DATABASE', 'admin', '', '', {}); alert("✅ Database successfully restored!"); } else { alert("Invalid backup file format."); } } catch(err) { alert("Error reading file: " + err.message); } event.target.value = ''; 
+        }; reader.readAsText(file);
+    }
+
+    async function checkPendingCount() {
+        if (!isAdmin) return alert("Admin only.");
+        try {
+            const items = await getOfflineQueueItems();
+            const counts = items.reduce((acc, item) => {
+                const type = item.dataType || 'unknown';
+                acc[type] = (acc[type] || 0) + 1;
+                return acc;
+            }, {});
+            const details = Object.keys(counts).length
+                ? Object.keys(counts).sort().map(k => `${k}: ${counts[k]}`).join('\n')
+                : 'No pending offline records on this device.';
+            alert(`📌 Local Offline Pending Count\n\nTotal: ${items.length}\n${details}`);
+        } catch (err) {
+            alert("Unable to check pending queue: " + err.message);
+        }
+    }
+
+    async function clearLocalOfflineQueue() {
+        if (!isAdmin) return alert("Admin only.");
+        try {
+            const items = await getOfflineQueueItems();
+            if (items.length === 0) return alert("✅ No local offline pending records on this device.");
+            const confirmText = prompt(`⚠️ This will delete ${items.length} LOCAL offline pending record(s) from THIS DEVICE only.\n\nOnly continue if you are sure they already synced to Cloud or are no longer needed.\n\nType CLEAR to continue:`);
+            if (confirmText !== 'CLEAR') return alert("Cancelled. Local offline queue was not cleared.");
+            await clearOfflineQueueStore();
+            offlineRecords = [];
+            refreshOfflineRecords();
+            await writeAuditLog('CLEAR_LOCAL_OFFLINE_QUEUE', 'admin', '', '', { count: items.length }); alert("✅ Local offline queue cleared on this device.");
+        } catch (err) {
+            alert("Unable to clear local offline queue: " + err.message);
+        }
+    }
+
+    async function backupAndResetRecords() {
+        if (!isAdmin) return alert("Admin only.");
+        if (!navigator.onLine) return alert("Requires internet.");
+        try {
+            const localPending = await getOfflineQueueItems();
+            if (localPending.length > 0) {
+                return alert(`⚠️ This device still has ${localPending.length} offline pending record(s). Sync or clear them before resetting cloud records.`);
+            }
+
+            if (!confirm("Step 1: The system will download a full backup first. Continue?")) return;
+            await backupDatabase();
+
+            const confirmText = prompt("⚠️ DANGER ZONE\n\nThis will clear cloud records from:\n- orders\n- quotations\n- enquiries\n- restock\n\nIt will keep staff settings and counters unless you choose to reset counters next.\n\nType RESET to continue:");
+            if (confirmText !== 'RESET') return alert("Cancelled. Cloud records were not reset.");
+
+            const resetCounters = confirm("Do you also want to reset counters to 1000?\n\nOK = reset counters, next numbers become MMC-1001 / QT-1001 / ENQ-1001.\nCancel = keep current running numbers.");
+
+            const updates = {
+                orders: null,
+                quotations: null,
+                enquiries: null,
+                restock: null
+            };
+
+            if (resetCounters) {
+                updates.orderCounter = 1000;
+                updates.quoteCounter = 1000;
+                updates.enquireCounter = 1000;
+            }
+
+            await db.ref('/').update(updates);
+            await writeAuditLog('BACKUP_AND_RESET_RECORDS', 'admin', '', '', { resetCounters: resetCounters });
+            forceDataSync(true);
+            alert("✅ Backup downloaded and cloud records reset completed.");
+        } catch (err) {
+            alert("Reset failed: " + err.message);
+        }
+    }
+
+    // ==========================================
+    // EXACT MATCH PRINT CHECKLIST
+    // ==========================================
+    function printChecklist(id, docType, outputMode = 'print') {
+        let dataList, title, statusText;
+        if (docType === 'quote') { dataList = quotes; title = "QUOTATION LIST"; statusText = "Quotation"; }
+        else if (docType === 'enquire') { dataList = enquiries; title = "ENQUIRY RECORD"; statusText = "Enquiry"; }
+        else { dataList = orders; title = "ORDER LIST / PACKING LIST"; statusText = "Pending Fulfillment"; }
+
+        const data = dataList.find(x => x.id === id); if(!data) { alert('Record not found. Please refresh and try again.'); return; }
+        if (docType === 'order') { if (data.status === 'arrived') statusText = 'Arrived'; if (data.status === 'completed') statusText = 'Completed'; }
+
+        let rows = '';
+        (data.items || []).forEach((i, idx) => {
+            rows += `<tr><td style="text-align:center; padding:10px; border:1px solid #e2e8f0; font-size:13px;">${idx+1}</td><td style="text-align:center; padding:10px; border:1px solid #e2e8f0;"><div style="width:16px;height:16px;border:2px solid #94a3b8;border-radius:3px;margin:auto;"></div></td><td style="padding:10px; border:1px solid #e2e8f0; font-size:13px;"><strong>${escapeHTML(i.part||'-')}</strong></td><td style="padding:10px; border:1px solid #e2e8f0; font-size:13px;">${escapeHTML(i.partNo || '-')}</td><td style="padding:10px; border:1px solid #e2e8f0; font-size:13px; font-weight:bold; color:#0f172a;">${escapeHTML(i.brand || '-')}</td><td style="text-align:center; padding:10px; border:1px solid #e2e8f0; font-size:13px;">${escapeHTML(i.qty||'1')}</td><td style="text-align:right; padding:10px; border:1px solid #e2e8f0; font-size:13px;">RM ${parseFloat(i.unitPrice||0).toFixed(2)}</td><td style="text-align:right; padding:10px; border:1px solid #e2e8f0; font-size:13px;"><strong>RM ${parseFloat(i.subTotal||0).toFixed(2)}</strong></td></tr>`;
+        });
+        
+        let footerFinance = '';
+        if (docType === 'quote' || docType === 'enquire') { footerFinance = `Total Amount: <strong style="font-size:16px;">RM ${parseFloat(data.total||0).toFixed(2)}</strong>`; } 
+        else { footerFinance = `Total Amount: <strong>RM ${parseFloat(data.total||0).toFixed(2)}</strong><br>Deposit Paid: RM ${parseFloat(data.deposit||0).toFixed(2)}<br><div style="margin-top:8px; font-size:16px;">Balance Due: <strong style="color:#ef4444;">RM ${parseFloat(data.balance||0).toFixed(2)}</strong></div>`; }
+        
+        const html = `<html><head><title>${title} - ${data.refNo}</title><style>@media print { @page { margin: 15mm; } body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } } body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 20px; color: #333; } table { width: 100%; border-collapse: collapse; margin-top: 20px; } th { background: #f8fafc !important; font-size: 12px; text-transform: uppercase; color: #475569; padding: 12px 10px; border: 1px solid #e2e8f0; }</style></head><body><h2 style="text-align:center; margin-bottom:10px; text-transform:uppercase; letter-spacing:1px; font-weight:800; font-size:22px;">Malaysia Motor Company</h2><hr style="border: 0; border-bottom: 2px solid #1e293b; margin-bottom: 20px;"><h3 style="text-align:center; margin-bottom:25px; font-size:18px; letter-spacing:1px;">${title}</h3><div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; display: flex; justify-content: space-between; margin-bottom: 25px; font-size: 13px; line-height: 1.6; border: 1px solid #e2e8f0;"><div style="width: 48%;"><strong>Customer Name:</strong> ${escapeHTML(data.name || 'N/A')}<br><strong>Contact:</strong> <span style="color:#2563eb; font-weight:bold;">${escapeHTML(data.phone || 'N/A')}</span><br><strong>Car Details:</strong> ${escapeHTML(data.car || '')} ${data.plate ? '['+escapeHTML(data.plate)+']' : ''}</div><div style="width: 48%;"><strong>Ref No:</strong> ${escapeHTML(data.refNo || 'N/A')}<br><strong>Date:</strong> ${escapeHTML(data.date || 'N/A')}<br><strong>Served By:</strong> ${escapeHTML(data.staff || 'N/A')}<br><strong>Status:</strong> ${escapeHTML(statusText)}</div></div><table><thead><tr><th style="width:5%; text-align:center;">No.</th><th style="width:5%; text-align:center;">Pack</th><th style="width:34%; text-align:left;">Part Description</th><th style="width:14%; text-align:left;">Item Code</th><th style="width:12%; text-align:left;">Brand</th><th style="width:5%; text-align:center;">QTY</th><th style="width:12%; text-align:right;">U.Price</th><th style="width:13%; text-align:right;">Total</th></tr></thead><tbody>${rows}</tbody></table><div style="text-align:right; margin-top:25px; font-size:14px; line-height:1.8;">${footerFinance}</div><div style="text-align:center; margin-top:60px; font-size:11px; color:#94a3b8;">Thank you for choosing Malaysia Motor Company. Please retain this list for your records.</div></body></html>`;
+        openPrintWindowOrPrintableView(html, `${title} - ${escapeHTML(data.refNo || 'N/A')}`, outputMode);
+    }
+
+    function saveChecklistPDF(id, docType) {
+        printChecklist(id, docType, 'pdf');
+    }
+
+    // ==========================================
+    // PREORDER LOGIC
+    // ==========================================
+    function calcRowTotal(rowId) {
+        const row = document.getElementById(rowId);
+        if(!row) return;
+        const qtyEl = row.querySelector('.i-qty');
+        const priceEl = row.querySelector('.i-unitPrice');
+        sanitizeNonNegativeInput(qtyEl);
+        sanitizeNonNegativeInput(priceEl);
+        const qty = toNonNegativeNumber(qtyEl.value, 0);
+        const price = toNonNegativeNumber(priceEl.value, 0);
+        row.querySelector('.i-subTotal').value = (qty * price) > 0 ? (qty * price).toFixed(2) : '';
+        calcGrandTotal();
+    }
+    function calcGrandTotal() { let grand = 0; document.querySelectorAll('#ordersTab .pos-table-row').forEach(row => { grand += parseFloat(row.querySelector('.i-subTotal').value) || 0; }); document.getElementById('totalPrice').value = grand > 0 ? grand.toFixed(2) : ''; calcBalance(); }
+    function calcBalance() {
+        const total = toNonNegativeNumber(document.getElementById('totalPrice').value, 0);
+        let depositInput = document.getElementById('deposit');
+        sanitizeNonNegativeInput(depositInput);
+        let deposit = toNonNegativeNumber(depositInput.value, 0);
+        if(deposit > total) { deposit = total; depositInput.value = deposit.toFixed(2); }
+        document.getElementById('balance').value = Math.max(0, total - deposit).toFixed(2);
+    }
+    function updateRowNumbers() { document.querySelectorAll('#ordersTab .pos-table-row').forEach((row, index) => { const numDiv = row.querySelector('.row-num'); if (numDiv) numDiv.innerText = index + 1; }); }
+
+    function addNewItemBlock(data = null) {
+        itemMapIdCounter++; const currentId = 'item_row_' + itemMapIdCounter; itemPhotosMap[currentId] = data && data.photos ? [...data.photos] : [];
+        const container = document.getElementById('dynamicItemsContainer'); const isFirst = container.children.length === 0;
+        const html = `<div class="pos-table-row" id="${currentId}"><div class="row-num">0</div><div><span class="mobile-label">Part Needed</span><div class="input-wrapper"><input type="text" class="i-part pos-input" placeholder="Part Desc" value="${escapeAttr(data ? data.part : '')}" autocomplete="off" oninput="handlePartInput(this, '${currentId}')" onfocus="handlePartInput(this, '${currentId}')"><div id="autocomplete_${currentId}" class="autocomplete-list" style="display:none;"></div></div></div><div><span class="mobile-label">Item Code / OEM No</span><input type="text" class="i-partNo pos-input" placeholder="OEM Code" value="${escapeAttr(data && data.partNo ? data.partNo : '')}" oninput="this.value = this.value.toUpperCase().replace(/\\s/g, '')"></div><div><span class="mobile-label">Brand</span><input type="text" class="i-brand pos-input" placeholder="Brand" value="${escapeAttr(data && data.brand ? data.brand : '')}"></div><div><span class="mobile-label">Supplier</span><input type="text" class="i-supplier pos-input" placeholder="Supplier" value="${escapeAttr(data && data.supplier ? data.supplier : '')}" list="supplierList"></div><div class="mobile-grid-3"><div><span class="mobile-label">Qty</span><input type="number" class="i-qty pos-input" placeholder="1" value="${escapeAttr(data && data.qty ? data.qty : '1')}" oninput="calcRowTotal('${currentId}')" style="text-align:center;"></div><div><span class="mobile-label">U.Price (RM)</span><input type="number" class="i-unitPrice pos-input" placeholder="0.00" value="${escapeAttr(data && data.unitPrice ? data.unitPrice : '')}" oninput="calcRowTotal('${currentId}')"></div><div><span class="mobile-label">Total (RM)</span><input type="number" class="i-subTotal pos-input readonly-input" placeholder="0.00" value="${escapeAttr(data && data.subTotal ? data.subTotal : '')}" readonly></div></div><div><span class="mobile-label">ETA Date</span><input type="date" class="i-eta pos-input" value="${escapeAttr(data && data.eta ? data.eta : '')}"></div><div style="display:flex; justify-content:center; align-items:center;"><label class="photo-upload-btn">📷 <span id="count_${currentId}">${itemPhotosMap[currentId].length}</span>/5<input type="file" accept="image/*" multiple capture="environment" onchange="processItemPhotos(event, '${currentId}')" style="display:none;"></label></div><div>${!isFirst || data !== null ? `<button type="button" class="remove-row-btn" onclick="removeItemBlock('${currentId}')">✖</button>` : `<div style="height:35px;"></div>`}</div><div id="gallery_${currentId}" class="row-gallery"></div></div>`;
+        container.insertAdjacentHTML('beforeend', html); renderGalleryUI(currentId); updateRowNumbers(); if(data) calcRowTotal(currentId); 
+    }
+
+    function removeItemBlock(id) { document.getElementById(id).remove(); delete itemPhotosMap[id]; updateRowNumbers(); calcGrandTotal(); if (document.getElementById('dynamicItemsContainer').children.length === 0) addNewItemBlock(); }
+    function compressPhotoFile(file, callback, errorCallback) {
+        const reader = new FileReader();
+        reader.onerror = () => errorCallback && errorCallback(new Error('Photo read failed.'));
+        reader.onload = function(e) {
+            const img = new Image();
+            img.onerror = () => errorCallback && errorCallback(new Error('Photo image load failed.'));
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+                const maxSize = 1024;
+                if (width > height) {
+                    if (width > maxSize) { height *= maxSize / width; width = maxSize; }
+                } else {
+                    if (height > maxSize) { width *= maxSize / height; height = maxSize; }
+                }
+                canvas.width = Math.round(width);
+                canvas.height = Math.round(height);
+                canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+                callback(canvas.toDataURL('image/jpeg', 0.65));
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function processPhotoFiles(event, targetArray, renderFn, maxCount = 5) {
+        const files = event.target.files;
+        if (!files || files.length === 0) return;
+        if (targetArray.length + files.length > maxCount) {
+            alert(`⚠️ Max ${maxCount} photos!`);
+            event.target.value = '';
+            return;
+        }
+        Array.from(files).forEach(file => {
+            compressPhotoFile(file, (dataUrl) => {
+                targetArray.push(dataUrl);
+                renderFn();
+            }, (err) => alert(err.message || 'Photo processing failed.'));
+        });
+        event.target.value = '';
+    }
+
+    function processItemPhotos(event, itemId) { processPhotoFiles(event, itemPhotosMap[itemId], () => renderGalleryUI(itemId), 5); }
+    function renderGalleryUI(itemId) { const gallery = document.getElementById('gallery_' + itemId); document.getElementById('count_' + itemId).innerText = itemPhotosMap[itemId].length; gallery.innerHTML = ''; itemPhotosMap[itemId].forEach((b64Data, index) => { const key = registerPhotoPreview(b64Data); gallery.innerHTML += `<div class="photo-wrapper"><img src="${safePhotoSrc(b64Data)}" class="photo-thumbnail" onclick="showPhotoByKey('${key}')"><button type="button" class="rotate-single-btn" onclick="rotateImage('${itemId}', ${index}, 'order')">↻</button><button type="button" class="remove-single-btn" onclick="removeSinglePhoto('${itemId}', ${index})">✖</button></div>`; }); }
+    function removeSinglePhoto(itemId, index) { itemPhotosMap[itemId].splice(index, 1); renderGalleryUI(itemId); }
+    function showPhoto(src) { document.getElementById('modalImg').src = src; document.getElementById('photoModal').style.display = 'block'; }
+    function closePhoto() { document.getElementById('photoModal').style.display = 'none'; }
+
+    function duplicateOrder(id) {
+        const order = orders.find(o => o.id === id);
+        if (!order) return alert('Record not found or already deleted. Please refresh the order list.');
+        if(!confirm(`Copy exactly the same parts and prices into a NEW document?`)) return;
+        document.getElementById('carModel').value = order.car || '';
+        document.getElementById('totalPrice').value = order.total || '';
+        document.getElementById('deposit').value = order.deposit || '';
+        document.getElementById('balance').value = order.balance || '';
+        document.getElementById('orderByStaff').value = order.staff || '';
+        document.getElementById('remarks').value = order.remarks || '';
+        document.getElementById('custName').value = ''; document.getElementById('custPhone').value = ''; document.getElementById('carPlate').value = ''; document.getElementById('chassisNumber').value = '';
+        document.getElementById('dynamicItemsContainer').innerHTML = ''; itemPhotosMap = {}; itemMapIdCounter = 0; const itemsToLoad = order.items || []; if(itemsToLoad.length === 0) addNewItemBlock(); itemsToLoad.forEach(data => addNewItemBlock(data));
+        editingId = null; document.getElementById('mainBtn').innerText = "💾 Save Document & Sync"; document.getElementById('mainBtn').style.backgroundColor = "#2563eb"; document.getElementById('cancelBtn').style.display = "none"; window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function editOrder(id) {
+        const order = orders.find(o => o.id === id);
+        if (!order) return alert('Record not found or already deleted. Please refresh the order list.');
+        if (order && order.status === 'completed' && !isAdmin) {
+            alert('Completed orders are locked. Please ask Boss/Admin to edit or return this order.');
+            return;
+        }
+        ['custName','custPhone','carPlate','carModel','chassisNumber','totalPrice','deposit','balance','orderByStaff','remarks'].forEach(f => { let val = order[f.replace('orderByStaff','staff').replace('custName','name').replace('custPhone','phone').replace('carPlate','plate').replace('carModel','car').replace('chassisNumber','chassis').replace('totalPrice','total')] || ''; document.getElementById(f).value = val; });
+        document.getElementById('dynamicItemsContainer').innerHTML = ''; itemPhotosMap = {}; const itemsToLoad = order.items || []; if(itemsToLoad.length === 0) addNewItemBlock(); itemsToLoad.forEach(data => addNewItemBlock(data));
+        editingId = id; document.getElementById('mainBtn').innerText = "Confirm Update Data (Cloud)"; document.getElementById('mainBtn').style.backgroundColor = "#10b981"; document.getElementById('cancelBtn').style.display = "block"; window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function cancelEdit() {
+        editingId = null; document.getElementById('mainBtn').innerText = "💾 Save Document & Sync"; document.getElementById('mainBtn').style.backgroundColor = "#2563eb"; document.getElementById('cancelBtn').style.display = "none";
+        document.querySelectorAll('#ordersTab input:not(.login-input)').forEach(i => { if(i.id !== 'searchInput' && i.id !== 'orderDateFromFilter' && i.id !== 'orderDateToFilter') i.value = ''; }); document.getElementById('orderByStaff').value = ''; document.getElementById('dynamicItemsContainer').innerHTML = ''; itemPhotosMap = {}; addNewItemBlock();
+    }
+
+    async function saveOrUpdateOrder() {
+        const mainBtn = document.getElementById('mainBtn'); if (mainBtn.disabled) return; 
+        let finalPhone = document.getElementById('custPhone').value.replace(/[^0-9]/g, ''); if (finalPhone.startsWith('0')) { finalPhone = '60' + finalPhone.substring(1); } document.getElementById('custPhone').value = finalPhone; 
+        const payload = { name: document.getElementById('custName').value, phone: finalPhone, plate: document.getElementById('carPlate').value.trim().toUpperCase(), car: document.getElementById('carModel').value, chassis: document.getElementById('chassisNumber').value.trim().toUpperCase(), total: toNonNegativeNumber(document.getElementById('totalPrice').value, 0).toFixed(2), deposit: toNonNegativeNumber(document.getElementById('deposit').value, 0).toFixed(2), balance: toNonNegativeNumber(document.getElementById('balance').value, 0).toFixed(2), staff: document.getElementById('orderByStaff').value, remarks: document.getElementById('remarks').value, items: [] };
+        const existingOrder = editingId ? orders.find(o => o.id === editingId) : null;
+        if (existingOrder && existingOrder.status === 'completed' && !isAdmin) {
+            alert('Completed orders are locked. Please ask Boss/Admin to edit or return this order.');
+            return;
+        }
+        document.querySelectorAll('#ordersTab .pos-table-row').forEach(card => { const id = card.id; const p = { part: card.querySelector('.i-part').value, partNo: card.querySelector('.i-partNo').value.trim().toUpperCase(), brand: card.querySelector('.i-brand').value, supplier: card.querySelector('.i-supplier').value, qty: String(toNonNegativeNumber(card.querySelector('.i-qty').value, 1)), unitPrice: toNonNegativeNumber(card.querySelector('.i-unitPrice').value, 0).toFixed(2), subTotal: toNonNegativeNumber(card.querySelector('.i-subTotal').value, 0).toFixed(2), eta: card.querySelector('.i-eta').value, photos: itemPhotosMap[id] || [] }; if (p.part || p.partNo) payload.items.push(p); });
+        if(!payload.name) return alert("Please fill Customer Name."); if(payload.items.length === 0) return alert("Enter at least 1 Part.");
+
+        if (!navigator.onLine) {
+            if (editingId) {
+                alert("⚠️ You are offline. Editing existing cloud orders is disabled until internet reconnects.");
+                return;
+            }
+            payload.date = getStandardDateStr();
+            payload.status = 'offline';
+            payload.timestamp = Date.now();
+            saveToOfflineQueue('order', payload);
+            return;
+        }
+
+        const originalText = mainBtn.innerText; mainBtn.innerText = "⏳ Processing Photos & Data..."; mainBtn.disabled = true;
+        try {
+            for(let i=0; i<payload.items.length; i++) { if(payload.items[i].photos && payload.items[i].photos.length > 0) { payload.items[i].photos = await uploadBase64ToStorage(payload.items[i].photos); } }
+            if (editingId) {
+                const oldOrder = orders.find(o => o.id === editingId) || {};
+                await db.ref('orders/' + editingId).update(payload);
+                await writeAuditLog('UPDATE_ORDER', 'orders', oldOrder.refNo || '', editingId, { name: payload.name, plate: payload.plate, total: payload.total });
+            } else {
+                const snapshot = await db.ref('orderCounter').transaction(cv => (cv || 1000) + 1);
+                payload.refNo = 'MMC-' + snapshot.snapshot.val();
+                payload.date = getStandardDateStr();
+                payload.status = 'waiting';
+                payload.timestamp = Date.now();
+                const newRef = await db.ref('orders').push(payload);
+                await writeAuditLog('CREATE_ORDER', 'orders', payload.refNo, newRef.key, { name: payload.name, plate: payload.plate, total: payload.total });
+            }
+            cancelEdit();
+        } catch(err) { alert("Upload Error: " + err.message); } finally { mainBtn.innerText = originalText; mainBtn.disabled = false; }
+    }
+
+    async function toggleStatus(id) { if(!navigator.onLine) return alert("Requires internet."); const order = orders.find(o => o.id === id); if(!order || order.status === 'completed' || order.status === 'offline') return; let newStatus = order.status === 'waiting' ? 'arrived' : 'waiting'; await db.ref('orders/' + id).update({ status: newStatus }); await writeAuditLog('TOGGLE_ORDER_STATUS', 'orders', order.refNo || '', id, { from: order.status, to: newStatus }); }
+    async function markCompleted(id) { if(!navigator.onLine) return alert("Offline!"); const order = orders.find(o => o.id === id); if(!order) return alert('Record not found or already deleted. Please refresh.'); if(confirm("Confirm item collected?")) { await db.ref('orders/' + id).update({ status: 'completed', completedDate: getStandardDateStr() }); await writeAuditLog('MARK_ORDER_COMPLETED', 'orders', order.refNo || '', id, { completedDate: getStandardDateStr() }); } }
+    async function restoreOrder(id) { if(!navigator.onLine) return; if(!isAdmin) return alert('Only Boss/Admin can return completed orders.'); const order = orders.find(o => o.id === id); if(!order) return alert('Record not found or already deleted. Please refresh.'); await db.ref('orders/' + id).update({ status: 'arrived', completedDate: null }); await writeAuditLog('RETURN_COMPLETED_ORDER', 'orders', order.refNo || '', id, { to: 'arrived' }); }
+    async function deleteOrder(id) { if(!navigator.onLine) return alert('Requires internet.'); const order = orders.find(o => o.id === id); if(!order) return alert('Record not found or already deleted. Please refresh.'); if(!confirm('Delete this order permanently?')) return; await db.ref('orders/' + id).remove(); await writeAuditLog('DELETE_ORDER', 'orders', order.refNo || '', id, { name: order.name || '', plate: order.plate || '', deletedBy: auth.currentUser ? auth.currentUser.email : '' }); }
+    function toggleAllOrderChecks(source) { document.querySelectorAll('.order-check').forEach(cb => cb.checked = source.checked); }
+    async function markSelectedArrived() {
+        if(!navigator.onLine) return alert("Requires internet."); let checkboxes = document.querySelectorAll('.order-check:checked'); if(checkboxes.length === 0) return alert("Please check at least one pending order.");
+        if(!confirm(`Mark ${checkboxes.length} selected items as ARRIVED?`)) return; let updates = {}; checkboxes.forEach(cb => { let id = cb.value; let o = orders.find(x => x.id === id); if(o && o.status === 'waiting') updates[id + '/status'] = 'arrived'; });
+        if(Object.keys(updates).length > 0) { await db.ref('orders').update(updates); await writeAuditLog('BULK_MARK_ARRIVED', 'orders', '', '', { count: Object.keys(updates).length }); document.getElementById('selectAllOrders').checked = false; } 
+    }
+
+    function clearDateFilter(type) { if(type === 'order') { document.getElementById('orderDateFromFilter').value = ''; document.getElementById('orderDateToFilter').value = ''; renderTable(); } else if(type === 'quote') { document.getElementById('quoteDateFromFilter').value = ''; document.getElementById('quoteDateToFilter').value = ''; renderQTable(); } else if(type === 'enquire') { document.getElementById('enquireDateFromFilter').value = ''; document.getElementById('enquireDateToFilter').value = ''; renderETable(); } else if(type === 'restock') { document.getElementById('rDateFromFilter').value = ''; document.getElementById('rDateToFilter').value = ''; renderRestockTable(); } }
+    function getFormattedDateForFilter(dateVal) { if(!dateVal) return ""; let [y, m, d] = dateVal.split('-'); const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]; return `${d} ${months[parseInt(m)-1]} ${y}`; }
+
+    function renderTable() {
+        const tbody = document.getElementById('orderTableBody'); tbody.innerHTML = '';
+        const search = document.getElementById('searchInput').value.toLowerCase(); const viewFilter = document.getElementById('viewFilter').value; const dateFromVal = document.getElementById('orderDateFromFilter').value; const dateToVal = document.getElementById('orderDateToFilter').value;
+        const offlineOrders = offlineRecords
+            .filter(x => x.dataType === 'order')
+            .map(x => ({
+                ...x,
+                id: x.tempId,
+                refNo: 'OFFLINE-PENDING',
+                status: 'offline',
+                offlinePending: true
+            }));
+        const displayOrders = [...offlineOrders, ...orders];
+
+        let filteredOrders = displayOrders.filter(o => { 
+            if (viewFilter === 'active' && o.status === 'completed') return false; if (viewFilter === 'history' && o.status !== 'completed') return false; if (!recordMatchesDateRange(o, dateFromVal, dateToVal)) return false;
+            const itemMatch = (o.items||[]).some(i => (i.part&&i.part.toLowerCase().includes(search)) || (i.partNo&&i.partNo.toLowerCase().includes(search))); 
+            return (o.name||'').toLowerCase().includes(search) || (o.car&&o.car.toLowerCase().includes(search)) || (o.refNo&&o.refNo.toLowerCase().includes(search)) || (o.plate&&o.plate.toLowerCase().includes(search)) || (o.remarks&&o.remarks.toLowerCase().includes(search)) || (o.staff&&o.staff.toLowerCase().includes(search)) || itemMatch; 
+        });
+
+        filteredOrders.forEach(order => {
+            let partsHtml = `<ul class="table-item-list">`; let waList = [];
+            (order.items||[]).forEach(item => {
+                const priceDetails = parseFloat(item.subTotal) > 0 ? `<span style="float:right;font-size:13px;color:#64748b;">${item.qty||1} x RM${parseFloat(item.unitPrice||0).toFixed(2)} = <b style="color:#0f172a;">RM${parseFloat(item.subTotal||0).toFixed(2)}</b></span>` : `<span style="float:right;font-size:13px;color:#64748b;font-weight:bold;">Qty: ${item.qty||1}</span>`;
+                let photoHtml = ''; if (item.photos && item.photos.length > 0) { photoHtml = `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;">`; item.photos.forEach(p => { const key = registerPhotoPreview(p); photoHtml += `<img src="${safePhotoSrc(p)}" class="photo-thumbnail" onclick="showPhotoByKey('${key}')" style="width:40px;height:40px;border:1px solid #cbd5e1;">`; }); photoHtml += `</div>`; }
+                const pNo = item.partNo && item.partNo.trim() !== '' ? item.partNo.trim() : null; const partNoHTML = pNo ? ` <small class="mono-text" style="color:#64748b; font-weight:bold;">[${escapeHTML(pNo)}]</small>` : '';
+                partsHtml += `<li><div style="margin-bottom:4px;"><strong style="font-size:14px;color:#0f172a;">${escapeHTML(item.part||'-')}</strong>${partNoHTML}${priceDetails}</div><small style="color:#64748b;">Brd: ${escapeHTML(item.brand||'-')} • Sup: ${escapeHTML(item.supplier||'-')}</small>${photoHtml}</li>`;
+                const partNoWA = pNo ? `[${pNo}] ` : ''; const brandWA = item.brand && item.brand.trim() !== '' ? `(Brand: ${item.brand.trim()}) ` : '';
+                const priceWA = parseFloat(item.subTotal) > 0 ? ` -> ${item.qty||1} x RM${parseFloat(item.unitPrice||0).toFixed(2)} = RM${parseFloat(item.subTotal||0).toFixed(2)}` : ` -> Qty: ${item.qty||1}`;
+                waList.push(`• ${item.part||'-'} ${partNoWA}${brandWA}${priceWA}`);
+            }); partsHtml += `</ul>`;
+            
+            const msgR = `🧾 *MALAYSIA MOTOR COMPANY - RESIT / RECEIPT*\n\nPelanggan yang dihormati ${plainText(order.name)},\nTerima kasih. Pesanan anda disahkan!\n\n*Order ID:* ${plainText(order.refNo)}\n*Car Plate:* ${order.plate||'-'}\n*Car Model:* ${order.car||''}\n*Items:*\n${waList.join('\n')}\n\n*Total:* RM${plainText(order.total)}\n*Deposit:* RM${plainText(order.deposit)}\n*Balance Due:* RM${plainText(order.balance)}`;
+            const msgA = `*MALAYSIA MOTOR COMPANY*\n\nPelanggan yang dihormati ${plainText(order.name)},\nBerita baik! Pesanan anda (${plainText(order.refNo)}) telah tiba. Baki bayaran: RM${plainText(order.balance)}. Dialu-alukan untuk mengambilnya.\n\nDear ${plainText(order.name)},\nGood news! Your order (${plainText(order.refNo)}) has arrived. Balance due: RM${plainText(order.balance)}. You are welcome to collect it.`;
+            const msgN = `*MALAYSIA MOTOR COMPANY*\n\nPelanggan yang dihormati ${plainText(order.name)},\nKami memohon maaf, pesanan anda (${plainText(order.refNo)}) kehabisan stok. Sila hubungi kami untuk pemulangan deposit (RM${plainText(order.deposit)}).\n\nDear ${plainText(order.name)},\nApologies, your order (${plainText(order.refNo)}) is out of stock. Contact us for a refund (RM${plainText(order.deposit)}).`;
+            const msgRemind = `🔔 *MALAYSIA MOTOR COMPANY - COLLECTION REMINDER*\n\nHello ${plainText(order.name)}!\nThis is a friendly reminder that your parts for ${order.plate||order.car||'your car'} are ready for collection at MMC.\n\nPlease drop by to collect them and clear the RM${plainText(order.balance)} balance.\nThank you!`;
+
+            const tr = document.createElement('tr'); tr.style.opacity = order.status === 'completed' ? '0.6' : '1';
+            const plateHtml = order.plate ? `<span style="background:#fef08a; color:#b45309; padding:2px 6px; border-radius:4px; font-weight:bold; font-size:12px; letter-spacing:1px;">${escapeHTML(order.plate)}</span><br>` : '';
+
+            let waActionButtons = '';
+            if (order.offlinePending) {
+                waActionButtons = `<div style="font-size:12px; color:#ef4444; font-weight:bold; text-align:center;">Waiting cloud sync</div>`;
+            } else {
+                if (order.phone && order.status !== 'completed') { waActionButtons += `<a href="https://wa.me/${waPhone(order.phone)}?text=${encodeURIComponent(msgR)}" target="_blank" class="wa-btn wa-btn-receipt">📄 WA Receipt</a><a href="https://wa.me/${waPhone(order.phone)}?text=${encodeURIComponent(msgA)}" target="_blank" class="wa-btn wa-btn-arrived">💬 Inform Arrived</a><a href="https://wa.me/${waPhone(order.phone)}?text=${encodeURIComponent(msgN)}" target="_blank" class="wa-btn wa-btn-cancel">❌ Item Not Found</a>`; }
+                if(order.status === 'arrived' && order.phone) { waActionButtons = `<a href="https://wa.me/${waPhone(order.phone)}?text=${encodeURIComponent(msgRemind)}" target="_blank" class="wa-btn wa-btn-remind">🔔 Remind Collection</a>` + waActionButtons; }
+            }
+
+            let mainActions = '';
+            if (order.offlinePending) {
+                mainActions = `<div style="font-size:12px; color:#ef4444; font-weight:bold; text-align:center; line-height:1.4;">🔴 Saved Offline<br>Waiting Cloud Sync</div>`;
+            } else {
+                mainActions += `<div class="action-btns" style="margin-bottom:6px;"><button class="copy-btn" onclick="duplicateOrder('${order.id}')">📋 Copy</button></div><div class="action-btns">`;
+                if (order.status !== 'completed') {
+                    mainActions += `<button class="complete-btn" onclick="markCompleted('${order.id}')">✔️ Done</button>`;
+                    mainActions += `<button class="edit-btn" onclick="editOrder('${order.id}')">✏️ Edit</button>`;
+                } else if (isAdmin) {
+                    mainActions += `<button class="edit-btn" onclick="restoreOrder('${order.id}')">⏪ Return</button>`;
+                    mainActions += `<button class="edit-btn" onclick="editOrder('${order.id}')">✏️ Edit</button>`;
+                } else {
+                    mainActions += `<span style="font-size:12px;color:#64748b;font-weight:bold;">🔒 Completed Locked</span>`;
+                }
+                mainActions += `<button class="delete-btn" onclick="deleteOrder('${order.id}')">✖ Del</button>`;
+                mainActions += `</div><button class="print-btn" onclick="printChecklist('${order.id}', 'order')" style="width:100%; margin-top:5px; margin-bottom:5px;">🖨️ Print Checklist</button><button class="print-btn" onclick="saveChecklistPDF('${order.id}', 'order')" style="width:100%; margin-top:5px; margin-bottom:5px;">📄 PDF Checklist</button>`;
+            }
+
+            const statusVisual = order.status === 'offline' ? '🔴 Pending Sync' : (order.status==='waiting'?'⏳ Wait':(order.status==='arrived'?'✅ Arrived':'📦 Done'));
+            const statusClass = order.status === 'offline' ? 'status-offline' : (order.status==='completed'?'status-completed':(order.status==='waiting'?'status-waiting':'status-arrived'));
+
+            tr.innerHTML = `<td><input type="checkbox" class="order-check" value="${order.id}"></td><td><span class="ref-badge">${escapeHTML(order.refNo)}</span><br><small style="color:#64748b;margin-top:6px;display:inline-block;font-weight:700;">${escapeHTML(order.date)}</small><br>${order.staff?`<span class="staff-badge">👤 ${escapeHTML(order.staff)}</span>`:''}</td><td><strong style="color:#0f172a;">${escapeHTML(order.name)}</strong><br><small style="color:#3b82f6;font-weight:bold;">${escapeHTML(order.phone)}</small><br><div style="margin-top:8px;padding-top:8px;border-top:1px dashed #e2e8f0;">${plateHtml}<strong class="car-model-wrap" style="color:#334155; font-size:13px; display:inline-block; margin-top:4px;">${escapeHTML(order.car||'-')}</strong> <span class="mono-text" style="color:#64748b;font-size:11px;">${order.chassis ? '(' + escapeHTML(order.chassis) + ')' : ''}</span></div></td><td>${partsHtml}<div class="notes-text" style="margin-top:8px;color:#059669;font-weight:600;">${order.remarks ? '📝 Remarks: ' + escapeHTML(order.remarks) : ''}</div></td><td><small style="color:#64748b;">Total: RM${escapeHTML(order.total)}</small><br><small style="color:#64748b;">Paid: RM${escapeHTML(order.deposit)}</small><br><strong style="font-size:15px;margin-top:6px;display:inline-block;color:#0f172a;">Bal: RM${escapeHTML(order.balance)}</strong></td><td><button class="status-btn ${statusClass}" onclick="toggleStatus('${order.id}')">${statusVisual}</button></td><td><div class="action-btns" style="flex-direction:column;align-items:stretch;">${waActionButtons}</div></td><td>${mainActions}</td>`;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function exportCSV() {
+        if(!isAdmin) return;
+        if(orders.length === 0) return alert("No data available to export.");
+        const header = ['Ref No','Order Date','Handled By','Customer Name','Phone','Car Plate','Car Model','Chassis No','All Parts','Total','Deposit','Balance','Status','Remarks'];
+        const rows = [header.map(csvCell).join(',')];
+        orders.forEach(o => {
+            const allPartsText = o.items ? o.items.map(i => {
+                const pNoText = (i.partNo && String(i.partNo).trim() !== '') ? ` [${i.partNo}]` : '';
+                return `${i.qty || 1}x ${i.part || ''}${pNoText} (RM${i.subTotal || ''})`;
+            }).join(' + ') : '';
+            rows.push([o.refNo, o.date, o.staff, o.name, o.phone, o.plate, o.car, o.chassis, allPartsText, o.total, o.deposit, o.balance, o.status, o.remarks].map(csvCell).join(','));
+        });
+        const csvContent = 'data:text/csv;charset=utf-8,\uFEFF' + rows.join('\n');
+        const link = document.createElement("a");
+        link.setAttribute("href", encodeURI(csvContent));
+        link.setAttribute("download", `MMC_Orders_${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    // ==========================================
+    // QUOTATION SYSTEM
+    // ==========================================
+    function calcQRowTotal(rowId) {
+        const row = document.getElementById(rowId);
+        if(!row) return;
+        const qtyEl = row.querySelector('.i-qty');
+        const priceEl = row.querySelector('.i-unitPrice');
+        sanitizeNonNegativeInput(qtyEl);
+        sanitizeNonNegativeInput(priceEl);
+        const qty = toNonNegativeNumber(qtyEl.value, 0);
+        const price = toNonNegativeNumber(priceEl.value, 0);
+        row.querySelector('.i-subTotal').value = (qty * price) > 0 ? (qty * price).toFixed(2) : '';
+        calcQGrandTotal();
+    }
+    function calcQGrandTotal() { let grand = 0; document.querySelectorAll('#quoteTab .pos-table-row').forEach(row => { grand += parseFloat(row.querySelector('.i-subTotal').value) || 0; }); document.getElementById('qTotalPrice').value = grand > 0 ? grand.toFixed(2) : ''; }
+    function updateQRowNumbers() { document.querySelectorAll('#quoteTab .pos-table-row').forEach((row, index) => { const numDiv = row.querySelector('.row-num'); if (numDiv) numDiv.innerText = index + 1; }); }
+
+    function addQItemBlock(data = null) {
+        qItemMapIdCounter++; const currentId = 'q_item_row_' + qItemMapIdCounter; qItemPhotosMap[currentId] = data && data.photos ? [...data.photos] : [];
+        const container = document.getElementById('qDynamicItemsContainer'); const isFirst = container.children.length === 0;
+        const html = `<div class="pos-table-row" id="${currentId}"><div class="row-num">0</div><div><span class="mobile-label">Part Needed</span><div class="input-wrapper"><input type="text" class="i-part pos-input" placeholder="Part Desc" value="${escapeAttr(data ? data.part : '')}" autocomplete="off" oninput="handlePartInput(this, '${currentId}')" onfocus="handlePartInput(this, '${currentId}')"><div id="autocomplete_${currentId}" class="autocomplete-list" style="display:none;"></div></div></div><div><span class="mobile-label">Item Code / OEM No</span><input type="text" class="i-partNo pos-input" placeholder="OEM Code" value="${escapeAttr(data && data.partNo ? data.partNo : '')}" oninput="this.value = this.value.toUpperCase().replace(/\\s/g, '')"></div><div><span class="mobile-label">Brand</span><input type="text" class="i-brand pos-input" placeholder="Brand" value="${escapeAttr(data && data.brand ? data.brand : '')}"></div><div><span class="mobile-label">Supplier</span><input type="text" class="i-supplier pos-input" placeholder="Supplier" value="${escapeAttr(data && data.supplier ? data.supplier : '')}" list="supplierList"></div><div class="mobile-grid-3"><div><span class="mobile-label">Qty</span><input type="number" class="i-qty pos-input" placeholder="1" value="${escapeAttr(data && data.qty ? data.qty : '1')}" oninput="calcQRowTotal('${currentId}')" style="text-align:center;"></div><div><span class="mobile-label">U.Price (RM)</span><input type="number" class="i-unitPrice pos-input" placeholder="0.00" value="${escapeAttr(data && data.unitPrice ? data.unitPrice : '')}" oninput="calcQRowTotal('${currentId}')"></div><div><span class="mobile-label">Total (RM)</span><input type="number" class="i-subTotal pos-input readonly-input" placeholder="0.00" value="${escapeAttr(data && data.subTotal ? data.subTotal : '')}" readonly></div></div><div><span class="mobile-label">ETA Date</span><input type="date" class="i-eta pos-input" value="${escapeAttr(data && data.eta ? data.eta : '')}"></div><div style="display:flex; justify-content:center; align-items:center;"><label class="photo-upload-btn">📷 <span id="q_count_${currentId}">${qItemPhotosMap[currentId].length}</span>/5<input type="file" accept="image/*" multiple capture="environment" onchange="processQItemPhotos(event, '${currentId}')" style="display:none;"></label></div><div>${!isFirst || data !== null ? `<button type="button" class="remove-row-btn" onclick="removeQItemBlock('${currentId}')">✖</button>` : `<div style="height:35px;"></div>`}</div><div id="q_gallery_${currentId}" class="row-gallery"></div></div>`;
+        container.insertAdjacentHTML('beforeend', html); renderQGalleryUI(currentId); updateQRowNumbers(); if(data) calcQRowTotal(currentId); 
+    }
+
+    function removeQItemBlock(id) { document.getElementById(id).remove(); delete qItemPhotosMap[id]; updateQRowNumbers(); calcQGrandTotal(); if (document.getElementById('qDynamicItemsContainer').children.length === 0) addQItemBlock(); }
+    function processQItemPhotos(event, itemId) { processPhotoFiles(event, qItemPhotosMap[itemId], () => renderQGalleryUI(itemId), 5); }
+    function renderQGalleryUI(itemId) { const gallery = document.getElementById('q_gallery_' + itemId); document.getElementById('q_count_' + itemId).innerText = qItemPhotosMap[itemId].length; gallery.innerHTML = ''; qItemPhotosMap[itemId].forEach((b64Data, index) => { const key = registerPhotoPreview(b64Data); gallery.innerHTML += `<div class="photo-wrapper"><img src="${safePhotoSrc(b64Data)}" class="photo-thumbnail" onclick="showPhotoByKey('${key}')"><button type="button" class="rotate-single-btn" onclick="rotateImage('${itemId}', ${index}, 'quote')">↻</button><button type="button" class="remove-single-btn" onclick="removeQSinglePhoto('${itemId}', ${index})">✖</button></div>`; }); }
+    function removeQSinglePhoto(itemId, index) { qItemPhotosMap[itemId].splice(index, 1); renderQGalleryUI(itemId); }
+
+    function editQuote(id) {
+        const quote = quotes.find(q => q.id === id);
+        if (!quote) return alert('Quotation not found or already deleted. Please refresh the quotation list.');
+        ['qCustName','qCustPhone','qCarPlate','qCarModel','qChassisNumber','qTotalPrice','qOrderByStaff','qRemarks'].forEach(f => { let val = quote[f.replace('qOrderByStaff','staff').replace('qCustName','name').replace('qCustPhone','phone').replace('qCarPlate','plate').replace('qCarModel','car').replace('qChassisNumber','chassis').replace('qTotalPrice','total').replace('qRemarks','remarks')] || ''; document.getElementById(f).value = val; });
+        document.getElementById('qDynamicItemsContainer').innerHTML = ''; qItemPhotosMap = {}; const itemsToLoad = quote.items || []; if(itemsToLoad.length === 0) addQItemBlock(); itemsToLoad.forEach(data => addQItemBlock(data));
+        qEditingId = id; document.getElementById('qMainBtn').innerText = "Confirm Update Quotation"; document.getElementById('qMainBtn').style.backgroundColor = "#10b981"; document.getElementById('qCancelBtn').style.display = "block"; window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function cancelQEdit() {
+        qEditingId = null; document.getElementById('qMainBtn').innerText = "💾 Save Quotation"; document.getElementById('qMainBtn').style.backgroundColor = "#8b5cf6"; document.getElementById('qCancelBtn').style.display = "none";
+        document.querySelectorAll('#quoteTab input:not(.login-input)').forEach(i => { if(i.id !== 'qSearchInput' && i.id !== 'quoteDateFromFilter' && i.id !== 'quoteDateToFilter') i.value = ''; }); document.getElementById('qOrderByStaff').value = ''; document.getElementById('qDynamicItemsContainer').innerHTML = ''; qItemPhotosMap = {}; addQItemBlock();
+    }
+
+    async function saveOrUpdateQuote() {
+        const qMainBtn = document.getElementById('qMainBtn'); if (qMainBtn.disabled) return;
+        let finalPhone = document.getElementById('qCustPhone').value.replace(/[^0-9]/g, ''); if (finalPhone.startsWith('0')) { finalPhone = '60' + finalPhone.substring(1); } document.getElementById('qCustPhone').value = finalPhone; 
+        const name = document.getElementById('qCustName').value; if(!name) return alert("Please fill Customer Name.");
+        const payload = { name: name, phone: finalPhone, plate: document.getElementById('qCarPlate').value.trim().toUpperCase(), car: document.getElementById('qCarModel').value, chassis: document.getElementById('qChassisNumber').value.trim().toUpperCase(), total: toNonNegativeNumber(document.getElementById('qTotalPrice').value, 0).toFixed(2), staff: document.getElementById('qOrderByStaff').value, remarks: document.getElementById('qRemarks').value, items: [] };
+        document.querySelectorAll('#quoteTab .pos-table-row').forEach(card => { const id = card.id; const p = { part: card.querySelector('.i-part').value, partNo: card.querySelector('.i-partNo').value.trim().toUpperCase(), brand: card.querySelector('.i-brand').value, supplier: card.querySelector('.i-supplier').value, qty: String(toNonNegativeNumber(card.querySelector('.i-qty').value, 1)), unitPrice: toNonNegativeNumber(card.querySelector('.i-unitPrice').value, 0).toFixed(2), subTotal: toNonNegativeNumber(card.querySelector('.i-subTotal').value, 0).toFixed(2), eta: card.querySelector('.i-eta').value, photos: qItemPhotosMap[id] || [] }; if (p.part || p.partNo) payload.items.push(p); });
+        if(payload.items.length === 0) return alert("Enter at least 1 Part.");
+
+        if (!navigator.onLine) {
+            if (qEditingId) {
+                alert("⚠️ You are offline. Editing existing quotation is disabled until internet reconnects.");
+                return;
+            }
+            payload.date = getStandardDateStr();
+            payload.timestamp = Date.now();
+            saveToOfflineQueue('quote', payload);
+            return;
+        }
+
+        const originalText = qMainBtn.innerText; qMainBtn.innerText = "⏳ Processing Photos & Data..."; qMainBtn.disabled = true;
+        try {
+            for(let i=0; i<payload.items.length; i++) { if(payload.items[i].photos && payload.items[i].photos.length > 0) { payload.items[i].photos = await uploadBase64ToStorage(payload.items[i].photos); } }
+            if (qEditingId) {
+                const oldQuote = quotes.find(q => q.id === qEditingId) || {};
+                await db.ref('quotations/' + qEditingId).update(payload);
+                await writeAuditLog('UPDATE_QUOTATION', 'quotations', oldQuote.refNo || '', qEditingId, { name: payload.name, plate: payload.plate, total: payload.total });
+            } else {
+                const snapshot = await db.ref('quoteCounter').transaction(cv => (cv || 1000) + 1);
+                payload.refNo = 'QT-' + snapshot.snapshot.val();
+                payload.date = getStandardDateStr();
+                payload.timestamp = Date.now();
+                const newRef = await db.ref('quotations').push(payload);
+                await writeAuditLog('CREATE_QUOTATION', 'quotations', payload.refNo, newRef.key, { name: payload.name, plate: payload.plate, total: payload.total });
+            }
+            cancelQEdit();
+        } catch(err) { alert("Upload Error: " + err.message); } finally { qMainBtn.innerText = originalText; qMainBtn.disabled = false; }
+    }
+
+    async function deleteQuote(id) { if(!navigator.onLine) return alert('Requires internet.'); const quote = quotes.find(q => q.id === id); if(!quote) return alert('Record not found or already deleted. Please refresh.'); if(!confirm('Delete this quotation permanently?')) return; await db.ref('quotations/' + id).remove(); await writeAuditLog('DELETE_QUOTATION', 'quotations', quote.refNo || '', id, { name: quote.name || '', plate: quote.plate || '', deletedBy: auth.currentUser ? auth.currentUser.email : '' }); }
+
+    async function markQuoteDone(id) {
+        if(!navigator.onLine) return alert('Requires internet.');
+        const quote = quotes.find(q => q.id === id);
+        if(!quote) return alert('Quotation not found or already deleted. Please refresh the quotation list.');
+        if(!confirm('Mark this quotation as completed/history?')) return;
+        await db.ref('quotations/' + id).update({ status: 'completed', completedDate: getStandardDateStr(), completedTimestamp: Date.now() });
+        await writeAuditLog('MARK_QUOTATION_DONE', 'quotations', quote.refNo || '', id, { name: quote.name || '', plate: quote.plate || '', reason: 'Manual Done' });
+    }
+
+    async function restoreQuote(id) {
+        if(!navigator.onLine) return alert('Requires internet.');
+        const quote = quotes.find(q => q.id === id);
+        if(!quote) return alert('Quotation not found or already deleted. Please refresh the quotation list.');
+        if(!confirm('Return this quotation to Active list?')) return;
+        await db.ref('quotations/' + id).update({ status: null, completedDate: null, completedTimestamp: null, completedReason: null });
+        await writeAuditLog('RETURN_QUOTATION_ACTIVE', 'quotations', quote.refNo || '', id, { name: quote.name || '', plate: quote.plate || '' });
+    }
+
+    function convertToPreorder(id) {
+        const quote = quotes.find(q => q.id === id); if(!quote) return alert('Quotation not found or already deleted. Please refresh the quotation list.'); document.getElementById('tabBtnOrder').click();
+        document.getElementById('custName').value = quote.name || ''; document.getElementById('custPhone').value = quote.phone || ''; document.getElementById('carPlate').value = quote.plate || ''; document.getElementById('carModel').value = quote.car || ''; document.getElementById('chassisNumber').value = quote.chassis || ''; document.getElementById('orderByStaff').value = quote.staff || ''; document.getElementById('remarks').value = "From Quotation: " + quote.refNo + (quote.remarks ? " - " + quote.remarks : '');
+        document.getElementById('dynamicItemsContainer').innerHTML = ''; itemPhotosMap = {}; itemMapIdCounter = 0; const itemsToLoad = quote.items || []; if(itemsToLoad.length === 0) addNewItemBlock(); itemsToLoad.forEach(data => addNewItemBlock(data));
+        if (navigator.onLine && quote.status !== 'completed') {
+            db.ref('quotations/' + id).update({ status: 'completed', completedDate: getStandardDateStr(), completedTimestamp: Date.now(), completedReason: 'Converted to Order form' })
+                .then(() => writeAuditLog('CONVERT_QUOTE_TO_ORDER_FORM', 'quotations', quote.refNo || '', id, { name: quote.name || '', plate: quote.plate || '', autoCompleted: true }))
+                .catch(err => console.warn('Auto-complete quotation failed:', err));
+        } else {
+            writeAuditLog('CONVERT_QUOTE_TO_ORDER_FORM', 'quotations', quote.refNo || '', id, { name: quote.name || '', plate: quote.plate || '' });
+        }
+        alert("✅ Quotation Loaded! It has been moved to Completed History. Please enter Deposit and click 'Save Document & Sync' to create Official Order."); window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function renderQTable() {
+        const tbody = document.getElementById('quoteTableBody'); tbody.innerHTML = '';
+        const search = document.getElementById('qSearchInput').value.toLowerCase(); const dateFromVal = document.getElementById('quoteDateFromFilter').value; const dateToVal = document.getElementById('quoteDateToFilter').value; const viewFilter = document.getElementById('qViewFilter') ? document.getElementById('qViewFilter').value : 'active';
+        const offlineQuotes = offlineRecords
+            .filter(x => x.dataType === 'quote')
+            .map(x => ({
+                ...x,
+                id: x.tempId,
+                refNo: 'OFFLINE-QT',
+                offlinePending: true
+            }));
+        const displayQuotes = [...offlineQuotes, ...quotes];
+
+        let filteredQuotes = displayQuotes.filter(q => { 
+            const isCompleted = !q.offlinePending && ((q.status || '').toLowerCase() === 'completed' || (q.status || '').toLowerCase() === 'done');
+            if (viewFilter === 'active' && isCompleted) return false;
+            if (viewFilter === 'history' && !isCompleted) return false;
+            if (!recordMatchesDateRange(q, dateFromVal, dateToVal)) return false;
+            const itemMatch = (q.items||[]).some(i => (i.part&&i.part.toLowerCase().includes(search)) || (i.partNo&&i.partNo.toLowerCase().includes(search))); 
+            return (q.name||'').toLowerCase().includes(search) || (q.car&&q.car.toLowerCase().includes(search)) || (q.refNo&&q.refNo.toLowerCase().includes(search)) || (q.plate&&q.plate.toLowerCase().includes(search)) || (q.remarks&&q.remarks.toLowerCase().includes(search)) || (q.staff&&q.staff.toLowerCase().includes(search)) || itemMatch; 
+        });
+        
+        filteredQuotes.forEach(quote => {
+            let partsHtml = `<ul class="table-item-list">`; let waList = [];
+            (quote.items||[]).forEach(item => {
+                const priceDetails = parseFloat(item.subTotal) > 0 ? `<span style="float:right;font-size:13px;color:#64748b;">${item.qty||1} x RM${parseFloat(item.unitPrice||0).toFixed(2)} = <b style="color:#0f172a;">RM${parseFloat(item.subTotal||0).toFixed(2)}</b></span>` : `<span style="float:right;font-size:13px;color:#64748b;font-weight:bold;">Qty: ${item.qty||1}</span>`;
+                let photoHtml = ''; if (item.photos && item.photos.length > 0) { photoHtml = `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;">`; item.photos.forEach(p => { const key = registerPhotoPreview(p); photoHtml += `<img src="${safePhotoSrc(p)}" class="photo-thumbnail" onclick="showPhotoByKey('${key}')" style="width:40px;height:40px;border:1px solid #cbd5e1;">`; }); photoHtml += `</div>`; }
+                const pNo = item.partNo && item.partNo.trim() !== '' ? item.partNo.trim() : null; const partNoHTML = pNo ? ` <small class="mono-text" style="color:#64748b; font-weight:bold;">[${escapeHTML(pNo)}]</small>` : '';
+                partsHtml += `<li><div style="margin-bottom:4px;"><strong style="font-size:14px;color:#0f172a;">${escapeHTML(item.part||'-')}</strong>${partNoHTML}${priceDetails}</div><small style="color:#64748b;">Brd: ${escapeHTML(item.brand||'-')} • Sup: ${escapeHTML(item.supplier||'-')}</small>${photoHtml}</li>`;
+                const partNoWA = pNo ? `[${pNo}] ` : ''; const brandWA = item.brand && item.brand.trim() !== '' ? `(Brand: ${item.brand.trim()}) ` : '';
+                const priceWA = parseFloat(item.subTotal) > 0 ? ` -> ${item.qty||1} x RM${parseFloat(item.unitPrice||0).toFixed(2)} = RM${parseFloat(item.subTotal||0).toFixed(2)}` : ` -> Qty: ${item.qty||1}`;
+                waList.push(`• ${item.part||'-'} ${partNoWA}${brandWA}${priceWA}`);
+            }); partsHtml += `</ul>`;
+            
+            const msgQ = `📄 *MALAYSIA MOTOR COMPANY - SEBUTHARGA / QUOTATION*\n\nPelanggan yang dihormati ${plainText(quote.name)},\nBerikut adalah sebutharga untuk rujukan anda:\n\nDear ${plainText(quote.name)},\nHere is the quotation for your reference:\n\n*No. Sebutharga / Quote ID:* ${plainText(quote.refNo)}\n*Car Plate:* ${quote.plate||'-'}\n*Kenderaan / Car:* ${quote.car||''}\n*Senarai Barang / Items:*\n${waList.join('\n')}\n\n*Jumlah / Grand Total:* RM${plainText(quote.total)}\n\nSila beritahu kami jika anda ingin meneruskan pesanan. / Please let us know if you wish to proceed with the order.\nTerima kasih! / Thank you!`;
+            const tr = document.createElement('tr'); const plateHtml = quote.plate ? `<span style="background:#fef08a; color:#b45309; padding:2px 6px; border-radius:4px; font-weight:bold; font-size:12px; letter-spacing:1px;">${escapeHTML(quote.plate)}</span><br>` : '';
+            
+            const isCompletedQuote = !quote.offlinePending && ((quote.status || '').toLowerCase() === 'completed' || (quote.status || '').toLowerCase() === 'done');
+            const quoteStatusBadge = isCompletedQuote ? `<br><span style="display:inline-block;margin-top:6px;background:#f1f5f9;color:#64748b;border:1px solid #cbd5e1;padding:3px 8px;border-radius:12px;font-size:11px;font-weight:bold;">📦 Completed</span>` : '';
+            let mainActions = '';
+            if (quote.offlinePending) {
+                mainActions = `<div style="font-size:12px; color:#ef4444; font-weight:bold; text-align:center; line-height:1.4;">🔴 Saved Offline<br>Waiting Cloud Sync</div>`;
+            } else if (isCompletedQuote) {
+                mainActions += `<div class="action-btns"><button class="edit-btn" onclick="restoreQuote('${quote.id}')">⏪ Return</button></div><div class="action-btns"><button class="edit-btn" onclick="editQuote('${quote.id}')">✏️ Edit</button>`;
+                mainActions += `<button class="delete-btn" onclick="deleteQuote('${quote.id}')">✖ Del</button>`;
+                mainActions += `</div><button class="print-btn" onclick="printChecklist('${quote.id}', 'quote')" style="width:100%; margin-top:5px; margin-bottom:5px;">🖨️ Print Checklist</button><button class="print-btn" onclick="saveChecklistPDF('${quote.id}', 'quote')" style="width:100%; margin-top:5px; margin-bottom:5px;">📄 PDF Checklist</button>`;
+            } else {
+                mainActions += `<div class="action-btns"><button class="convert-btn" onclick="convertToPreorder('${quote.id}')">➡️ Convert to Order</button></div><div class="action-btns"><button class="complete-btn" onclick="markQuoteDone('${quote.id}')">✔️ Done</button><button class="edit-btn" onclick="editQuote('${quote.id}')">✏️ Edit</button>`;
+                mainActions += `<button class="delete-btn" onclick="deleteQuote('${quote.id}')">✖ Del</button>`;
+                mainActions += `</div><button class="print-btn" onclick="printChecklist('${quote.id}', 'quote')" style="width:100%; margin-top:5px; margin-bottom:5px;">🖨️ Print Checklist</button><button class="print-btn" onclick="saveChecklistPDF('${quote.id}', 'quote')" style="width:100%; margin-top:5px; margin-bottom:5px;">📄 PDF Checklist</button>`;
+            }
+
+            tr.innerHTML = `<td><span class="ref-badge">${escapeHTML(quote.refNo)}</span><br><small style="color:#64748b;margin-top:6px;display:inline-block;font-weight:700;">${escapeHTML(quote.date)}</small>${quoteStatusBadge}<br>${quote.staff?`<span class="staff-badge">👤 ${escapeHTML(quote.staff)}</span>`:''}</td><td><strong style="color:#0f172a;">${escapeHTML(quote.name)}</strong><br><small style="color:#3b82f6;font-weight:bold;">${escapeHTML(quote.phone)}</small><br><div style="margin-top:8px;padding-top:8px;border-top:1px dashed #e2e8f0;">${plateHtml}<strong class="car-model-wrap" style="color:#334155; font-size:13px; display:inline-block; margin-top:4px;">${escapeHTML(quote.car||'-')}</strong> <span class="mono-text" style="color:#64748b;font-size:12px;">${escapeHTML(quote.chassis||'')}</span></div></td><td>${partsHtml}<div class="notes-text" style="margin-top:8px;color:#059669;font-weight:600;">${quote.remarks ? '📝 Remarks: ' + escapeHTML(quote.remarks) : ''}</div></td><td><strong style="font-size:18px;color:#0f172a;">RM${escapeHTML(quote.total)}</strong></td><td><div class="action-btns">${quote.offlinePending ? '<div style="font-size:12px; color:#ef4444; font-weight:bold;">Waiting Sync</div>' : (quote.phone ? `<a href="https://wa.me/${waPhone(quote.phone)}?text=${encodeURIComponent(msgQ)}" target="_blank" class="wa-btn wa-btn-quote" style="width:100%;">💬 Send Quotation</a>` : '<div style="font-size:12px; color:#94a3b8; font-weight:bold;">No Phone</div>')}</div></td><td>${mainActions}</td>`;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // ==========================================
+    // ENQUIRY SYSTEM LOGIC
+    // ==========================================
+    function calcERowTotal(rowId) {
+        const row = document.getElementById(rowId);
+        if(!row) return;
+        const qtyEl = row.querySelector('.i-qty');
+        const priceEl = row.querySelector('.i-unitPrice');
+        sanitizeNonNegativeInput(qtyEl);
+        sanitizeNonNegativeInput(priceEl);
+        const qty = toNonNegativeNumber(qtyEl.value, 0);
+        const price = toNonNegativeNumber(priceEl.value, 0);
+        row.querySelector('.i-subTotal').value = (qty * price) > 0 ? (qty * price).toFixed(2) : '';
+        calcEGrandTotal();
+    }
+    function calcEGrandTotal() { let grand = 0; document.querySelectorAll('#enquireTab .pos-table-row').forEach(row => { grand += parseFloat(row.querySelector('.i-subTotal').value) || 0; }); document.getElementById('eTotalPrice').value = grand > 0 ? grand.toFixed(2) : ''; }
+    function updateERowNumbers() { document.querySelectorAll('#enquireTab .pos-table-row').forEach((row, index) => { const numDiv = row.querySelector('.row-num'); if (numDiv) numDiv.innerText = index + 1; }); }
+
+    function addEItemBlock(data = null) {
+        eItemMapIdCounter++; const currentId = 'e_item_row_' + eItemMapIdCounter; eItemPhotosMap[currentId] = data && data.photos ? [...data.photos] : [];
+        const container = document.getElementById('eDynamicItemsContainer'); const isFirst = container.children.length === 0;
+        const html = `<div class="pos-table-row" id="${currentId}"><div class="row-num">0</div><div><span class="mobile-label">Part Needed</span><div class="input-wrapper"><input type="text" class="i-part pos-input" placeholder="Part Desc" value="${escapeAttr(data ? data.part : '')}" autocomplete="off" oninput="handlePartInput(this, '${currentId}')" onfocus="handlePartInput(this, '${currentId}')"><div id="autocomplete_${currentId}" class="autocomplete-list" style="display:none;"></div></div></div><div><span class="mobile-label">Item Code / OEM No</span><input type="text" class="i-partNo pos-input" placeholder="OEM Code" value="${escapeAttr(data && data.partNo ? data.partNo : '')}" oninput="this.value = this.value.toUpperCase().replace(/\\s/g, '')"></div><div><span class="mobile-label">Brand</span><input type="text" class="i-brand pos-input" placeholder="Brand" value="${escapeAttr(data && data.brand ? data.brand : '')}"></div><div><span class="mobile-label">Supplier</span><input type="text" class="i-supplier pos-input" placeholder="Supplier" value="${escapeAttr(data && data.supplier ? data.supplier : '')}" list="supplierList"></div><div class="mobile-grid-3"><div><span class="mobile-label">Qty</span><input type="number" class="i-qty pos-input" placeholder="1" value="${escapeAttr(data && data.qty ? data.qty : '1')}" oninput="calcERowTotal('${currentId}')" style="text-align:center;"></div><div><span class="mobile-label">U.Price (RM)</span><input type="number" class="i-unitPrice pos-input" placeholder="0.00" value="${escapeAttr(data && data.unitPrice ? data.unitPrice : '')}" oninput="calcERowTotal('${currentId}')"></div><div><span class="mobile-label">Total (RM)</span><input type="number" class="i-subTotal pos-input readonly-input" placeholder="0.00" value="${escapeAttr(data && data.subTotal ? data.subTotal : '')}" readonly></div></div><div><span class="mobile-label">ETA Date</span><input type="date" class="i-eta pos-input" value="${escapeAttr(data && data.eta ? data.eta : '')}"></div><div style="display:flex; justify-content:center; align-items:center;"><label class="photo-upload-btn">📷 <span id="e_count_${currentId}">${eItemPhotosMap[currentId].length}</span>/5<input type="file" accept="image/*" multiple capture="environment" onchange="processEItemPhotos(event, '${currentId}')" style="display:none;"></label></div><div>${!isFirst || data !== null ? `<button type="button" class="remove-row-btn" onclick="removeEItemBlock('${currentId}')">✖</button>` : `<div style="height:35px;"></div>`}</div><div id="e_gallery_${currentId}" class="row-gallery"></div></div>`;
+        container.insertAdjacentHTML('beforeend', html); renderEGalleryUI(currentId); updateERowNumbers(); if(data) calcERowTotal(currentId); 
+    }
+
+    function removeEItemBlock(id) { document.getElementById(id).remove(); delete eItemPhotosMap[id]; updateERowNumbers(); calcEGrandTotal(); if (document.getElementById('eDynamicItemsContainer').children.length === 0) addEItemBlock(); }
+    function processEItemPhotos(event, itemId) { processPhotoFiles(event, eItemPhotosMap[itemId], () => renderEGalleryUI(itemId), 5); }
+    function renderEGalleryUI(itemId) { const gallery = document.getElementById('e_gallery_' + itemId); document.getElementById('e_count_' + itemId).innerText = eItemPhotosMap[itemId].length; gallery.innerHTML = ''; eItemPhotosMap[itemId].forEach((b64Data, index) => { const key = registerPhotoPreview(b64Data); gallery.innerHTML += `<div class="photo-wrapper"><img src="${safePhotoSrc(b64Data)}" class="photo-thumbnail" onclick="showPhotoByKey('${key}')"><button type="button" class="rotate-single-btn" onclick="rotateImage('${itemId}', ${index}, 'enquire')">↻</button><button type="button" class="remove-single-btn" onclick="removeESinglePhoto('${itemId}', ${index})">✖</button></div>`; }); }
+    function removeESinglePhoto(itemId, index) { eItemPhotosMap[itemId].splice(index, 1); renderEGalleryUI(itemId); }
+
+    function editEnquire(id) {
+        const enq = enquiries.find(e => e.id === id);
+        if (!enq) return alert('Enquiry not found or already deleted. Please refresh the enquiry list.');
+        ['eCustName','eCustPhone','eCarPlate','eCarModel','eChassisNumber','eTotalPrice','eOrderByStaff','eRemarks'].forEach(f => { let val = enq[f.replace('eOrderByStaff','staff').replace('eCustName','name').replace('eCustPhone','phone').replace('eCarPlate','plate').replace('eCarModel','car').replace('eChassisNumber','chassis').replace('eTotalPrice','total').replace('eRemarks','remarks')] || ''; document.getElementById(f).value = val; });
+        document.getElementById('eDynamicItemsContainer').innerHTML = ''; eItemPhotosMap = {}; const itemsToLoad = enq.items || []; if(itemsToLoad.length === 0) addEItemBlock(); itemsToLoad.forEach(data => addEItemBlock(data));
+        eEditingId = id; document.getElementById('eMainBtn').innerText = "Confirm Update Enquiry"; document.getElementById('eMainBtn').style.backgroundColor = "#10b981"; document.getElementById('eCancelBtn').style.display = "block"; window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function cancelEEdit() {
+        eEditingId = null; document.getElementById('eMainBtn').innerText = "💾 Save Enquiry"; document.getElementById('eMainBtn').style.backgroundColor = "#0284c7"; document.getElementById('eCancelBtn').style.display = "none";
+        document.querySelectorAll('#enquireTab input:not(.login-input)').forEach(i => { if(i.id !== 'eSearchInput' && i.id !== 'enquireDateFromFilter' && i.id !== 'enquireDateToFilter') i.value = ''; }); document.getElementById('eOrderByStaff').value = ''; document.getElementById('eDynamicItemsContainer').innerHTML = ''; eItemPhotosMap = {}; addEItemBlock();
+    }
+
+    async function saveOrUpdateEnquire() {
+        const eMainBtn = document.getElementById('eMainBtn'); if (eMainBtn.disabled) return;
+        let finalPhone = document.getElementById('eCustPhone').value.replace(/[^0-9]/g, ''); if (finalPhone.startsWith('0')) { finalPhone = '60' + finalPhone.substring(1); } document.getElementById('eCustPhone').value = finalPhone; 
+        const name = document.getElementById('eCustName').value; if(!name) return alert("Please fill Customer Name.");
+        const payload = { name: name, phone: finalPhone, plate: document.getElementById('eCarPlate').value.trim().toUpperCase(), car: document.getElementById('eCarModel').value, chassis: document.getElementById('eChassisNumber').value.trim().toUpperCase(), total: toNonNegativeNumber(document.getElementById('eTotalPrice').value, 0).toFixed(2), staff: document.getElementById('eOrderByStaff').value, remarks: document.getElementById('eRemarks').value, items: [] };
+        document.querySelectorAll('#enquireTab .pos-table-row').forEach(card => { const id = card.id; const p = { part: card.querySelector('.i-part').value, partNo: card.querySelector('.i-partNo').value.trim().toUpperCase(), brand: card.querySelector('.i-brand').value, supplier: card.querySelector('.i-supplier').value, qty: String(toNonNegativeNumber(card.querySelector('.i-qty').value, 1)), unitPrice: toNonNegativeNumber(card.querySelector('.i-unitPrice').value, 0).toFixed(2), subTotal: toNonNegativeNumber(card.querySelector('.i-subTotal').value, 0).toFixed(2), eta: card.querySelector('.i-eta').value, photos: eItemPhotosMap[id] || [] }; if (p.part || p.partNo) payload.items.push(p); });
+        if(payload.items.length === 0) return alert("Enter at least 1 Part.");
+
+        if (!navigator.onLine) {
+            if (eEditingId) {
+                alert("⚠️ You are offline. Editing existing enquiry is disabled until internet reconnects.");
+                return;
+            }
+            payload.date = getStandardDateStr();
+            payload.timestamp = Date.now();
+            saveToOfflineQueue('enquire', payload);
+            return;
+        }
+
+        const originalText = eMainBtn.innerText; eMainBtn.innerText = "⏳ Processing Photos & Data..."; eMainBtn.disabled = true;
+        try {
+            for(let i=0; i<payload.items.length; i++) { if(payload.items[i].photos && payload.items[i].photos.length > 0) { payload.items[i].photos = await uploadBase64ToStorage(payload.items[i].photos); } }
+            if (eEditingId) {
+                const oldEnq = enquiries.find(e => e.id === eEditingId) || {};
+                await db.ref('enquiries/' + eEditingId).update(payload);
+                await writeAuditLog('UPDATE_ENQUIRY', 'enquiries', oldEnq.refNo || '', eEditingId, { name: payload.name, plate: payload.plate, total: payload.total });
+            } else {
+                const snapshot = await db.ref('enquireCounter').transaction(cv => (cv || 1000) + 1);
+                payload.refNo = 'ENQ-' + snapshot.snapshot.val();
+                payload.date = getStandardDateStr();
+                payload.timestamp = Date.now();
+                const newRef = await db.ref('enquiries').push(payload);
+                await writeAuditLog('CREATE_ENQUIRY', 'enquiries', payload.refNo, newRef.key, { name: payload.name, plate: payload.plate, total: payload.total });
+            }
+            cancelEEdit();
+        } catch(err) { alert("Upload Error: " + err.message); } finally { eMainBtn.innerText = originalText; eMainBtn.disabled = false; }
+    }
+
+    async function deleteEnquire(id) { if(!navigator.onLine) return alert('Requires internet.'); const enq = enquiries.find(e => e.id === id); if(!enq) return alert('Record not found or already deleted. Please refresh.'); if(!confirm('Delete this enquiry permanently?')) return; await db.ref('enquiries/' + id).remove(); await writeAuditLog('DELETE_ENQUIRY', 'enquiries', enq.refNo || '', id, { name: enq.name || '', plate: enq.plate || '', deletedBy: auth.currentUser ? auth.currentUser.email : '' }); }
+
+    async function markEnquiryDone(id) {
+        if(!navigator.onLine) return alert('Requires internet.');
+        const enq = enquiries.find(e => e.id === id);
+        if(!enq) return alert('Enquiry not found or already deleted. Please refresh the enquiry list.');
+        if(!confirm('Mark this enquiry as completed/history?')) return;
+        await db.ref('enquiries/' + id).update({ status: 'completed', completedDate: getStandardDateStr(), completedTimestamp: Date.now() });
+        await writeAuditLog('MARK_ENQUIRY_DONE', 'enquiries', enq.refNo || '', id, { name: enq.name || '', plate: enq.plate || '', reason: 'Manual Done' });
+    }
+
+    async function restoreEnquiry(id) {
+        if(!navigator.onLine) return alert('Requires internet.');
+        const enq = enquiries.find(e => e.id === id);
+        if(!enq) return alert('Enquiry not found or already deleted. Please refresh the enquiry list.');
+        if(!confirm('Return this enquiry to Active list?')) return;
+        await db.ref('enquiries/' + id).update({ status: null, completedDate: null, completedTimestamp: null, completedReason: null });
+        await writeAuditLog('RETURN_ENQUIRY_ACTIVE', 'enquiries', enq.refNo || '', id, { name: enq.name || '', plate: enq.plate || '' });
+    }
+
+    function convertEnqToQuote(id) {
+        const enq = enquiries.find(e => e.id === id); if(!enq) return alert('Enquiry not found or already deleted. Please refresh the enquiry list.'); document.getElementById('tabBtnQuote').click();
+        document.getElementById('qCustName').value = enq.name || ''; document.getElementById('qCustPhone').value = enq.phone || ''; document.getElementById('qCarPlate').value = enq.plate || ''; document.getElementById('qCarModel').value = enq.car || ''; document.getElementById('qChassisNumber').value = enq.chassis || ''; document.getElementById('qOrderByStaff').value = enq.staff || ''; document.getElementById('qRemarks').value = "From Enquiry: " + enq.refNo + (enq.remarks ? " - " + enq.remarks : '');
+        document.getElementById('qDynamicItemsContainer').innerHTML = ''; qItemPhotosMap = {}; qItemMapIdCounter = 0; const itemsToLoad = enq.items || []; if(itemsToLoad.length === 0) addQItemBlock(); itemsToLoad.forEach(data => addQItemBlock(data));
+        if (navigator.onLine && enq.status !== 'completed') {
+            db.ref('enquiries/' + id).update({ status: 'completed', completedDate: getStandardDateStr(), completedTimestamp: Date.now(), completedReason: 'Converted to Quote form' })
+                .then(() => writeAuditLog('CONVERT_ENQUIRY_TO_QUOTE_FORM', 'enquiries', enq.refNo || '', id, { name: enq.name || '', plate: enq.plate || '', autoCompleted: true }))
+                .catch(err => console.warn('Auto-complete enquiry failed:', err));
+        } else {
+            writeAuditLog('CONVERT_ENQUIRY_TO_QUOTE_FORM', 'enquiries', enq.refNo || '', id, { name: enq.name || '', plate: enq.plate || '' });
+        }
+        alert("✅ Enquiry Loaded into Quotation! It has been moved to Completed History. Please review prices and click 'Save Quotation'."); window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function renderETable() {
+        const tbody = document.getElementById('enquireTableBody'); tbody.innerHTML = '';
+        const search = document.getElementById('eSearchInput').value.toLowerCase(); const dateFromVal = document.getElementById('enquireDateFromFilter').value; const dateToVal = document.getElementById('enquireDateToFilter').value; const viewFilter = document.getElementById('eViewFilter') ? document.getElementById('eViewFilter').value : 'active';
+        const offlineEnquiries = offlineRecords
+            .filter(x => x.dataType === 'enquire')
+            .map(x => ({
+                ...x,
+                id: x.tempId,
+                refNo: 'OFFLINE-ENQ',
+                offlinePending: true
+            }));
+        const displayEnquiries = [...offlineEnquiries, ...enquiries];
+
+        let filteredEnquiries = displayEnquiries.filter(e => { 
+            const isCompleted = !e.offlinePending && ((e.status || '').toLowerCase() === 'completed' || (e.status || '').toLowerCase() === 'done');
+            if (viewFilter === 'active' && isCompleted) return false;
+            if (viewFilter === 'history' && !isCompleted) return false;
+            if (!recordMatchesDateRange(e, dateFromVal, dateToVal)) return false;
+            const itemMatch = (e.items||[]).some(i => (i.part&&i.part.toLowerCase().includes(search)) || (i.partNo&&i.partNo.toLowerCase().includes(search))); 
+            return (e.name||'').toLowerCase().includes(search) || (e.car&&e.car.toLowerCase().includes(search)) || (e.refNo&&e.refNo.toLowerCase().includes(search)) || (e.plate&&e.plate.toLowerCase().includes(search)) || (e.remarks&&e.remarks.toLowerCase().includes(search)) || (e.staff&&e.staff.toLowerCase().includes(search)) || itemMatch; 
+        });
+        
+        filteredEnquiries.forEach(enq => {
+            let partsHtml = `<ul class="table-item-list">`; let waList = [];
+            (enq.items||[]).forEach(item => {
+                const priceDetails = parseFloat(item.subTotal) > 0 ? `<span style="float:right;font-size:13px;color:#64748b;">${item.qty||1} x RM${parseFloat(item.unitPrice||0).toFixed(2)} = <b style="color:#0f172a;">RM${parseFloat(item.subTotal||0).toFixed(2)}</b></span>` : `<span style="float:right;font-size:13px;color:#64748b;font-weight:bold;">Qty: ${item.qty||1}</span>`;
+                let photoHtml = ''; if (item.photos && item.photos.length > 0) { photoHtml = `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;">`; item.photos.forEach(p => { const key = registerPhotoPreview(p); photoHtml += `<img src="${safePhotoSrc(p)}" class="photo-thumbnail" onclick="showPhotoByKey('${key}')" style="width:40px;height:40px;border:1px solid #cbd5e1;">`; }); photoHtml += `</div>`; }
+                const pNo = item.partNo && item.partNo.trim() !== '' ? item.partNo.trim() : null; const partNoHTML = pNo ? ` <small class="mono-text" style="color:#64748b; font-weight:bold;">[${escapeHTML(pNo)}]</small>` : '';
+                partsHtml += `<li><div style="margin-bottom:4px;"><strong style="font-size:14px;color:#0f172a;">${escapeHTML(item.part||'-')}</strong>${partNoHTML}${priceDetails}</div><small style="color:#64748b;">Brd: ${escapeHTML(item.brand||'-')} • Sup: ${escapeHTML(item.supplier||'-')}</small>${photoHtml}</li>`;
+                const partNoWA = pNo ? `[${pNo}] ` : ''; const brandWA = item.brand && item.brand.trim() !== '' ? `(Brand: ${item.brand.trim()}) ` : '';
+                const priceWA = parseFloat(item.subTotal) > 0 ? ` -> ${item.qty||1} x RM${parseFloat(item.unitPrice||0).toFixed(2)} = RM${parseFloat(item.subTotal||0).toFixed(2)}` : ` -> Qty: ${item.qty||1}`;
+                waList.push(`• ${item.part||'-'} ${partNoWA}${brandWA}${priceWA}`);
+            }); partsHtml += `</ul>`;
+            
+            const msgE = `💬 *MALAYSIA MOTOR COMPANY - MAKLUMBALAS PERTANYAAN / ENQUIRY RESPONSE*\n\nPelanggan yang dihormati ${plainText(enq.name)},\nTerima kasih kerana menghubungi kami. Berikut adalah maklumat untuk pertanyaan anda:\n\nDear ${plainText(enq.name)},\nThank you for reaching out. Here is the information regarding your enquiry:\n\n*No. Pertanyaan / Enq ID:* ${plainText(enq.refNo)}\n*Car Plate:* ${enq.plate||'-'}\n*Kenderaan / Car:* ${enq.car||''}\n*Senarai Barang / Items:*\n${waList.join('\n')}\n\n*Anggaran Jumlah / Estimated Total:* RM${plainText(enq.total)}\n\nSila beritahu kami jika anda mempunyai sebarang soalan lanjut. / Please let us know if you have any further questions.\nTerima kasih! / Thank you!`;
+            const tr = document.createElement('tr'); const plateHtml = enq.plate ? `<span style="background:#fef08a; color:#b45309; padding:2px 6px; border-radius:4px; font-weight:bold; font-size:12px; letter-spacing:1px;">${escapeHTML(enq.plate)}</span><br>` : '';
+            
+            const isCompletedEnquiry = !enq.offlinePending && ((enq.status || '').toLowerCase() === 'completed' || (enq.status || '').toLowerCase() === 'done');
+            const enquiryStatusBadge = isCompletedEnquiry ? `<br><span style="display:inline-block;margin-top:6px;background:#f1f5f9;color:#64748b;border:1px solid #cbd5e1;padding:3px 8px;border-radius:12px;font-size:11px;font-weight:bold;">📦 Completed</span>` : '';
+            let mainActions = '';
+            if (enq.offlinePending) {
+                mainActions = `<div style="font-size:12px; color:#ef4444; font-weight:bold; text-align:center; line-height:1.4;">🔴 Saved Offline<br>Waiting Cloud Sync</div>`;
+            } else if (isCompletedEnquiry) {
+                mainActions += `<div class="action-btns"><button class="edit-btn" onclick="restoreEnquiry('${enq.id}')">⏪ Return</button></div><div class="action-btns"><button class="edit-btn" onclick="editEnquire('${enq.id}')">✏️ Edit</button>`;
+                mainActions += `<button class="delete-btn" onclick="deleteEnquire('${enq.id}')">✖ Del</button>`;
+                mainActions += `</div><button class="print-btn" onclick="printChecklist('${enq.id}', 'enquire')" style="width:100%; margin-top:5px; margin-bottom:5px;">🖨️ Print Enquiry</button><button class="print-btn" onclick="saveChecklistPDF('${enq.id}', 'enquire')" style="width:100%; margin-top:5px; margin-bottom:5px;">📄 PDF Enquiry</button>`;
+            } else {
+                mainActions += `<div class="action-btns"><button class="convert-btn-alt" onclick="convertEnqToQuote('${enq.id}')">➡️ Convert to Quote</button></div><div class="action-btns"><button class="complete-btn" onclick="markEnquiryDone('${enq.id}')">✔️ Done</button><button class="edit-btn" onclick="editEnquire('${enq.id}')">✏️ Edit</button>`;
+                mainActions += `<button class="delete-btn" onclick="deleteEnquire('${enq.id}')">✖ Del</button>`;
+                mainActions += `</div><button class="print-btn" onclick="printChecklist('${enq.id}', 'enquire')" style="width:100%; margin-top:5px; margin-bottom:5px;">🖨️ Print Enquiry</button><button class="print-btn" onclick="saveChecklistPDF('${enq.id}', 'enquire')" style="width:100%; margin-top:5px; margin-bottom:5px;">📄 PDF Enquiry</button>`;
+            }
+
+            tr.innerHTML = `<td><span class="ref-badge">${escapeHTML(enq.refNo)}</span><br><small style="color:#64748b;margin-top:6px;display:inline-block;font-weight:700;">${escapeHTML(enq.date)}</small>${enquiryStatusBadge}<br>${enq.staff?`<span class="staff-badge">👤 ${escapeHTML(enq.staff)}</span>`:''}</td><td><strong style="color:#0f172a;">${escapeHTML(enq.name)}</strong><br><small style="color:#3b82f6;font-weight:bold;">${escapeHTML(enq.phone)}</small><br><div style="margin-top:8px;padding-top:8px;border-top:1px dashed #e2e8f0;">${plateHtml}<strong class="car-model-wrap" style="color:#334155; font-size:13px; display:inline-block; margin-top:4px;">${escapeHTML(enq.car||'-')}</strong> <span class="mono-text" style="color:#64748b;font-size:12px;">${escapeHTML(enq.chassis||'')}</span></div></td><td>${partsHtml}<div class="notes-text" style="margin-top:8px;color:#059669;font-weight:600;">${enq.remarks ? '📝 Remarks: ' + escapeHTML(enq.remarks) : ''}</div></td><td><strong style="font-size:18px;color:#0f172a;">RM${escapeHTML(enq.total)}</strong></td><td><div class="action-btns">${enq.offlinePending ? '<div style="font-size:12px; color:#ef4444; font-weight:bold;">Waiting Sync</div>' : (enq.phone ? `<a href="https://wa.me/${waPhone(enq.phone)}?text=${encodeURIComponent(msgE)}" target="_blank" class="wa-btn wa-btn-enq" style="width:100%;">💬 Send Enquiry</a>` : '<div style="font-size:12px; color:#94a3b8; font-weight:bold;">No Phone</div>')}</div></td><td>${mainActions}</td>`;
+            tbody.appendChild(tr);
+        });
+    }
+
+
+    // ==========================================
+    // V72 DELETE REQUEST WORKFLOW
+    // ==========================================
+    function getPathForModule(moduleName) {
+        return moduleName === 'orders' ? 'orders' : moduleName === 'quotations' ? 'quotations' : moduleName === 'enquiries' ? 'enquiries' : moduleName === 'restock' ? 'restock' : '';
+    }
+
+    async function submitDeleteRequest(moduleName, recordId, refNo, details) {
+        if (!auth.currentUser) return alert('Please login first.');
+        const reason = prompt('Please enter delete reason (required):\nExample: wrong item / duplicate / customer cancelled');
+        if (!reason || !reason.trim()) return alert('Delete request cancelled. Reason is required.');
+        const req = {
+            module: moduleName,
+            recordId: recordId,
+            refNo: refNo || '',
+            details: details || {},
+            reason: reason.trim(),
+            requestedBy: auth.currentUser.email,
+            requestedDeviceId: currentDeviceId || getOrCreateDeviceId(),
+            requestedDeviceName: currentDeviceName || getDeviceName(),
+            status: 'pending',
+            requestedAt: firebase.database.ServerValue.TIMESTAMP
+        };
+        await db.ref('deleteRequests').push(req);
+        await writeAuditLog('REQUEST_DELETE', moduleName, refNo || '', recordId, { reason: reason.trim(), details: details || {} });
+        alert('✅ Delete request sent to Boss/Admin for approval.');
+    }
+
+    function updateDeleteRequestIndicators(count) {
+        const safeCount = Math.max(0, Number(count) || 0);
+        const badge = document.getElementById('deleteRequestCountBadge');
+        const alertBox = document.getElementById('deleteRequestAlert');
+        const alertCount = document.getElementById('deleteRequestAlertCount');
+        if (badge) {
+            badge.textContent = safeCount;
+            badge.style.display = safeCount > 0 ? 'inline-flex' : 'none';
+        }
+        if (alertBox) alertBox.style.display = (isAdmin && safeCount > 0) ? 'flex' : 'none';
+        if (alertCount) alertCount.textContent = `${safeCount} Pending`;
+    }
+
+    function stopDeleteRequestWatch() {
+        if (deleteRequestWatchCallback) {
+            db.ref('deleteRequests').off('value', deleteRequestWatchCallback);
+            deleteRequestWatchCallback = null;
+        }
+        updateDeleteRequestIndicators(0);
+    }
+
+    function startDeleteRequestWatch() {
+        stopDeleteRequestWatch();
+        if (!isAdmin || !auth.currentUser) return;
+        deleteRequestWatchCallback = (snap) => {
+            let pendingCount = 0;
+            snap.forEach(child => {
+                const value = child.val() || {};
+                if ((value.status || 'pending') === 'pending') pendingCount++;
+            });
+            updateDeleteRequestIndicators(pendingCount);
+        };
+        db.ref('deleteRequests').on('value', deleteRequestWatchCallback, (err) => {
+            console.error('Delete request watch failed:', err);
+            updateDeleteRequestIndicators(0);
+        });
+    }
+
+    function formatDeleteRequestTime(timestamp) {
+        if (!timestamp) return '-';
+        try {
+            return new Intl.DateTimeFormat('en-MY', {
+                year:'numeric', month:'short', day:'2-digit',
+                hour:'2-digit', minute:'2-digit', hour12:true
+            }).format(new Date(timestamp));
+        } catch (_) { return new Date(timestamp).toLocaleString(); }
+    }
+
+    async function viewDeleteRequests() {
+        if (!isAdmin) return alert('Admin only.');
+        document.getElementById('historyContent').innerHTML = `<h3>🗑️ Delete Requests</h3><p>Loading...</p>`;
+        document.getElementById('historyModal').style.display = 'flex';
+        try {
+            const snap = await db.ref('deleteRequests').orderByChild('requestedAt').limitToLast(100).once('value');
+            const reqs = [];
+            snap.forEach(child => reqs.push({ id: child.key, ...child.val() }));
+            reqs.sort((a,b) => (b.requestedAt || 0) - (a.requestedAt || 0));
+            let html = `<h3>🗑️ Delete Requests</h3><p style="font-size:12px;color:#64748b;">Boss/Admin can approve or reject staff delete requests.</p>`;
+            const pending = reqs.filter(r => (r.status || 'pending') === 'pending');
+            if (pending.length === 0) html += `<p style="font-size:13px;color:#64748b;">No pending delete requests.</p>`;
+            pending.forEach(r => {
+                html += `<div style="border:1px solid #fecaca;background:#fff7ed;border-radius:8px;padding:10px;margin-bottom:8px;font-size:12px;line-height:1.5;word-break:break-word;">
+                    <strong>${escapeHTML((r.module || '-').toUpperCase())}</strong> | Ref: <b>${escapeHTML(r.refNo || r.recordId || '-')}</b><br>
+                    Requested by: <b>${escapeHTML(r.requestedBy || '-')}</b><br>
+                    Requested at: <b>${escapeHTML(formatDeleteRequestTime(r.requestedAt))}</b><br>
+                    Device: <b>${escapeHTML(r.requestedDeviceName || '-')}</b><br>
+                    Reason: <b style="color:#b45309;">${escapeHTML(r.reason || '-')}</b><br>
+                    Record details: <span style="color:#334155;">${escapeHTML(JSON.stringify(r.details || {}))}</span><br>
+                    <button onclick="approveDeleteRequest('${r.id}')" style="background:#dc2626;color:white;border:none;padding:8px 10px;border-radius:5px;font-weight:bold;margin-top:8px;cursor:pointer;">✅ Approve Delete</button>
+                    <button onclick="rejectDeleteRequest('${r.id}')" style="background:#64748b;color:white;border:none;padding:8px 10px;border-radius:5px;font-weight:bold;margin-top:8px;cursor:pointer;">Reject</button>
+                </div>`;
+            });
+            html += `<button onclick="document.getElementById('historyModal').style.display='none'" style="padding:12px;width:100%;background:#64748b;color:white;border:none;border-radius:6px;font-weight:bold;cursor:pointer;">Close</button>`;
+            document.getElementById('historyContent').innerHTML = html;
+        } catch (err) {
+            document.getElementById('historyContent').innerHTML = `<h3>🗑️ Delete Requests</h3><p style="color:#ef4444;font-weight:bold;">Unable to load requests: ${escapeHTML(err && err.message ? err.message : err)}</p><button onclick="document.getElementById('historyModal').style.display='none'" style="padding:10px;width:100%;">Close</button>`;
+        }
+    }
+
+    async function approveDeleteRequest(requestId) {
+        if (!isAdmin) return alert('Admin only.');
+        const snap = await db.ref('deleteRequests/' + requestId).once('value');
+        const r = snap.val();
+        if (!r || r.status !== 'pending') return alert('Request is not pending.');
+        if (!confirm(`Approve delete for ${r.module} ${r.refNo || r.recordId}?`)) return;
+        const path = getPathForModule(r.module);
+        if (!path) return alert('Invalid module.');
+        await db.ref(path + '/' + r.recordId).remove();
+        await db.ref('deleteRequests/' + requestId).update({ status: 'approved', approvedBy: auth.currentUser.email, approvedAt: firebase.database.ServerValue.TIMESTAMP });
+        await writeAuditLog('APPROVE_DELETE_REQUEST', r.module, r.refNo || '', r.recordId, { reason: r.reason || '', requestedBy: r.requestedBy || '' });
+        viewDeleteRequests();
+    }
+
+    async function rejectDeleteRequest(requestId) {
+        if (!isAdmin) return alert('Admin only.');
+        const reason = prompt('Reject reason (optional):') || '';
+        await db.ref('deleteRequests/' + requestId).update({ status: 'rejected', rejectedBy: auth.currentUser.email, rejectedReason: reason, rejectedAt: firebase.database.ServerValue.TIMESTAMP });
+        await writeAuditLog('REJECT_DELETE_REQUEST', 'deleteRequests', '', requestId, { reason });
+        viewDeleteRequests();
+    }
+
+    // ==========================================
+    // RESTOCK SYSTEM
+    // ==========================================
+
+    // V75: clear, selectable Smart Part Lookup cards. Uses loaded Restock records.
+    let mmcLookupMatches = [];
+    function mmcLookupRestock(raw) {
+        const panel = document.getElementById('mmcPartLookupResults');
+        if (!panel) return;
+        panel.replaceChildren();
+        const q = String(raw || '').trim().toUpperCase();
+        if (restockEditingId || q.length < 2) { panel.style.display='none'; return; }
+        const seen = new Set();
+        mmcLookupMatches = restockItems.filter(r => {
+            const code = String(r.code || '').trim().toUpperCase();
+            if (!code || !code.includes(q)) return false;
+            const key = [code, String(r.brand||'').trim().toUpperCase(), String(r.supp||'').trim().toUpperCase(), String(r.car||'').trim().toUpperCase()].join('|');
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+        }).slice(0, 12);
+        const heading = document.createElement('div');
+        heading.style.cssText='padding:9px 12px;background:#eff6ff;color:#1e40af;font-weight:700;font-size:13px;border-bottom:1px solid #bfdbfe;';
+        heading.textContent = '🔎 Smart Part Lookup · ' + mmcLookupMatches.length + ' match(es)';
+        panel.appendChild(heading);
+        if (!mmcLookupMatches.length) {
+            const msg = document.createElement('div');
+            msg.style.cssText='padding:12px;color:#64748b;font-size:12px;';
+            msg.textContent='No match in loaded Restock history. Enter a new part manually or load older Restock logs.';
+            panel.appendChild(msg);
+        } else {
+            mmcLookupMatches.forEach((r, index) => {
+                const card = document.createElement('div');
+                card.style.cssText='padding:12px;border-bottom:1px solid #e2e8f0;background:#fff;display:flex;flex-wrap:wrap;align-items:center;gap:10px;justify-content:space-between;';
+                const details = document.createElement('div');
+                details.style.cssText='flex:1;min-width:180px;overflow-wrap:anywhere;';
+                const title = document.createElement('div');
+                title.style.cssText='font-weight:700;color:#0f172a;font-size:14px;';
+                title.textContent = (r.code || '') + ' · ' + (r.part || 'No description');
+                details.appendChild(title);
+                const fields = [ ['Brand',r.brand],['Car Model',r.car],['Supplier',r.supp],['Previous Cost','RM'+Number(r.unitCost||0).toFixed(2)],['Date',r.date] ];
+                fields.forEach(([label,value]) => {
+                    const line = document.createElement('div');
+                    line.style.cssText='font-size:12px;color:#475569;margin-top:3px;';
+                    line.textContent=label+': '+(value||'-');
+                    details.appendChild(line);
+                });
+                const choose = document.createElement('button');
+                choose.type='button';
+                choose.textContent='SELECT';
+                choose.setAttribute('aria-label','Select '+(r.code||'part'));
+                choose.style.cssText='padding:10px 15px;background:#2563eb;color:white;border:0;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;min-height:40px;';
+                choose.addEventListener('click', () => mmcSelectRestockHistory(index));
+                card.appendChild(details);
+                card.appendChild(choose);
+                panel.appendChild(card);
+            });
+        }
+        panel.style.display='block';
+    }
+    function mmcSelectRestockHistory(index) {
+        const r=mmcLookupMatches[index];
+        if (!r || restockEditingId) return;
+        for (const [id, value] of Object.entries({
+            r_code:r.code||'', r_part:r.part||'', r_brand:r.brand||'',
+            r_supp:r.supp||'', r_car:r.car||'', r_unitCost:r.unitCost||''
+        })) {
+            const el=document.getElementById(id);
+            if(el) el.value=value;
+        }
+        // Old quantities and stock are deliberately never copied.
+        document.getElementById('r_onHand').value='';
+        document.getElementById('r_needOrder').value='';
+        // Preserve existing image URLs/base64; uploader handles both types.
+        currentRestockPhotos=Array.isArray(r.photos)?r.photos.slice(0,5):[];
+        renderRestockGalleryUI();
+        calcRestockCost();
+        document.getElementById('mmcPartLookupResults').style.display='none';
+        document.getElementById('mmcPreviousCost').textContent='Previous recorded cost: RM'+Number(r.unitCost||0).toFixed(2)+' | Supplier: '+(r.supp||'-')+' | Date: '+(r.date||'-')+' (reference only; editable)';
+        document.getElementById('r_needOrder').focus();
+    }
+
+    function calcRestockCost() {
+        const qtyEl = document.getElementById('r_needOrder');
+        const costEl = document.getElementById('r_unitCost');
+        sanitizeNonNegativeInput(qtyEl);
+        sanitizeNonNegativeInput(costEl);
+        const qty = toNonNegativeNumber(qtyEl.value, 1);
+        const uCost = toNonNegativeNumber(costEl.value, 0);
+        document.getElementById('r_totalCost').value = (qty * uCost).toFixed(2);
+    }
+    document.getElementById('r_needOrder').addEventListener('input', calcRestockCost);
+
+    function processRestockPhotos(event) { processPhotoFiles(event, currentRestockPhotos, renderRestockGalleryUI, 5); }
+    function renderRestockGalleryUI() { const gallery = document.getElementById('r_gallery'); document.getElementById('r_count').innerText = currentRestockPhotos.length; gallery.innerHTML = ''; currentRestockPhotos.forEach((b64Data, index) => { const key = registerPhotoPreview(b64Data); gallery.innerHTML += `<div class="photo-wrapper"><img src="${safePhotoSrc(b64Data)}" class="photo-thumbnail" onclick="showPhotoByKey('${key}')"><button type="button" class="rotate-single-btn" onclick="rotateRestockImage(${index})">↻</button><button type="button" class="remove-single-btn" onclick="removeRestockSinglePhoto(${index})">✖</button></div>`; }); }
+    function removeRestockSinglePhoto(index) { currentRestockPhotos.splice(index, 1); renderRestockGalleryUI(); }
+    function rotateRestockImage(index) { rotatePhotoBase64(currentRestockPhotos[index], (newBase64) => { currentRestockPhotos[index] = newBase64; renderRestockGalleryUI(); }); }
+
+    function clearRestockFormFields() {
+        ['r_part','r_code','r_brand','r_supp','r_car','r_onHand','r_needOrder','r_unitCost','r_totalCost'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = '';
+        });
+        currentRestockPhotos = [];
+        renderRestockGalleryUI();
+        if (document.getElementById('mmcPartLookupResults')) {
+            document.getElementById('mmcPartLookupResults').style.display = 'none';
+            document.getElementById('mmcPartLookupResults').replaceChildren();
+        }
+        if (document.getElementById('mmcPreviousCost')) document.getElementById('mmcPreviousCost').textContent = '';
+    }
+
+    function setRestockEditMode(item) {
+        restockEditingId = item.id;
+        document.getElementById('r_part').value = item.part || '';
+        document.getElementById('r_code').value = (item.code || '').trim().toUpperCase();
+        document.getElementById('r_brand').value = item.brand || '';
+        document.getElementById('r_supp').value = item.supp || '';
+        document.getElementById('r_car').value = item.car || '';
+        document.getElementById('r_onHand').value = item.onHandQty || '0';
+        document.getElementById('r_needOrder').value = item.needOrderQty || '1';
+        document.getElementById('r_unitCost').value = item.unitCost || '0';
+        document.getElementById('r_totalCost').value = item.totalCost || '0';
+        currentRestockPhotos = Array.isArray(item.photos) ? [...item.photos] : [];
+        renderRestockGalleryUI();
+        calcRestockCost();
+        const btn = document.getElementById('addRestockBtn');
+        if (btn) {
+            btn.innerText = '✅ Update Restock';
+            btn.style.backgroundColor = '#10b981';
+        }
+        const cancelBtn = document.getElementById('cancelRestockEditBtn');
+        if (cancelBtn) cancelBtn.style.display = 'inline-block';
+        document.getElementById('r_part').focus();
+        document.getElementById('restockTab').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function cancelRestockEdit() {
+        restockEditingId = null;
+        clearRestockFormFields();
+        const btn = document.getElementById('addRestockBtn');
+        if (btn) {
+            btn.innerText = '➕ Add to Restock';
+            btn.style.backgroundColor = '#2563eb';
+            btn.disabled = false;
+        }
+        const cancelBtn = document.getElementById('cancelRestockEditBtn');
+        if (cancelBtn) cancelBtn.style.display = 'none';
+    }
+
+    let v75RestockSaveBusy = false;
+    async function addRestockItem() {
+        if (v75RestockSaveBusy) return;
+        v75RestockSaveBusy = true;
+        try { return await v75PerformRestockSave(); }
+        finally { v75RestockSaveBusy = false; }
+    }
+    async function v75PerformRestockSave() {
+        const part = document.getElementById('r_part').value;
+        const code = document.getElementById('r_code').value.trim().toUpperCase();
+        const brand = document.getElementById('r_brand').value;
+        const supp = document.getElementById('r_supp').value;
+        const car = document.getElementById('r_car').value;
+        const onHandQty = String(toNonNegativeNumber(document.getElementById('r_onHand').value, 0));
+        const needOrderQty = String(toNonNegativeNumber(document.getElementById('r_needOrder').value, 1));
+        const unitCost = toNonNegativeNumber(document.getElementById('r_unitCost').value, 0).toFixed(2);
+        const totalCost = (toNonNegativeNumber(needOrderQty,1) * toNonNegativeNumber(unitCost,0)).toFixed(2);
+        if(!part && !code) return alert("Please enter at least a part description or item code.");
+        const priorRestock=restockEditingId?restockItems.find(r=>r.id===restockEditingId):null;
+        const supplierCheck=v742bValidateSupplier(supp,priorRestock?.supp);
+        if(!supplierCheck.ok)return alert(supplierCheck.message);
+        const approvedSupplierName=supplierCheck.name;
+        const approvedSupplierId=supplierCheck.id || ((priorRestock && v742bNorm(priorRestock.supp)===v742bNorm(supp))?priorRestock.supplierId:null);
+
+
+        const btn = document.getElementById('addRestockBtn');
+        const origText = btn.innerText;
+        btn.innerText = restockEditingId ? "⏳ Updating..." : "⏳ Uploading...";
+        btn.disabled = true;
+
+        try {
+            if (restockEditingId) {
+                if (!navigator.onLine) return alert('Requires internet to update restock record.');
+                const existing = restockItems.find(r => r.id === restockEditingId);
+                if (!existing) {
+                    cancelRestockEdit();
+                    return alert('Restock record not found or already deleted. Please refresh.');
+                }
+
+                const uploadedPhotos = currentRestockPhotos && currentRestockPhotos.length > 0 ? await uploadBase64ToStorage(currentRestockPhotos) : [];
+                if (uploadedPhotos.length !== currentRestockPhotos.length) throw new Error('Some photos could not be uploaded. Restock was not updated.');
+                const updates = {
+                    part,
+                    code,
+                    brand,
+                    supp: approvedSupplierName,
+                    supplierId: approvedSupplierId,
+                    car,
+                    onHandQty,
+                    needOrderQty,
+                    photos: uploadedPhotos,
+                    editedAt: firebase.database.ServerValue.TIMESTAMP,
+                    editedBy: auth.currentUser ? auth.currentUser.email : ''
+                };
+                updates.unitCost = unitCost;
+                updates.totalCost = (toNonNegativeNumber(needOrderQty, 1) * toNonNegativeNumber(unitCost, 0)).toFixed(2);
+                await db.ref('restock/' + restockEditingId).update(updates);
+                try { await writeAuditLog('EDIT_RESTOCK_FORM', 'restock', '', restockEditingId, { part, code, brand, supp, car, onHandQty, needOrderQty, photoCount: uploadedPhotos.length }); } catch(auditError) { console.warn('Restock edit saved, audit log failed:', auditError); }
+                alert('✅ Restock record updated.');
+                cancelRestockEdit();
+                return;
+            }
+
+            if (!(await v742aConfirmDuplicate(code, brand, car))) return;
+            const payload = { part, code, brand, supp: approvedSupplierName, supplierId: approvedSupplierId, car, onHandQty, needOrderQty, unitCost, totalCost, date: getStandardDateStr(), timestamp: Date.now(), status: 'Not Yet Order', photos: [...currentRestockPhotos] };
+            if (!navigator.onLine) {
+                saveToOfflineQueue('restock', payload);
+                return;
+            }
+
+            if (payload.photos && payload.photos.length > 0) {
+                const expectedPhotoCount=payload.photos.length;
+                payload.photos = await uploadBase64ToStorage(payload.photos);
+                if (payload.photos.length !== expectedPhotoCount) throw new Error('Some photos could not be uploaded. Restock was not saved.');
+            }
+
+            const newRef = await db.ref('restock').push(payload);
+            try { await writeAuditLog('CREATE_RESTOCK', 'restock', '', newRef.key, { part: payload.part, code: payload.code, supplier: payload.supp, needOrderQty: payload.needOrderQty }); } catch(auditError) { console.warn('Restock saved, audit log failed:', auditError); }
+            clearRestockFormFields();
+            const status=document.getElementById('mmcQuickEntryStatus');
+            if(status) status.textContent='✓ Saved. Ready for next Part Number.';
+            document.getElementById('r_code').focus();
+        } catch (e) {
+            alert("Error: " + (e && e.message ? e.message : e));
+        } finally {
+            if (restockEditingId) {
+                btn.innerText = '✅ Update Restock';
+                btn.style.backgroundColor = '#10b981';
+            } else {
+                btn.innerText = '➕ Add to Restock';
+                btn.style.backgroundColor = '#2563eb';
+            }
+            btn.disabled = false;
+        }
+    }
+
+    function editRestock(id) {
+        const item = restockItems.find(r => r.id === id);
+        if (!item) return alert('Restock record not found or already deleted. Please refresh.');
+        if (item.offlinePending) return alert('This restock record is still pending offline sync. Please sync first before editing.');
+        setRestockEditMode(item);
+    }
+
+    async function updateRestockSupplier(id, newValue) { const check=v742bValidateSupplier(newValue,restockItems.find(r=>r.id===id)?.supp); if(!check.ok)return alert(check.message); if(!navigator.onLine) return alert('Requires internet.'); const item = restockItems.find(r => r.id === id); if(!item) return alert('Restock record not found or already deleted. Please refresh.'); await db.ref('restock/' + id).update({ supp: check.name, supplierId: check.id }); await writeAuditLog('UPDATE_RESTOCK_SUPPLIER', 'restock', '', id, { part: item.part || '', from: item.supp || '', to: newValue }); }
+    async function markRestockOrdered(id) { if(!navigator.onLine) return; const item = restockItems.find(r => r.id === id); if(!item) return alert('Restock record not found or already deleted. Please refresh.'); await db.ref('restock/' + id).update({ status: 'Ordered' }); await writeAuditLog('MARK_RESTOCK_ORDERED', 'restock', '', id, { part: item.part || '', code: item.code || '' }); }
+    async function returnToNotYet(id) { if(!navigator.onLine) return; const item = restockItems.find(r => r.id === id); if(!item) return alert('Restock record not found or already deleted. Please refresh.'); await db.ref('restock/' + id).update({ status: 'Not Yet Order' }); await writeAuditLog('RETURN_RESTOCK_NOT_YET', 'restock', '', id, { part: item.part || '', code: item.code || '' }); }
+
+    async function deleteRestock(id) { if(!navigator.onLine) return alert('Requires internet.'); const item = restockItems.find(r => r.id === id); if(!item) return alert('Record not found or already deleted. Please refresh.'); if(!confirm('Delete this restock record permanently?')) return; await db.ref('restock/' + id).remove(); await writeAuditLog('DELETE_RESTOCK', 'restock', '', id, { part: item.part || '', code: item.code || '', car: item.car || '', deletedBy: auth.currentUser ? auth.currentUser.email : '' }); }
+    
+    async function markFilteredOrdered() { if(!isAdmin) return alert("Admin only."); if(!navigator.onLine) return alert("Requires internet."); let toUpdate = currentRestockView.filter(i => i.status !== 'Ordered' && !i.offlinePending); if(toUpdate.length === 0) return alert('No cloud pending items found in your current view. Offline pending items must sync first.'); if(!confirm(`Mark all ${toUpdate.length} cloud item(s) on this screen as ORDERED?`)) return; let updates = {}; toUpdate.forEach(i => { updates[i.id + '/status'] = 'Ordered'; }); await db.ref('restock').update(updates); await writeAuditLog('BULK_MARK_RESTOCK_ORDERED', 'restock', '', '', { count: Object.keys(updates).length }); }
+
+    function getRestockItemDateValue(item) {
+        if (item && Number.isFinite(Number(item.timestamp)) && Number(item.timestamp) > 0) return new Date(Number(item.timestamp));
+        const raw = String((item && item.date) || '').trim();
+        if (!raw) return null;
+        const match = raw.match(/^(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})$/);
+        if (match) {
+            const months = { january:0, february:1, march:2, april:3, may:4, june:5, july:6, august:7, september:8, october:9, november:10, december:11 };
+            const monthIndex = months[match[2].toLowerCase()];
+            if (monthIndex !== undefined) return new Date(Number(match[3]), monthIndex, Number(match[1]), 12, 0, 0, 0);
+        }
+        const parsed = new Date(raw);
+        return Number.isNaN(parsed.getTime()) ? null : parsed;
+    }
+
+    function recordMatchesDateRange(item, fromVal, toVal) {
+        if (!fromVal && !toVal) return true;
+        const itemDate = getRestockItemDateValue(item);
+        if (!itemDate) return false;
+        const itemTime = itemDate.getTime();
+        if (fromVal) {
+            const from = new Date(fromVal + 'T00:00:00');
+            if (itemTime < from.getTime()) return false;
+        }
+        if (toVal) {
+            const to = new Date(toVal + 'T23:59:59.999');
+            if (itemTime > to.getTime()) return false;
+        }
+        return true;
+    }
+
+
+    function restockMatchesDateRange(item, fromVal, toVal) { return recordMatchesDateRange(item, fromVal, toVal); }
+
+
+    // V75: all-history query is explicit; normal typing never downloads the database.
+    let v742aHistory = null;
+    let v742aHistoryLoading = false;
+    function v742aTokens(text) {
+        return String(text || '').toLocaleLowerCase().trim().split(/\s+/).filter(Boolean);
+    }
+    function v742aMatches(item, tokens) {
+        if (!tokens.length) return true;
+        const fields = [item.code, item.part, item.brand, item.supp, item.car]
+            .map(v => String(v || '').toLocaleLowerCase());
+        return tokens.every(word => fields.some(field => field.includes(word)));
+    }
+    function v742aSetStatus(message) {
+        const el=document.getElementById('v742aSearchStatus');
+        if(el) el.textContent=message;
+    }
+    async function v742aChangeScope() {
+        const scope=document.getElementById('v742aScope').value;
+        if(scope==='all') {
+            if(!v742aHistory) await v742aSearchAllHistory();
+            if(!v742aHistory) { document.getElementById('v742aScope').value='active'; return; }
+            document.getElementById('rViewFilter').value='all';
+        } else {
+            document.getElementById('rViewFilter').value='active';
+        }
+        renderRestockTable();
+    }
+    function v742aReAddFromHistory(index) {
+        const record=currentRestockView[index];
+        if(!record || record.offlinePending) return;
+        if(restockEditingId && !confirm('Exit current Edit mode and prepare a NEW Restock entry? Unsaved edits will be lost.')) return;
+        if(!restockEditingId && ['r_code','r_part','r_brand','r_supp','r_car','r_needOrder'].some(id=>String(document.getElementById(id)?.value||'').trim()) && !confirm('Replace the current unsaved Manual Input with this historical part?')) return;
+        cancelRestockEdit();
+        for(const [id,value] of Object.entries({r_code:record.code||'',r_part:record.part||'',r_brand:record.brand||'',r_supp:record.supp||'',r_car:record.car||'',r_unitCost:record.unitCost||''})) {
+            const input=document.getElementById(id);if(input) input.value=value;
+        }
+        currentRestockPhotos=Array.isArray(record.photos)?record.photos.slice(0,5):[];
+        renderRestockGalleryUI();
+        // Never reuse old stock or order quantities.
+        document.getElementById('r_onHand').value='';
+        document.getElementById('r_needOrder').value='';
+        calcRestockCost();
+        const note=document.getElementById('mmcPreviousCost');
+        if(note) note.textContent='Re-added from history | Previous recorded cost: RM'+Number(record.unitCost||0).toFixed(2)+' | '+(record.date||'-')+' | Enter current quantities before saving.';
+        document.getElementById('r_needOrder').focus();
+        document.getElementById('r_needOrder').scrollIntoView({behavior:'smooth',block:'center'});
+    }
+    function v742aClearSearch() {
+        const input=document.getElementById('v742aQuery');
+        if(input) input.value='';
+        v742aHistory=null;
+        document.getElementById('v742aScope').value='active';
+        document.getElementById('rViewFilter').value='active';
+        v742aSetStatus('Showing Active List. Choose All History to include older Firebase records.');
+        renderRestockTable();
+    }
+    async function v742aSearchAllHistory() {
+        if(v742aHistoryLoading) return;
+        if(!navigator.onLine) {
+            v742aSetStatus('Offline: cannot search all Firebase history. Showing locally loaded records.');
+            return;
+        }
+        const btn=document.getElementById('v742aAllHistoryBtn');
+        v742aHistoryLoading=true;
+        if(btn) btn.disabled=true;
+        v742aSetStatus('Loading complete Restock history from Firebase; please wait...');
+        try {
+            const snap=await db.ref('restock').once('value');
+            const all=[];
+            snap.forEach(child => { if(child.val()) all.push({id:child.key,...child.val()}); });
+            all.sort((a,b)=>(b.timestamp||0)-(a.timestamp||0));
+            v742aHistory=all;
+            document.getElementById('v742aScope').value='all';
+            document.getElementById('rViewFilter').value='all';
+            v742aSetStatus('All-history search loaded: '+all.length+' records. Search, status and date filters apply. Large histories may use significant data.');
+            renderRestockTable();
+        } catch(err) {
+            v742aHistory=null;
+            document.getElementById('v742aScope').value='active';
+            v742aSetStatus('Full-history search failed: '+(err?.message||err)+'. Showing loaded records only.');
+            renderRestockTable();
+        } finally {
+            v742aHistoryLoading=false;
+            if(btn) btn.disabled=false;
+        }
+    }
+    // Show active matches from both loaded and full history without treating prior orders as errors.
+    async function v742aConfirmDuplicate(code, brand, car) {
+        if (!code) return true;
+        if (!navigator.onLine) {
+            return confirm('Offline: full-history duplicate check unavailable. Save to offline queue anyway?');
+        }
+        try {
+            // Read the complete history to include legacy case variants and older records.
+            const snap=await db.ref('restock').once('value');
+            const norm=v=>String(v||'').toUpperCase().replace(/[\s-]/g,'');
+            const matches=[];
+            snap.forEach(child=>{
+                const r=child.val()||{};
+                if(restockEditingId && child.key===restockEditingId) return;
+                if(norm(r.code)===norm(code)) matches.push(r);
+            });
+            if(!matches.length) return true;
+            const isHistorical=r=>['ordered','done','completed'].includes(String(r.status||'').toLowerCase().trim());
+            const active=matches.filter(r=>!isHistorical(r));
+            const previous=matches.filter(isHistorical);
+            const summarize=r=>[r.date||'Unknown date',r.status||'Not Yet Order','Qty '+(r.needOrderQty||'-'),r.supp||'-',r.brand||'-',r.car||'-'].join(' | ');
+            let message='Restock history for '+code+':\n';
+            if(active.length) message+='\n⚠ POSSIBLE ACTIVE DUPLICATE ('+active.length+'):\n'+active.slice(0,6).map(summarize).join('\n');
+            if(previous.length) message+='\n\nPrevious ordered records ('+previous.length+'):\n'+previous.slice(0,4).map(summarize).join('\n');
+            message+='\n\nContinue saving a NEW Restock record?';
+            return confirm(message);
+        } catch(err) {
+            alert('Duplicate history check failed. Save cancelled to avoid unchecked duplicate: '+(err?.message||err));
+            return false;
+        }
+    }
+
+    function renderRestockTable() {
+        let theadHTML = `<tr><th style="width:100px;">Date Added</th><th>Part Description</th><th>Item Code / OEM</th><th>Brand</th><th>Supplier <span style="font-size:10px; color:#b45309;">(Editable)</span></th><th>Car Model</th><th style="text-align:center; width: 60px;">On Hand</th><th style="text-align:center; width: 60px;">Order Qty</th>`;
+        theadHTML += `<th style="text-align:center;">Unit Cost</th><th style="text-align:center;">Total Cost</th>`;
+        theadHTML += `<th style="text-align:center; width: 100px;">Photos</th><th style="text-align:center; width: 100px;">Status</th><th style="text-align:center; width: 80px;">Actions</th></tr>`;
+        theadHTML=theadHTML.replace('<tr>', '<tr><th style="width:45px">Select</th>');
+        document.getElementById('restockThead').innerHTML = theadHTML;
+        const tbody = document.getElementById('restockTableBody'); tbody.innerHTML = '';
+        const view = document.getElementById('rViewFilter').value; const dateFromVal = document.getElementById('rDateFromFilter').value; const dateToVal = document.getElementById('rDateToFilter').value; const suppFilter = document.getElementById('rSuppFilter').value;
+        const offlineRestockItems = offlineRecords
+            .filter(x => x.dataType === 'restock')
+            .map(x => ({
+                ...x,
+                id: x.tempId,
+                offlinePending: true,
+                status: x.status || 'Not Yet Order'
+            }));
+        const scope=document.getElementById('v742aScope')?.value||'active';
+        const baseRecords = scope==='all' && v742aHistory ? v742aHistory : restockItems;
+        const displayRestockItems = [...offlineRestockItems, ...baseRecords];
+        const queryTokens=v742aTokens(document.getElementById('v742aQuery')?.value);
+
+        currentRestockView = displayRestockItems.filter(item => { const status = item.status || 'Not Yet Order'; if (scope === 'active' && status === 'Ordered') return false; if (view === 'active' && status === 'Ordered') return false; if (view === 'history' && status !== 'Ordered') return false; if (!restockMatchesDateRange(item, dateFromVal, dateToVal)) return false; if (suppFilter !== 'all' && (item.supp||'').trim() !== suppFilter) return false; if (!v742aMatches(item,queryTokens)) return false; return true; });
+        if(document.getElementById('v742cGrouping')?.value==='supplier') currentRestockView.sort((a,b)=>v742cSupplier(a).name.localeCompare(v742cSupplier(b).name));
+        let lastSupplierKey='';
+        currentRestockView.forEach((item, rowIndex) => {
+            if(document.getElementById('v742cGrouping')?.value==='supplier') {
+                const group=v742cSupplier(item);
+                if(group.key!==lastSupplierKey){lastSupplierKey=group.key;const groupRow=document.createElement('tr');const cell=document.createElement('td');cell.colSpan=14;cell.style.cssText='background:#dbeafe;font-weight:800;padding:12px';cell.textContent='🏢 '+group.name+(group.verified?'':' — Unverified / legacy; PO blocked');groupRow.appendChild(cell);tbody.appendChild(groupRow);}
+            }
+            const status = item.status || 'Not Yet Order';
+            const statusHtml = status === 'Ordered' ? `<span style="padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; background:#d1fae5; color:#047857;">Ordered</span>` : `<span style="padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; background:#fef3c7; color:#b45309;">Not Yet Order</span>`;
+            let actionHtml = '';
+            if (item.offlinePending) {
+                actionHtml = `<div style="font-size:11px; color:#ef4444; font-weight:bold; text-align:center;">🔴 Pending Sync</div>`;
+            } else {
+                if (status !== 'Ordered') { actionHtml += `<button class="complete-btn" onclick="markRestockOrdered('${item.id}')" style="width:100%; margin-bottom:4px;">✔️ Done</button>`; } else { actionHtml += `<button class="edit-btn" onclick="returnToNotYet('${item.id}')" style="width:100%; margin-bottom:4px;">⏪ Return</button>`; }
+                actionHtml += `<button type="button" class="edit-btn" onclick="v742aReAddFromHistory(${rowIndex})" style="width:100%; margin-bottom:4px; background:#2563eb;color:white;">➕ Re-Add</button>`;
+                actionHtml += `<button class="edit-btn" onclick="editRestock('${item.id}')" style="width:100%; margin-bottom:4px;">✏️ Edit</button>`;
+                actionHtml += `<button class="delete-btn" onclick="deleteRestock('${item.id}')" style="width:100%;">✖ Del</button>`; 
+            }
+            let suppHtml = !item.offlinePending ? `<input type="text" class="pos-input" value="${escapeAttr(item.supp||'')}" placeholder="Type..." style="width:100px; font-size:12px; background:#fffbeb; color:#b45309; font-weight:bold;" list="supplierList" onchange="updateRestockSupplier('${item.id}', this.value)">` : escapeHTML(item.supp || '-');
+            let costHtml = `<td style="text-align:center; font-weight:bold; color:#059669;">RM ${parseFloat(item.unitCost||0).toFixed(2)}</td><td style="text-align:center; font-weight:bold; color:#059669;">RM ${parseFloat(item.totalCost||0).toFixed(2)}</td>`;
+            let photoHtml = ''; if (item.photos && item.photos.length > 0) { photoHtml = `<div style="display:flex; gap:4px; flex-wrap:wrap; justify-content:center;">`; item.photos.forEach(p => { const key = registerPhotoPreview(p); photoHtml += `<img src="${safePhotoSrc(p)}" class="photo-thumbnail" onclick="showPhotoByKey('${key}')" style="width:35px;height:35px;border:1px solid #cbd5e1; cursor:pointer;">`; }); photoHtml += `</div>`; } else { photoHtml = `<span style="color:#94a3b8; font-size:11px;">No Photo</span>`; }
+            const tr = document.createElement('tr'); tr.style.opacity = status === 'Ordered' ? '0.6' : '1';
+            tr.innerHTML = `<td><input type="checkbox" aria-label="Select restock item" data-restock-id="${escapeAttr(String(item.id||''))}" ${v742cSelected.has(String(item.id))?'checked':''} ${item.offlinePending?'disabled':''} onchange="v742cToggle(this.dataset.restockId,this.checked)"></td><td><small style="color:#64748b; font-weight:bold;">${escapeHTML(item.date)}</small></td><td><strong>${escapeHTML(item.part || '-') }</strong></td><td class="mono-text">${escapeHTML(item.code || '-') }</td><td>${escapeHTML(item.brand || '-') }</td><td>${suppHtml}</td><td class="car-model-wrap">${escapeHTML(item.car || '-') }</td><td style="text-align:center; font-weight:bold;">${escapeHTML(item.onHandQty || '0') }</td><td style="text-align:center; color:#ef4444; font-weight:bold;">${escapeHTML(item.needOrderQty || '1') }</td>${costHtml}<td style="text-align:center;">${photoHtml}</td><td style="text-align:center;">${statusHtml}</td><td><div class="action-btns" style="flex-direction:column;">${actionHtml}</div></td>`; tbody.appendChild(tr);
+        });
+        v742cRefreshCount();
+    }
+
+    function getRestockHTML(poMode = 'supplier') {
+        const showActualCosts = poMode === 'boss' && isAdmin;
+        let grandTotal = 0;
+        let rows = '';
+        currentRestockView.filter(i => !i.offlinePending).forEach((i, idx) => {
+            const status = i.status || 'Not Yet Order';
+            const actualUnitCost = toNonNegativeNumber(i.unitCost, 0);
+            const qty = toNonNegativeNumber(i.needOrderQty, 1);
+            const storedTotal = toNonNegativeNumber(i.totalCost, actualUnitCost * qty);
+            const actualTotalCost = storedTotal || (actualUnitCost * qty);
+            if (showActualCosts) grandTotal += actualTotalCost;
+
+            if (showActualCosts) {
+                rows += `<tr>
+                    <td style="text-align:center;">${idx+1}</td>
+                    <td>${escapeHTML(i.date)}</td>
+                    <td><strong>${escapeHTML(i.part||'-')}</strong></td>
+                    <td>${escapeHTML(i.code||'-')}</td>
+                    <td>${escapeHTML(i.brand||'-')}</td>
+                    <td>${escapeHTML(i.supp||'-')}</td>
+                    <td class="car-model-wrap">${escapeHTML(i.car||'-')}</td>
+                    <td style="text-align:center;">${escapeHTML(i.onHandQty||'0')}</td>
+                    <td style="text-align:center;font-weight:bold;">${escapeHTML(i.needOrderQty||'1')}</td>
+                    <td style="text-align:right;">RM ${actualUnitCost.toFixed(2)}</td>
+                    <td style="text-align:right;font-weight:bold;">RM ${actualTotalCost.toFixed(2)}</td>
+                    <td style="text-align:center;">${escapeHTML(status)}</td>
+                </tr>`;
+            } else {
+                rows += `<tr>
+                    <td style="text-align:center;">${idx+1}</td>
+                    <td>${escapeHTML(i.date)}</td>
+                    <td><strong>${escapeHTML(i.part||'-')}</strong></td>
+                    <td>${escapeHTML(i.code||'-')}</td>
+                    <td>${escapeHTML(i.brand||'-')}</td>
+                    <td class="car-model-wrap">${escapeHTML(i.car||'-')}</td>
+                    <td style="text-align:center;font-weight:bold;font-size:13px;">${escapeHTML(i.needOrderQty||'1')}</td>
+                </tr>`;
+            }
+        });
+
+        const filterTitle = showActualCosts ? 'BOSS COST PURCHASE ORDER' : 'SUPPLIER PURCHASE ORDER';
+        const suppFilter = document.getElementById('rSuppFilter').value;
+        const selectedGroupNames=[...new Set(currentRestockView.map(r=>v742cSupplier(r).name))];
+        const supplierName = selectedGroupNames.length===1 ? selectedGroupNames[0] : (suppFilter && suppFilter !== 'all' ? suppFilter : 'All Suppliers');
+        const fromVal = document.getElementById('rDateFromFilter').value;
+        const toVal = document.getElementById('rDateToFilter').value;
+        const dateFilter = fromVal || toVal ? `${fromVal || 'Start'} to ${toVal || 'Today'}` : 'All Dates';
+
+        const tableHead = showActualCosts
+            ? `<tr><th>No</th><th>Date</th><th>Part Description</th><th>Item Code</th><th>Brand</th><th>Supplier</th><th>Car Model</th><th>On Hand</th><th>Order Qty</th><th>Unit Cost</th><th>Total Cost</th><th>Status</th></tr>`
+            : `<tr><th style="width:5%;">No</th><th style="width:12%;">Date</th><th style="width:27%;">Part Description</th><th style="width:17%;">Item Code / OEM</th><th style="width:13%;">Brand</th><th style="width:16%;">Car Model</th><th style="width:10%;">Order Qty</th></tr>`;
+
+        return `<style>
+            *, *::before, *::after { box-sizing: border-box; }
+            body{font-family:Arial,sans-serif;padding:24px;color:#0f172a;}
+            table{width:100%;border-collapse:collapse;margin-top:18px;font-size:11px;table-layout:fixed;}
+            th,td{border:1px solid #94a3b8;padding:7px;word-wrap:break-word;}
+            th{background:#f1f5f9;text-align:left;}
+            .po-meta{display:flex;justify-content:space-between;gap:20px;margin-top:12px;font-size:13px;}
+            .po-total{margin-top:14px;margin-left:auto;width:320px;border:2px solid #334155;padding:12px;font-size:17px;font-weight:800;text-align:right;}
+            .confidential{margin-top:8px;text-align:center;font-size:11px;color:#7c3aed;font-weight:700;}
+        </style>
+        <div id="rInvoiceBody">
+            <h2 style="text-align:center;margin:0;">${escapeHTML(filterTitle)}</h2>
+            ${showActualCosts ? '<div class="confidential">INTERNAL BOSS VIEW — ACTUAL COSTS / STOCK</div>' : ''}
+            <div class="po-meta"><div><b>Supplier:</b> ${escapeHTML(supplierName)}</div><div><b>Date Range:</b> ${escapeHTML(dateFilter)}</div></div>
+            <table><thead>${tableHead}</thead><tbody>${rows}</tbody></table>
+            ${showActualCosts ? `<div class="po-total">Grand Total Cost: RM ${grandTotal.toFixed(2)}</div>` : ''}
+        </div>`;
+    }
+
+    function sanitizeDocumentFileName(value) {
+        return String(value || 'Document')
+            .replace(/[\\/:*?"<>|]+/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim()
+            .slice(0, 80) || 'Document';
+    }
+
+    function getRestockPDFTitle(poMode = 'supplier') {
+        const supplier = document.getElementById('rSuppFilter').value;
+        const supplierName = v75PrintingSupplierName || (supplier && supplier !== 'all' ? supplier : 'All Suppliers');
+        const fromVal = document.getElementById('rDateFromFilter').value; const toVal = document.getElementById('rDateToFilter').value; const dateText = fromVal || toVal ? `${fromVal || 'Start'} to ${toVal || 'Today'}` : new Date().toISOString().slice(0,10);
+        const typeText = poMode === 'boss' ? 'Boss Cost PO' : 'Supplier PO';
+        return sanitizeDocumentFileName(`${supplierName} ${typeText} ${dateText}`);
+    }
+
+    function v742bUnverifiedItems() {
+        return currentRestockView.filter(i=>!i.offlinePending && !v742cSupplier(i).verified);
+    }
+    function v742bVerifyPOAction() {
+        const unknown=v742bUnverifiedItems();
+        if(!unknown.length)return true;
+        const names=[...new Set(unknown.map(i=>i.supp||'Unknown Supplier'))];
+        alert('Formal PO blocked: '+unknown.length+' item(s) have unverified suppliers: '+names.join(', ')+'. Boss must confirm the supplier alias or approve the new supplier.');
+        return false;
+    }
+    function printRestock(outputMode = 'print', poMode = 'supplier') {
+        if (poMode === 'boss' && !isAdmin) return alert('Boss/Admin only.');
+        if(!v742bVerifyPOAction())return;
+        if (currentRestockView.filter(i => !i.offlinePending).length === 0) return alert('No cloud records found for this PO view.');
+        const documentTitle = getRestockPDFTitle(poMode);
+        const html = `<html><head><title>${escapeHTML(documentTitle)}</title></head><body>${getRestockHTML(poMode)}</body></html>`;
+        openPrintWindowOrPrintableView(html, documentTitle, outputMode);
+    }
+    function saveRestockPDF() { printRestock('pdf', 'supplier'); }
+    function saveRestockBossPDF() {
+        if (!isAdmin) return alert('Boss/Admin only.');
+        printRestock('pdf', 'boss');
+    }
+
+    function sendRestockWA(phone, bossName) {
+        if(!v742bVerifyPOAction())return;
+        if (currentRestockView.length === 0) { alert("No items found for this view/date."); return; }
+        let fromVal = document.getElementById('rDateFromFilter').value; let toVal = document.getElementById('rDateToFilter').value; let dateText = fromVal || toVal ? `${fromVal || 'Start'} to ${toVal || 'Today'}` : 'All Dates';
+        let text = `📦 *MMC RESTOCK SUMMARY*
+To: Boss ${bossName}
+Date Filter: ${dateText}
+
+`;
+        let notYetCount = 0;
+        currentRestockView.forEach(i => {
+            const status = i.status || 'Not Yet Order';
+            if (i.offlinePending) return;
+            if (status !== 'Ordered') {
+                const codeWA = i.code && i.code.trim() !== '' ? `[${i.code.trim()}] ` : '';
+                const brandWA = i.brand && i.brand.trim() !== '' ? `(Brd: ${i.brand.trim()}) ` : '';
+                const suppWA = i.supp && i.supp.trim() !== '' ? `(Sup: ${i.supp.trim()}) ` : '';
+                const carWA = i.car && i.car.trim() !== '' ? `(Car: ${i.car.trim()}) ` : '';
+                text += `• ${i.part||''} ${codeWA}${brandWA}${suppWA}${carWA}(Need: ${plainText(i.needOrderQty || '1')})
+`;
+                notYetCount++;
+            }
+        });
+        if (notYetCount === 0) { alert("No cloud pending items found. Offline pending items must sync first."); return; }
+        text += `
+*Total Pending Order:* ${notYetCount}`;
+        window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank');
+    }
+</script>
+</body>
+</html>
