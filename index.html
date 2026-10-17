@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="MMC Portal">
     <link rel="apple-touch-icon" href="logo.png">
-    <title>Malaysia Motor Company - Secure Portal V74.1.1</title>
+    <title>Malaysia Motor Company - Secure Portal V74.2-A</title>
     <link rel="manifest" href="manifest.json">
     <script>
         if ('serviceWorker' in navigator) {
@@ -16,12 +16,12 @@
             navigator.serviceWorker.addEventListener('controllerchange', () => { if (!refreshing) { window.location.reload(); refreshing = true; }});
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js').then(reg => {
-                    setInterval(() => { console.log("Checking server for V74.1.1 updates..."); reg.update(); }, 5 * 60 * 1000);
+                    setInterval(() => { console.log("Checking server for V74.2-A updates..."); reg.update(); }, 5 * 60 * 1000);
                     reg.onupdatefound = () => {
                         const installingWorker = reg.installing;
                         installingWorker.onstatechange = () => {
                             if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                if (confirm("🔄 New system version (V74.1.1) available! Click OK to apply.")) { installingWorker.postMessage('SKIP_WAITING'); }
+                                if (confirm("🔄 New system version (V74.2-A) available! Click OK to apply.")) { installingWorker.postMessage('SKIP_WAITING'); }
                             }
                         };
                     };
@@ -198,7 +198,7 @@
 <div id="mainApp" class="container">
     <div class="header-flex">
         <div>
-            <h2>Malaysia Motor Company <span class="version-badge">V74.1.1 Enterprise</span> <span id="adminBadge">👑 Boss View</span></h2>
+            <h2>Malaysia Motor Company <span class="version-badge">V74.2-A Enterprise</span> <span id="adminBadge">👑 Boss View</span></h2>
             <div style="margin-top:8px;">
                 <span id="networkBadge" class="net-online">🟢 Online (Live Cloud Sync)</span>
             </div>
@@ -392,7 +392,7 @@
         </div>
 
         <div class="top-controls" style="background:#f8fafc; padding:15px; border-radius:8px; border:1px solid #e2e8f0; align-items:center;">
-            <button onclick="refreshTabData('restock')" class="sync-btn" style="border-radius:6px;">🔄 Refresh Restock</button><select id="rViewFilter" onchange="renderRestockTable()" style="padding:10px; border-radius:6px; font-weight:bold; color:#2563eb; border:1px solid #cbd5e1;"><option value="active">Active List (Not Yet Order)</option><option value="history">History (Ordered)</option><option value="all">All Items</option></select>
+            <button onclick="refreshTabData('restock')" class="sync-btn" style="border-radius:6px;">🔄 Refresh Restock</button><div id="v742aSearchPanel" style="width:100%;padding:12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;margin:8px 0;box-sizing:border-box;"><div style="font-weight:800;color:#1e40af;margin-bottom:7px;">🔎 Universal Restock Search — V74.2-A</div><div style="display:flex;gap:8px;flex-wrap:wrap;"><input id="v742aQuery" type="search" autocomplete="off" placeholder="Part No / Item / Brand / Supplier / Car Model (multiple words)" oninput="if(this.value.trim()) document.getElementById('rViewFilter').value='all';renderRestockTable()" style="flex:1;min-width:230px;padding:10px;border:1px solid #94a3b8;border-radius:6px;"><button type="button" onclick="v742aSearchAllHistory()" id="v742aAllHistoryBtn" style="padding:10px;border-radius:6px;background:#1d4ed8;color:white;border:0;font-weight:bold;">Search ALL History</button><button type="button" onclick="v742aClearSearch()" style="padding:10px;border:1px solid #94a3b8;border-radius:6px;background:white;">Clear Search</button></div><div id="v742aSearchStatus" role="status" aria-live="polite" style="font-size:12px;color:#334155;margin-top:7px;">Typing filters loaded records. Select Search ALL History to include older Firebase records.</div></div><select id="rViewFilter" onchange="renderRestockTable()" style="padding:10px; border-radius:6px; font-weight:bold; color:#2563eb; border:1px solid #cbd5e1;"><option value="active">Active List (Not Yet Order)</option><option value="history">History (Ordered)</option><option value="all">All Items</option></select>
             <select id="rSuppFilter" onchange="renderRestockTable()" style="padding:10px; border-radius:6px; font-weight:bold; border:1px solid #cbd5e1; background: #fffbeb; color: #b45309;"><option value="all">🔍 All Suppliers</option></select>
             <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;"><span style="font-size:13px; font-weight:bold; color:#475569;">Date From:</span><input type="date" id="rDateFromFilter" onchange="renderRestockTable()" style="padding:10px; border-radius:6px; width:155px; border:1px solid #cbd5e1;"><span style="font-size:13px; font-weight:bold; color:#475569;">To:</span><input type="date" id="rDateToFilter" onchange="renderRestockTable()" style="padding:10px; border-radius:6px; width:155px; border:1px solid #cbd5e1;"><button onclick="clearDateFilter('restock')" style="padding:10px; border-radius:6px; cursor:pointer; border:1px solid #cbd5e1; background:white; font-weight:bold;">Clear</button></div>
             <div style="margin-left:auto; display:flex; gap:10px; flex-wrap:wrap;"><button class="print-btn" onclick="printRestock()" style="padding:10px 15px; border-radius:6px; font-weight:bold; cursor:pointer;">🖨️ Print PO List</button><button class="print-btn" onclick="saveRestockPDF()" style="padding:10px 15px; border-radius:6px; font-weight:bold; cursor:pointer;">📄 Supplier PO (RM0)</button><button class="print-btn boss-restock" onclick="saveRestockBossPDF()" style="display:none; padding:10px 15px; border-radius:6px; font-weight:bold; cursor:pointer; background:#7c3aed;">👑 Boss Cost PO</button><button class="wa-btn" style="background:#25D366; margin:0; padding:10px 15px; border-radius:6px; font-size:13px;" onclick="sendRestockWA('60194482580', 'Hock')">📲 WA Hock</button><button class="wa-btn" style="background:#25D366; margin:0; padding:10px 15px; border-radius:6px; font-size:13px;" onclick="sendRestockWA('60164401970', 'Kelvin')">📲 WA Kelvin</button><button class="complete-btn" onclick="markFilteredOrdered()" style="margin:0; padding:10px 15px; border-radius:6px; font-size:13px;">📦 Mark View as Ordered</button></div>
@@ -419,7 +419,7 @@
     measurementId: "G-CPSC89HTB5"
     };
     
-    // MMC_STARTUP_FAILSAFE V74.1.1
+    // MMC_STARTUP_FAILSAFE V74.2-A
     // Never leave the user on a blank screen if Firebase/Auth startup is delayed.
     const mmcStartupTimer = setTimeout(() => {
         const loginScreen = document.getElementById('loginScreen');
@@ -867,7 +867,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
     }
 
     // ==========================================
-    // V74.1.1 iPhone / iPad PRINT / PDF FALLBACK
+    // V74.2-A iPhone / iPad PRINT / PDF FALLBACK
     // iOS PWA can block or mishandle popup print windows. This fallback opens
     // a same-page printable view with Back and Print buttons.
     // ==========================================
@@ -1635,7 +1635,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
     function loadDatabaseData() { db.ref('orders').orderByChild('timestamp').limitToLast(orderLimit).on('value', (snapshot) => { orders = []; snapshot.forEach(child => { orders.push({ id: child.key, ...child.val() }); }); orders.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0)); buildDictionaries(); renderTable(); calculateDailyCash(); }); }
     function loadQuoteData() { db.ref('quotations').orderByChild('timestamp').limitToLast(quoteLimit).on('value', (snapshot) => { quotes = []; snapshot.forEach(child => { quotes.push({ id: child.key, ...child.val() }); }); quotes.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0)); buildDictionaries(); renderQTable(); }); }
     function loadEnquireData() { db.ref('enquiries').orderByChild('timestamp').limitToLast(enquireLimit).on('value', (snapshot) => { enquiries = []; snapshot.forEach(child => { enquiries.push({ id: child.key, ...child.val() }); }); enquiries.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0)); buildDictionaries(); renderETable(); }); }
-    function loadRestockData() { db.ref('restock').orderByChild('timestamp').limitToLast(restockLimit).on('value', (snapshot) => { restockItems = []; snapshot.forEach(child => { restockItems.push({ id: child.key, ...child.val() }); }); restockItems.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0)); buildDictionaries(); renderRestockTable(); }); }
+    function loadRestockData() { db.ref('restock').orderByChild('timestamp').limitToLast(restockLimit).on('value', (snapshot) => { restockItems = []; snapshot.forEach(child => { restockItems.push({ id: child.key, ...child.val() }); }); restockItems.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0)); if(v742aHistory) { v742aHistory=null; v742aSetStatus('Restock changed. Reload Search ALL History for complete results.'); } buildDictionaries(); renderRestockTable(); }); }
     
     function loadMoreRecords(type) {
         if(type === 'order') { orderLimit += 200; db.ref('orders').off(); loadDatabaseData(); } else if(type === 'quote') { quoteLimit += 200; db.ref('quotations').off(); loadQuoteData(); } else if(type === 'enquire') { enquireLimit += 200; db.ref('enquiries').off(); loadEnquireData(); } else if(type === 'restock') { restockLimit += 200; db.ref('restock').off(); loadRestockData(); }
@@ -2503,7 +2503,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
     // RESTOCK SYSTEM
     // ==========================================
 
-    // V74.1.1: clear, selectable Smart Part Lookup cards. Uses loaded Restock records.
+    // V74.2-A: clear, selectable Smart Part Lookup cards. Uses loaded Restock records.
     let mmcLookupMatches = [];
     function mmcLookupRestock(raw) {
         const panel = document.getElementById('mmcPartLookupResults');
@@ -2697,6 +2697,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
                 return;
             }
 
+            if (!(await v742aConfirmDuplicate(code, brand, car))) return;
             const payload = { part, code, brand, supp, car, onHandQty, needOrderQty, unitCost, totalCost, date: getStandardDateStr(), timestamp: Date.now(), status: 'Not Yet Order', photos: [...currentRestockPhotos] };
             if (!navigator.onLine) {
                 saveToOfflineQueue('restock', payload);
@@ -2775,6 +2776,89 @@ Uploaded ${successCount} item(s) to Cloud.`);
 
     function restockMatchesDateRange(item, fromVal, toVal) { return recordMatchesDateRange(item, fromVal, toVal); }
 
+
+    // V74.2-A: all-history query is explicit; normal typing never downloads the database.
+    let v742aHistory = null;
+    let v742aHistoryLoading = false;
+    function v742aTokens(text) {
+        return String(text || '').toLocaleLowerCase().trim().split(/\s+/).filter(Boolean);
+    }
+    function v742aMatches(item, tokens) {
+        if (!tokens.length) return true;
+        const fields = [item.code, item.part, item.brand, item.supp, item.car]
+            .map(v => String(v || '').toLocaleLowerCase());
+        return tokens.every(word => fields.some(field => field.includes(word)));
+    }
+    function v742aSetStatus(message) {
+        const el=document.getElementById('v742aSearchStatus');
+        if(el) el.textContent=message;
+    }
+    function v742aClearSearch() {
+        const input=document.getElementById('v742aQuery');
+        if(input) input.value='';
+        v742aHistory=null;
+        v742aSetStatus('Showing loaded records. Select Search ALL History to include older Firebase records.');
+        renderRestockTable();
+    }
+    async function v742aSearchAllHistory() {
+        if(v742aHistoryLoading) return;
+        if(!navigator.onLine) {
+            v742aSetStatus('Offline: cannot search all Firebase history. Showing locally loaded records.');
+            return;
+        }
+        const btn=document.getElementById('v742aAllHistoryBtn');
+        v742aHistoryLoading=true;
+        if(btn) btn.disabled=true;
+        v742aSetStatus('Loading complete Restock history from Firebase; please wait...');
+        try {
+            const snap=await db.ref('restock').once('value');
+            const all=[];
+            snap.forEach(child => { if(child.val()) all.push({id:child.key,...child.val()}); });
+            all.sort((a,b)=>(b.timestamp||0)-(a.timestamp||0));
+            v742aHistory=all;
+            document.getElementById('rViewFilter').value='all';
+            v742aSetStatus('All-history search loaded: '+all.length+' records. Search, status and date filters apply. Large histories may use significant data.');
+            renderRestockTable();
+        } catch(err) {
+            v742aHistory=null;
+            v742aSetStatus('Full-history search failed: '+(err?.message||err)+'. Showing loaded records only.');
+            renderRestockTable();
+        } finally {
+            v742aHistoryLoading=false;
+            if(btn) btn.disabled=false;
+        }
+    }
+    // Show active matches from both loaded and full history without treating prior orders as errors.
+    async function v742aConfirmDuplicate(code, brand, car) {
+        if (!code) return true;
+        if (!navigator.onLine) {
+            return confirm('Offline: full-history duplicate check unavailable. Save to offline queue anyway?');
+        }
+        try {
+            // Read the complete history to include legacy case variants and older records.
+            const snap=await db.ref('restock').once('value');
+            const norm=v=>String(v||'').toUpperCase().replace(/[\s-]/g,'');
+            const matches=[];
+            snap.forEach(child=>{
+                const r=child.val()||{};
+                if(restockEditingId && child.key===restockEditingId) return;
+                if(norm(r.code)===norm(code)) matches.push(r);
+            });
+            if(!matches.length) return true;
+            const active=matches.filter(r=>(r.status||'Not Yet Order')!=='Ordered');
+            const previous=matches.filter(r=>(r.status||'Not Yet Order')==='Ordered');
+            const summarize=r=>[r.date||'Unknown date',r.status||'Not Yet Order','Qty '+(r.needOrderQty||'-'),r.supp||'-',r.brand||'-',r.car||'-'].join(' | ');
+            let message='Restock history for '+code+':\n';
+            if(active.length) message+='\n⚠ POSSIBLE ACTIVE DUPLICATE ('+active.length+'):\n'+active.slice(0,6).map(summarize).join('\n');
+            if(previous.length) message+='\n\nPrevious ordered records ('+previous.length+'):\n'+previous.slice(0,4).map(summarize).join('\n');
+            message+='\n\nContinue saving a NEW Restock record?';
+            return confirm(message);
+        } catch(err) {
+            alert('Duplicate history check failed. Save cancelled to avoid unchecked duplicate: '+(err?.message||err));
+            return false;
+        }
+    }
+
     function renderRestockTable() {
         let theadHTML = `<tr><th style="width:100px;">Date Added</th><th>Part Description</th><th>Item Code / OEM</th><th>Brand</th><th>Supplier <span style="font-size:10px; color:#b45309;">(Editable)</span></th><th>Car Model</th><th style="text-align:center; width: 60px;">On Hand</th><th style="text-align:center; width: 60px;">Order Qty</th>`;
         theadHTML += `<th style="text-align:center;">Unit Cost</th><th style="text-align:center;">Total Cost</th>`;
@@ -2790,9 +2874,11 @@ Uploaded ${successCount} item(s) to Cloud.`);
                 offlinePending: true,
                 status: x.status || 'Not Yet Order'
             }));
-        const displayRestockItems = [...offlineRestockItems, ...restockItems];
+        const baseRecords = v742aHistory || restockItems;
+        const displayRestockItems = [...offlineRestockItems, ...baseRecords];
+        const queryTokens=v742aTokens(document.getElementById('v742aQuery')?.value);
 
-        currentRestockView = displayRestockItems.filter(item => { const status = item.status || 'Not Yet Order'; if (view === 'active' && status === 'Ordered') return false; if (view === 'history' && status !== 'Ordered') return false; if (!restockMatchesDateRange(item, dateFromVal, dateToVal)) return false; if (suppFilter !== 'all' && (item.supp||'').trim() !== suppFilter) return false; return true; });
+        currentRestockView = displayRestockItems.filter(item => { const status = item.status || 'Not Yet Order'; if (view === 'active' && status === 'Ordered') return false; if (view === 'history' && status !== 'Ordered') return false; if (!restockMatchesDateRange(item, dateFromVal, dateToVal)) return false; if (suppFilter !== 'all' && (item.supp||'').trim() !== suppFilter) return false; if (!v742aMatches(item,queryTokens)) return false; return true; });
         currentRestockView.forEach(item => {
             const status = item.status || 'Not Yet Order';
             const statusHtml = status === 'Ordered' ? `<span style="padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; background:#d1fae5; color:#047857;">Ordered</span>` : `<span style="padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; background:#fef3c7; color:#b45309;">Not Yet Order</span>`;
