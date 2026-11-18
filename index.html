@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="MMC Portal">
     <link rel="apple-touch-icon" href="logo.png">
-    <title>Malaysia Motor Company - Secure Portal V75</title>
+    <title>Malaysia Motor Company - Secure Portal V75.2 Security Review</title>
     <link rel="manifest" href="manifest.json">
     <script>
         if ('serviceWorker' in navigator) {
@@ -16,12 +16,12 @@
             navigator.serviceWorker.addEventListener('controllerchange', () => { if (!refreshing) { window.location.reload(); refreshing = true; }});
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js').then(reg => {
-                    setInterval(() => { console.log("Checking server for V75 updates..."); reg.update(); }, 5 * 60 * 1000);
+                    setInterval(() => { console.log("Checking server for V75.5 updates..."); reg.update(); }, 5 * 60 * 1000);
                     reg.onupdatefound = () => {
                         const installingWorker = reg.installing;
                         installingWorker.onstatechange = () => {
                             if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                if (confirm("🔄 New system version (V75) available! Click OK to apply.")) { installingWorker.postMessage('SKIP_WAITING'); }
+                                if (confirm("🔄 New system version (V75.5) available! Click OK to apply.")) { installingWorker.postMessage('SKIP_WAITING'); }
                             }
                         };
                     };
@@ -198,7 +198,7 @@
 <div id="mainApp" class="container">
     <div class="header-flex">
         <div>
-            <h2>Malaysia Motor Company <span class="version-badge">V75 Enterprise</span> <span id="adminBadge">👑 Boss View</span></h2>
+            <h2>Malaysia Motor Company <span class="version-badge">V75.5 Security Candidate</span> <span id="adminBadge">👑 Boss View</span></h2>
             <div style="margin-top:8px;">
                 <span id="networkBadge" class="net-online">🟢 Online (Live Cloud Sync)</span>
             </div>
@@ -230,6 +230,8 @@
         <button class="tab-btn" id="tabBtnQuote" onclick="switchTab('quoteTab', this)">📄 Quotation</button>
         <button class="tab-btn" id="tabBtnEnquire" onclick="switchTab('enquireTab', this)">💬 Enquiry</button>
         <button class="tab-btn" id="tabBtnRestock" onclick="switchTab('restockTab', this)">📦 Restock Register</button>
+        <button class="tab-btn" id="tabBtnBatteryClaim" onclick="switchTab('batteryClaimTab', this)">🔋 Battery Claim</button>
+        <button class="tab-btn" id="tabBtnBatteryTrade" onclick="switchTab('batteryTradeTab', this)">♻️ Old Battery Trade-In</button>
     </div>
     
     <div id="ordersTab" class="tab-content active">
@@ -372,7 +374,7 @@
                 <div><span class="label-text">Part Description</span><div class="input-wrapper"><input type="text" id="r_part" placeholder="e.g. Brake Pad" autocomplete="off" oninput="handleRestockInput(this)" onfocus="handleRestockInput(this)"><div id="r_autocomplete" class="autocomplete-list" style="display:none;"></div></div></div>
                 <div><span class="label-text">Item Code / OEM No</span><input type="text" id="r_code" placeholder="OEM Code / Search history" autocomplete="off" oninput="this.value=this.value.toUpperCase().replace(/\\s/g,''); mmcLookupRestock(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault(); mmcLookupRestock(this.value)}"><div style="font-size:12px;font-weight:700;color:#1d4ed8;margin-top:7px;">🔎 Smart Part Lookup <span style="font-weight:400;color:#64748b;">(type 2+ characters, then SELECT a match)</span></div><div id="mmcPartLookupResults" style="display:none;background:white;border:1px solid #cbd5e1;border-radius:6px;max-height:230px;overflow:auto;margin-top:5px;position:relative;z-index:3;"></div><div id="mmcPreviousCost" style="font-size:12px;color:#475569;margin-top:5px;" aria-live="polite"></div></div>
                 <div><span class="label-text">Brand</span><input type="text" id="r_brand" placeholder="e.g. TRW"></div>
-                <div><span class="label-text">Supplier (approved or pending)</span><input type="text" id="r_supp" placeholder="Search or enter supplier name" list="supplierList" oninput="v742bSupplierHint();v75RenderSupplierMatches()" onblur="v742bSupplierHint()"><div id="v75SupplierMatches" role="listbox" style="display:none;margin-top:5px"></div><div id="v742bSupplierHint" style="font-size:12px;color:#475569;margin-top:4px" aria-live="polite"></div><button type="button" onclick="v742bShowRequest()" style="font-size:12px;margin-top:5px;padding:5px 8px;border-radius:5px;border:1px solid #64748b;background:white">+ Add Supplier Now</button></div>
+                <div><span class="label-text">Supplier</span><input type="text" id="r_supp" placeholder="Type supplier name (free text)" list="supplierList" maxlength="120" oninput="v75RenderSupplierMatches()"><div id="v75SupplierMatches" role="listbox" style="display:none;margin-top:5px"></div></div>
                 <div><span class="label-text">Car Model</span><input type="text" id="r_car" placeholder="e.g. Axia"></div>
                 <div><span class="label-text">On Hand Qty</span><input type="number" id="r_onHand" placeholder="0"></div>
                 <div><span class="label-text">Order Qty</span><input type="number" id="r_needOrder" placeholder="1"></div>
@@ -404,6 +406,39 @@
     </div>
 </div>
 
+
+<div id="batteryClaimTab" class="tab-content">
+ <h2>🔋 Battery Claim Record</h2><p>One free replacement per warranty chain. Replacement serials cannot be claimed again.</p>
+ <div class="form-grid">
+  <div><label>Battery Brand</label><select id="batBrand"></select><button type="button" onclick="batAddBrand()">+ Add Brand</button></div>
+  <div><label>Battery Size / Model (Optional)</label><input id="batSize" maxlength="80"></div>
+  <div><label>Old Battery Serial Number</label><input id="batOld" maxlength="120" autocomplete="off"></div>
+  <div><label>New Replacement Serial Number</label><input id="batNew" maxlength="120" autocomplete="off"></div>
+  <div><label>Car Plate / Customer Reference (Optional)</label><input id="batCustomer" maxlength="120"></div>
+  <div><label>Remarks (Optional)</label><input id="batNotes" maxlength="250"></div>
+ </div>
+ <p id="batClaimStatus" role="status"></p><button id="batClaimSave" type="button" onclick="batSaveClaim()">Save Battery Claim</button>
+ <h3>Claim History / Serial Search</h3><input id="batClaimSearch" placeholder="Search serial, brand or car plate" oninput="batRenderClaims()"><div id="batClaimHistory"></div>
+</div>
+<div id="batteryTradeTab" class="tab-content">
+ <h2>♻️ Old Battery Trade-In</h2><p>Simple record of batteries bought from customers.</p>
+ <div class="form-grid">
+  <div><label>Battery Size</label><input id="batTradeSize" maxlength="80" placeholder="e.g. NS40 / DIN55"></div>
+  <div><label>Buy Price (RM)</label><input id="batTradeAmount" type="number" min="0.01" step="0.01"></div>
+  <div><label>Purchase Date</label><input id="batTradeDate" type="date"></div>
+ </div>
+ <p id="batTradeStatus" role="status"></p><button id="batTradeSave" type="button" onclick="batSaveTrade()">Save Trade-In</button>
+ <div id="batBossSummary" style="display:none;border:1px solid #cbd5e1;border-radius:8px;padding:12px;margin-top:18px">
+  <h3>👑 Boss Only — Select Dates & Summary</h3><button type="button" onclick="batSelectAllDates(true)">Select All</button> <button type="button" onclick="batSelectAllDates(false)">Clear</button>
+  <div id="batDateChoices"></div><h3 id="batSummaryTotal">RM 0.00</h3><p id="batSummaryCount">0 batteries</p>
+ </div>
+ <h3>Trade-In History</h3><div id="batTradeHistory"></div>
+ <div id="batEmergency" style="display:none;margin-top:30px;padding:12px;border:1px solid #ddd;border-radius:8px">
+  <small>👑 Boss Only — Emergency Staff Access Control (normally leave enabled)</small><p id="batVisibilityLabel"></p>
+  <button type="button" id="batVisibilityButton" onclick="batToggleStaffAccess()">Hide Staff Trade-In Tab</button>
+ </div>
+</div>
+
 <div id="photoModal" onclick="closePhoto()"><img id="modalImg" src=""><div style="color:white; margin-top:15px; font-weight:bold; letter-spacing:1px;">Click anywhere to close</div></div>
 <div id="historyModal"><div id="historyContent"></div></div>
 
@@ -411,16 +446,22 @@
 
 <script>
     const firebaseConfig = {
-    apiKey: "AIzaSyDdTc6A67sqq1D5vMRWI1q-bhGsSd5DQBs",
-    authDomain: "malaysia-motor-preorder.firebaseapp.com",
-    databaseURL: "https://malaysia-motor-preorder-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "malaysia-motor-preorder",
-    storageBucket: "malaysia-motor-preorder.firebasestorage.app",
-    messagingSenderId: "409637154704",
-    appId: "1:409637154704:web:ac1ed4603fb62bd0258d15",
-    measurementId: "G-CPSC89HTB5"
+        apiKey: "AIzaSyDdTc6A67sqq1D5vMRWI1q-bhGsSd5DQBs",
+        authDomain: "malaysia-motor-preorder.firebaseapp.com",
+        databaseURL: "https://malaysia-motor-preorder-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "malaysia-motor-preorder",
+        storageBucket: "malaysia-motor-preorder.appspot.com",
+        messagingSenderId: "409637154704",
+        appId: "1:409637154704:web:ac1ed4603fb62bd0258d15"
     };
     
+    // V75.5: fail visibly when the supplied test configuration has not been replaced.
+    if (['Test','test',''].includes(firebaseConfig.apiKey) || ['Test','test',''].includes(firebaseConfig.appId)) {
+        window.addEventListener('DOMContentLoaded', () => {
+            const msg=document.getElementById('startupStatus');
+            if(msg) msg.textContent='TEST FIREBASE CONFIG: replace placeholder values using your authorized project configuration before testing. Do not deploy this candidate.';
+        });
+    }
     // MMC_STARTUP_FAILSAFE V75
     // Never leave the user on a blank screen if Firebase/Auth startup is delayed.
     const mmcStartupTimer = setTimeout(() => {
@@ -1331,9 +1372,10 @@ Uploaded ${successCount} item(s) to Cloud.`);
         document.getElementById('adminTools').style.display = isAdmin ? 'flex' : 'none';
         document.getElementById('cashDashboard').style.display = isAdmin ? 'flex' : 'none';
         document.querySelectorAll('.boss-restock').forEach(el => el.style.display = isAdmin ? 'block' : 'none');
-        document.getElementById('v75BossSupplierManagement').style.display=isAdmin?'block':'none';
+        document.getElementById('v75BossSupplierManagement').style.display='none';
         document.getElementById('v742bBossPanel').style.display=isAdmin?'block':'none';
         v742bReloadSuppliers();
+        batStart();
         document.getElementById('loginScreen').style.display = 'none';
         document.getElementById('mainApp').style.display = 'block';
         document.getElementById('loginError').style.display = 'none';
@@ -1351,6 +1393,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
     }
 
     function switchTab(tabId, btnElement) {
+        if(tabId==='batteryTradeTab' && !isAdmin && (!batAccessReady||!batStaffVisible)) return;
         document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.getElementById(tabId).classList.add('active');
@@ -1368,6 +1411,21 @@ Uploaded ${successCount} item(s) to Cloud.`);
             await showMainAppForUser(user);
         } else {
             stopDeleteRequestWatch();
+            batStop();
+            if(typeof batClaims!=='undefined')batClaims={};
+            if(typeof batTrades!=='undefined')batTrades={};
+            if(typeof batBrands!=='undefined')batBrands={};
+            if(typeof batClaimReady!=='undefined')batClaimReady=false;
+            if(typeof batTradeReady!=='undefined')batTradeReady=false;
+            if(typeof batBrandReady!=='undefined')batBrandReady=false;
+            if(typeof batAccessReady!=='undefined')batAccessReady=false;
+            ['batClaimHistory','batTradeHistory','batDateChoices'].forEach(id=>{const e=document.getElementById(id);if(e)e.replaceChildren();});
+            ['batOld','batNew','batSize','batCustomer','batNotes','batClaimSearch','batTradeSize','batTradeAmount'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+            ['batClaimStatus','batTradeStatus','batSummaryTotal','batSummaryCount'].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent='';});
+            if(typeof batSelectedDates!=='undefined')batSelectedDates.clear();
+            document.querySelectorAll('#mainApp input:not([type=hidden]),#mainApp textarea').forEach(e=>{if(e.type==='checkbox'||e.type==='radio')e.checked=false;else if(e.type!=='button'&&e.type!=='submit')e.value='';});
+            document.querySelectorAll('#mainApp input[type=file]').forEach(e=>{e.value='';});
+            if(typeof photoRegistry!=='undefined'&&photoRegistry instanceof Map)photoRegistry.clear();
             isDeviceApproved = false;
             isAdmin = false;
             orders = [];
@@ -1441,12 +1499,37 @@ Uploaded ${successCount} item(s) to Cloud.`);
         document.getElementById('v742bProposedName').value=name;
         document.getElementById('v742bProposedName').focus();
     }
-    function v75RenderSupplierMatches(){
-        const target=document.getElementById('v75SupplierMatches');if(!target)return;
+    // V75.1: Optional suggestions only. The staff can type any supplier and save.
+    function v75RenderSupplierMatches() {
+        const target=document.getElementById('v75SupplierMatches');
         const input=document.getElementById('r_supp');
-        const matches=v742bSuggestions(input?.value||'');
-        target.style.display=matches.length?'block':'none';
-        target.innerHTML=matches.map(([id,s])=>'<button type="button" style="display:block;width:100%;text-align:left;padding:9px;margin:3px 0;border:1px solid #cbd5e1;border-radius:6px;background:white;cursor:pointer" data-supplier-id="'+v742bSafe(id)+'" onclick="v742bPickSupplier(this.dataset.supplierId)"><strong>'+v742bSafe(s.officialName)+'</strong> <small>'+v742bSafe((s.aliases||[]).join(', '))+'</small> — SELECT</button>').join('');
+        if(!target||!input)return;
+        const query=v742bNorm(input.value);
+        target.replaceChildren();
+        if(query.length<2){target.style.display='none';return;}
+        const names=new Map();
+        // Official names and confirmed aliases are useful hints, never mandatory.
+        for(const [,supplier] of Object.entries(v742bSuppliers)){
+            if(supplier.status==='inactive')continue;
+            const aliases=Array.isArray(supplier.aliases)?supplier.aliases:[];
+            if([supplier.officialName,...aliases].some(n=>v742bNorm(n).includes(query)))
+                names.set(v742bNorm(supplier.officialName),supplier.officialName);
+        }
+        // Include historic free-text names even when Supplier Master is unavailable.
+        for(const item of restockItems){
+            const name=String(item.supp||'').trim();
+            if(name&&v742bNorm(name).includes(query)&&!names.has(v742bNorm(name)))
+                names.set(v742bNorm(name),name);
+        }
+        for(const name of [...names.values()].slice(0,8)){
+            const btn=document.createElement('button');
+            btn.type='button';
+            btn.textContent=name;
+            btn.style.cssText='display:block;width:100%;text-align:left;padding:9px;margin:3px 0;border:1px solid #cbd5e1;border-radius:6px;background:white;cursor:pointer';
+            btn.addEventListener('click',()=>{input.value=name;target.style.display='none';input.focus();});
+            target.appendChild(btn);
+        }
+        target.style.display=target.childElementCount?'block':'none';
     }
     async function v742bReloadSuppliers() {
         if(!auth.currentUser)return;
@@ -1513,18 +1596,14 @@ Uploaded ${successCount} item(s) to Cloud.`);
         return Object.entries(v742bOwnRequests).find(([id,r])=>r.status==='pending'&&v742bNorm(r.proposedName)===needle);
     }
     function v742bValidateSupplier(name, previousName) {
-        if(!name.trim())return {ok:false,message:'Select an approved supplier.'};
-        if(!v742bLoaded)return {ok:false,message:'Supplier Master has not loaded. Refresh suppliers and try again.'};
-        const match=v742bFindSupplier(name);
-        if(match)return {ok:true,name:match.officialName,id:match.id};
-        const pending=v742bPendingSupplier(name);
-        if(pending)return {ok:true,name:pending[1].proposedName,id:'pending:'+pending[0],pending:true};
-        // Legacy record edits retain their existing supplier without forced migration.
-        if(previousName && v742bNorm(name)===v742bNorm(previousName))return {ok:true,name:previousName,id:null,legacy:true};
-        // Preserve existing historical supplier spellings when adding known legacy stock.
-        const knownLegacy=restockItems.some(r=>v742bNorm(r.supp)===v742bNorm(name));
-        if(knownLegacy)return {ok:false,message:'Legacy supplier name found. Please select an approved supplier or Add Supplier Now for Boss review.'};
-        return {ok:false,message:'Supplier not registered. Click Add Supplier Now; you can then save Restock immediately.'};
+        const raw=String(name||'').trim();
+        if(!raw)return {ok:false,message:'Please enter a Supplier name.'};
+        if(raw.length>120)return {ok:false,message:'Supplier name must be 120 characters or fewer.'};
+        // No approval, pending request, or Supplier Master dependency for saving.
+        // Keep the name exactly as typed. Only retain an existing ID if unchanged;
+        // otherwise link to a known approved alias without changing the free-text name.
+        const match=v742bFindSupplier(raw);
+        return {ok:true,name:raw,id:match?match.id:null};
     }
 
     // V75: display grouping only; never rewrite historical supplier fields.
@@ -1532,11 +1611,9 @@ Uploaded ${successCount} item(s) to Cloud.`);
     let v75PrintingSupplierName = null;
     function v742cSupplier(item) {
         const raw=String(item.supp||'').trim();
-        const pending=String(item.supplierId||'').startsWith('pending:');
-        if(pending) return {key:'pending:'+item.supplierId, name:raw||'Pending supplier', verified:false};
-        let found=null;
-        if(item.supplierId && v742bSuppliers[item.supplierId] && v742bSuppliers[item.supplierId].status!=='inactive') found={id:item.supplierId,...v742bSuppliers[item.supplierId]};
-        if(!found) found=v742bFindSupplier(raw);
+        // Historical pending IDs and stale approved IDs never override the typed supplier name.
+        // Only a confirmed exact official name / alias may join a verified group.
+        const found=v742bFindSupplier(raw);
         if(found) return {key:'verified:'+found.id,name:found.officialName,verified:true};
         // Unknown legacy suppliers must NOT be merged by spelling similarity.
         return {key:'legacy:'+v742bNorm(raw),name:raw||'Unknown supplier',verified:false};
@@ -1553,7 +1630,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
         const selected=v742cSelectedRows();
         if(!selected.length)return alert('Select at least one Restock item first.');
         const groups=new Map();
-        for(const item of selected){const supplier=v742cSupplier(item);if(!supplier.verified)return alert('PO blocked: '+supplier.name+' is not verified. Boss must link/approve this supplier first.');if(!groups.has(supplier.key))groups.set(supplier.key,{supplier,items:[]});groups.get(supplier.key).items.push(item);}
+        for(const item of selected){const supplier=v742cSupplier(item);if(!supplier.name || supplier.name==='Unknown supplier')return alert('Supplier name is missing. Please enter a Supplier before generating PO.');if(!groups.has(supplier.key))groups.set(supplier.key,{supplier,items:[]});groups.get(supplier.key).items.push(item);}
         if(!confirm('Generate '+groups.size+' separate '+(mode==='boss'?'Boss':'Supplier')+' PO(s) for '+selected.length+' selected item(s)?'))return;
         const previous=currentRestockView;
         try {for(const group of groups.values()){
@@ -2094,7 +2171,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
     async function toggleStatus(id) { if(!navigator.onLine) return alert("Requires internet."); const order = orders.find(o => o.id === id); if(!order || order.status === 'completed' || order.status === 'offline') return; let newStatus = order.status === 'waiting' ? 'arrived' : 'waiting'; await db.ref('orders/' + id).update({ status: newStatus }); await writeAuditLog('TOGGLE_ORDER_STATUS', 'orders', order.refNo || '', id, { from: order.status, to: newStatus }); }
     async function markCompleted(id) { if(!navigator.onLine) return alert("Offline!"); const order = orders.find(o => o.id === id); if(!order) return alert('Record not found or already deleted. Please refresh.'); if(confirm("Confirm item collected?")) { await db.ref('orders/' + id).update({ status: 'completed', completedDate: getStandardDateStr() }); await writeAuditLog('MARK_ORDER_COMPLETED', 'orders', order.refNo || '', id, { completedDate: getStandardDateStr() }); } }
     async function restoreOrder(id) { if(!navigator.onLine) return; if(!isAdmin) return alert('Only Boss/Admin can return completed orders.'); const order = orders.find(o => o.id === id); if(!order) return alert('Record not found or already deleted. Please refresh.'); await db.ref('orders/' + id).update({ status: 'arrived', completedDate: null }); await writeAuditLog('RETURN_COMPLETED_ORDER', 'orders', order.refNo || '', id, { to: 'arrived' }); }
-    async function deleteOrder(id) { if(!navigator.onLine) return alert('Requires internet.'); const order = orders.find(o => o.id === id); if(!order) return alert('Record not found or already deleted. Please refresh.'); if(!confirm('Delete this order permanently?')) return; await db.ref('orders/' + id).remove(); await writeAuditLog('DELETE_ORDER', 'orders', order.refNo || '', id, { name: order.name || '', plate: order.plate || '', deletedBy: auth.currentUser ? auth.currentUser.email : '' }); }
+    async function deleteOrder(id) { if(!isAdmin) { const record=(orders||[]).find(x=>x.id===id); if(!record)return alert('Record not found.'); return submitDeleteRequest('orders',id,record.refNo||'',{part:record.part||'',plate:record.plate||''}); } if(!navigator.onLine) return alert('Requires internet.'); const order = orders.find(o => o.id === id); if(!order) return alert('Record not found or already deleted. Please refresh.'); if(!confirm('Delete this order permanently?')) return; await db.ref('orders/' + id).remove(); await writeAuditLog('DELETE_ORDER', 'orders', order.refNo || '', id, { name: order.name || '', plate: order.plate || '', deletedBy: auth.currentUser ? auth.currentUser.email : '' }); }
     function toggleAllOrderChecks(source) { document.querySelectorAll('.order-check').forEach(cb => cb.checked = source.checked); }
     async function markSelectedArrived() {
         if(!navigator.onLine) return alert("Requires internet."); let checkboxes = document.querySelectorAll('.order-check:checked'); if(checkboxes.length === 0) return alert("Please check at least one pending order.");
@@ -2167,7 +2244,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
                 } else {
                     mainActions += `<span style="font-size:12px;color:#64748b;font-weight:bold;">🔒 Completed Locked</span>`;
                 }
-                mainActions += `<button class="delete-btn" onclick="deleteOrder('${order.id}')">✖ Del</button>`;
+                mainActions += `<button class="delete-btn" onclick="deleteOrder('${order.id}')">${isAdmin ? "✖ Del" : "📝 Request Delete"}</button>`;
                 mainActions += `</div><button class="print-btn" onclick="printChecklist('${order.id}', 'order')" style="width:100%; margin-top:5px; margin-bottom:5px;">🖨️ Print Checklist</button><button class="print-btn" onclick="saveChecklistPDF('${order.id}', 'order')" style="width:100%; margin-top:5px; margin-bottom:5px;">📄 PDF Checklist</button>`;
             }
 
@@ -2281,7 +2358,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
         } catch(err) { alert("Upload Error: " + err.message); } finally { qMainBtn.innerText = originalText; qMainBtn.disabled = false; }
     }
 
-    async function deleteQuote(id) { if(!navigator.onLine) return alert('Requires internet.'); const quote = quotes.find(q => q.id === id); if(!quote) return alert('Record not found or already deleted. Please refresh.'); if(!confirm('Delete this quotation permanently?')) return; await db.ref('quotations/' + id).remove(); await writeAuditLog('DELETE_QUOTATION', 'quotations', quote.refNo || '', id, { name: quote.name || '', plate: quote.plate || '', deletedBy: auth.currentUser ? auth.currentUser.email : '' }); }
+    async function deleteQuote(id) { if(!isAdmin) { const record=(quotes||[]).find(x=>x.id===id); if(!record)return alert('Record not found.'); return submitDeleteRequest('quotations',id,record.refNo||'',{part:record.part||'',plate:record.plate||''}); } if(!navigator.onLine) return alert('Requires internet.'); const quote = quotes.find(q => q.id === id); if(!quote) return alert('Record not found or already deleted. Please refresh.'); if(!confirm('Delete this quotation permanently?')) return; await db.ref('quotations/' + id).remove(); await writeAuditLog('DELETE_QUOTATION', 'quotations', quote.refNo || '', id, { name: quote.name || '', plate: quote.plate || '', deletedBy: auth.currentUser ? auth.currentUser.email : '' }); }
 
     async function markQuoteDone(id) {
         if(!navigator.onLine) return alert('Requires internet.');
@@ -2359,11 +2436,11 @@ Uploaded ${successCount} item(s) to Cloud.`);
                 mainActions = `<div style="font-size:12px; color:#ef4444; font-weight:bold; text-align:center; line-height:1.4;">🔴 Saved Offline<br>Waiting Cloud Sync</div>`;
             } else if (isCompletedQuote) {
                 mainActions += `<div class="action-btns"><button class="edit-btn" onclick="restoreQuote('${quote.id}')">⏪ Return</button></div><div class="action-btns"><button class="edit-btn" onclick="editQuote('${quote.id}')">✏️ Edit</button>`;
-                mainActions += `<button class="delete-btn" onclick="deleteQuote('${quote.id}')">✖ Del</button>`;
+                mainActions += `<button class="delete-btn" onclick="deleteQuote('${quote.id}')">${isAdmin ? "✖ Del" : "📝 Request Delete"}</button>`;
                 mainActions += `</div><button class="print-btn" onclick="printChecklist('${quote.id}', 'quote')" style="width:100%; margin-top:5px; margin-bottom:5px;">🖨️ Print Checklist</button><button class="print-btn" onclick="saveChecklistPDF('${quote.id}', 'quote')" style="width:100%; margin-top:5px; margin-bottom:5px;">📄 PDF Checklist</button>`;
             } else {
                 mainActions += `<div class="action-btns"><button class="convert-btn" onclick="convertToPreorder('${quote.id}')">➡️ Convert to Order</button></div><div class="action-btns"><button class="complete-btn" onclick="markQuoteDone('${quote.id}')">✔️ Done</button><button class="edit-btn" onclick="editQuote('${quote.id}')">✏️ Edit</button>`;
-                mainActions += `<button class="delete-btn" onclick="deleteQuote('${quote.id}')">✖ Del</button>`;
+                mainActions += `<button class="delete-btn" onclick="deleteQuote('${quote.id}')">${isAdmin ? "✖ Del" : "📝 Request Delete"}</button>`;
                 mainActions += `</div><button class="print-btn" onclick="printChecklist('${quote.id}', 'quote')" style="width:100%; margin-top:5px; margin-bottom:5px;">🖨️ Print Checklist</button><button class="print-btn" onclick="saveChecklistPDF('${quote.id}', 'quote')" style="width:100%; margin-top:5px; margin-bottom:5px;">📄 PDF Checklist</button>`;
             }
 
@@ -2453,7 +2530,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
         } catch(err) { alert("Upload Error: " + err.message); } finally { eMainBtn.innerText = originalText; eMainBtn.disabled = false; }
     }
 
-    async function deleteEnquire(id) { if(!navigator.onLine) return alert('Requires internet.'); const enq = enquiries.find(e => e.id === id); if(!enq) return alert('Record not found or already deleted. Please refresh.'); if(!confirm('Delete this enquiry permanently?')) return; await db.ref('enquiries/' + id).remove(); await writeAuditLog('DELETE_ENQUIRY', 'enquiries', enq.refNo || '', id, { name: enq.name || '', plate: enq.plate || '', deletedBy: auth.currentUser ? auth.currentUser.email : '' }); }
+    async function deleteEnquire(id) { if(!isAdmin) { const record=(enquiries||[]).find(x=>x.id===id); if(!record)return alert('Record not found.'); return submitDeleteRequest('enquiries',id,record.refNo||'',{part:record.part||'',plate:record.plate||''}); } if(!navigator.onLine) return alert('Requires internet.'); const enq = enquiries.find(e => e.id === id); if(!enq) return alert('Record not found or already deleted. Please refresh.'); if(!confirm('Delete this enquiry permanently?')) return; await db.ref('enquiries/' + id).remove(); await writeAuditLog('DELETE_ENQUIRY', 'enquiries', enq.refNo || '', id, { name: enq.name || '', plate: enq.plate || '', deletedBy: auth.currentUser ? auth.currentUser.email : '' }); }
 
     async function markEnquiryDone(id) {
         if(!navigator.onLine) return alert('Requires internet.');
@@ -2531,11 +2608,11 @@ Uploaded ${successCount} item(s) to Cloud.`);
                 mainActions = `<div style="font-size:12px; color:#ef4444; font-weight:bold; text-align:center; line-height:1.4;">🔴 Saved Offline<br>Waiting Cloud Sync</div>`;
             } else if (isCompletedEnquiry) {
                 mainActions += `<div class="action-btns"><button class="edit-btn" onclick="restoreEnquiry('${enq.id}')">⏪ Return</button></div><div class="action-btns"><button class="edit-btn" onclick="editEnquire('${enq.id}')">✏️ Edit</button>`;
-                mainActions += `<button class="delete-btn" onclick="deleteEnquire('${enq.id}')">✖ Del</button>`;
+                mainActions += `<button class="delete-btn" onclick="deleteEnquire('${enq.id}')">${isAdmin ? "✖ Del" : "📝 Request Delete"}</button>`;
                 mainActions += `</div><button class="print-btn" onclick="printChecklist('${enq.id}', 'enquire')" style="width:100%; margin-top:5px; margin-bottom:5px;">🖨️ Print Enquiry</button><button class="print-btn" onclick="saveChecklistPDF('${enq.id}', 'enquire')" style="width:100%; margin-top:5px; margin-bottom:5px;">📄 PDF Enquiry</button>`;
             } else {
                 mainActions += `<div class="action-btns"><button class="convert-btn-alt" onclick="convertEnqToQuote('${enq.id}')">➡️ Convert to Quote</button></div><div class="action-btns"><button class="complete-btn" onclick="markEnquiryDone('${enq.id}')">✔️ Done</button><button class="edit-btn" onclick="editEnquire('${enq.id}')">✏️ Edit</button>`;
-                mainActions += `<button class="delete-btn" onclick="deleteEnquire('${enq.id}')">✖ Del</button>`;
+                mainActions += `<button class="delete-btn" onclick="deleteEnquire('${enq.id}')">${isAdmin ? "✖ Del" : "📝 Request Delete"}</button>`;
                 mainActions += `</div><button class="print-btn" onclick="printChecklist('${enq.id}', 'enquire')" style="width:100%; margin-top:5px; margin-bottom:5px;">🖨️ Print Enquiry</button><button class="print-btn" onclick="saveChecklistPDF('${enq.id}', 'enquire')" style="width:100%; margin-top:5px; margin-bottom:5px;">📄 PDF Enquiry</button>`;
             }
 
@@ -2927,11 +3004,11 @@ Uploaded ${successCount} item(s) to Cloud.`);
         setRestockEditMode(item);
     }
 
-    async function updateRestockSupplier(id, newValue) { const check=v742bValidateSupplier(newValue,restockItems.find(r=>r.id===id)?.supp); if(!check.ok)return alert(check.message); if(!navigator.onLine) return alert('Requires internet.'); const item = restockItems.find(r => r.id === id); if(!item) return alert('Restock record not found or already deleted. Please refresh.'); await db.ref('restock/' + id).update({ supp: check.name, supplierId: check.id }); await writeAuditLog('UPDATE_RESTOCK_SUPPLIER', 'restock', '', id, { part: item.part || '', from: item.supp || '', to: newValue }); }
+    async function updateRestockSupplier(id, newValue) { const check=v742bValidateSupplier(newValue,restockItems.find(r=>r.id===id)?.supp); if(!check.ok)return alert(check.message); if(!navigator.onLine) return alert('Requires internet.'); const item = restockItems.find(r => r.id === id); if(!item) return alert('Restock record not found or already deleted. Please refresh.'); await db.ref('restock/' + id).update({ supp: check.name, supplierId: check.id }); try { await writeAuditLog('UPDATE_RESTOCK_SUPPLIER', 'restock', '', id, { part: item.part || '', from: item.supp || '', to: newValue }); } catch(e) { console.warn('Supplier updated, audit failed',e); } }
     async function markRestockOrdered(id) { if(!navigator.onLine) return; const item = restockItems.find(r => r.id === id); if(!item) return alert('Restock record not found or already deleted. Please refresh.'); await db.ref('restock/' + id).update({ status: 'Ordered' }); await writeAuditLog('MARK_RESTOCK_ORDERED', 'restock', '', id, { part: item.part || '', code: item.code || '' }); }
     async function returnToNotYet(id) { if(!navigator.onLine) return; const item = restockItems.find(r => r.id === id); if(!item) return alert('Restock record not found or already deleted. Please refresh.'); await db.ref('restock/' + id).update({ status: 'Not Yet Order' }); await writeAuditLog('RETURN_RESTOCK_NOT_YET', 'restock', '', id, { part: item.part || '', code: item.code || '' }); }
 
-    async function deleteRestock(id) { if(!navigator.onLine) return alert('Requires internet.'); const item = restockItems.find(r => r.id === id); if(!item) return alert('Record not found or already deleted. Please refresh.'); if(!confirm('Delete this restock record permanently?')) return; await db.ref('restock/' + id).remove(); await writeAuditLog('DELETE_RESTOCK', 'restock', '', id, { part: item.part || '', code: item.code || '', car: item.car || '', deletedBy: auth.currentUser ? auth.currentUser.email : '' }); }
+    async function deleteRestock(id) { if(!isAdmin) { const record=(restockItems||[]).find(x=>x.id===id); if(!record)return alert('Record not found.'); return submitDeleteRequest('restock',id,record.refNo||'',{part:record.part||'',plate:record.plate||''}); } if(!navigator.onLine) return alert('Requires internet.'); const item = restockItems.find(r => r.id === id); if(!item) return alert('Record not found or already deleted. Please refresh.'); if(!confirm('Delete this restock record permanently?')) return; await db.ref('restock/' + id).remove(); await writeAuditLog('DELETE_RESTOCK', 'restock', '', id, { part: item.part || '', code: item.code || '', car: item.car || '', deletedBy: auth.currentUser ? auth.currentUser.email : '' }); }
     
     async function markFilteredOrdered() { if(!isAdmin) return alert("Admin only."); if(!navigator.onLine) return alert("Requires internet."); let toUpdate = currentRestockView.filter(i => i.status !== 'Ordered' && !i.offlinePending); if(toUpdate.length === 0) return alert('No cloud pending items found in your current view. Offline pending items must sync first.'); if(!confirm(`Mark all ${toUpdate.length} cloud item(s) on this screen as ORDERED?`)) return; let updates = {}; toUpdate.forEach(i => { updates[i.id + '/status'] = 'Ordered'; }); await db.ref('restock').update(updates); await writeAuditLog('BULK_MARK_RESTOCK_ORDERED', 'restock', '', '', { count: Object.keys(updates).length }); }
 
@@ -3114,7 +3191,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
         currentRestockView.forEach((item, rowIndex) => {
             if(document.getElementById('v742cGrouping')?.value==='supplier') {
                 const group=v742cSupplier(item);
-                if(group.key!==lastSupplierKey){lastSupplierKey=group.key;const groupRow=document.createElement('tr');const cell=document.createElement('td');cell.colSpan=14;cell.style.cssText='background:#dbeafe;font-weight:800;padding:12px';cell.textContent='🏢 '+group.name+(group.verified?'':' — Unverified / legacy; PO blocked');groupRow.appendChild(cell);tbody.appendChild(groupRow);}
+                if(group.key!==lastSupplierKey){lastSupplierKey=group.key;const groupRow=document.createElement('tr');const cell=document.createElement('td');cell.colSpan=14;cell.style.cssText='background:#dbeafe;font-weight:800;padding:12px';cell.textContent='🏢 '+group.name+(group.verified?'':' — Free-text supplier');groupRow.appendChild(cell);tbody.appendChild(groupRow);}
             }
             const status = item.status || 'Not Yet Order';
             const statusHtml = status === 'Ordered' ? `<span style="padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; background:#d1fae5; color:#047857;">Ordered</span>` : `<span style="padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; background:#fef3c7; color:#b45309;">Not Yet Order</span>`;
@@ -3125,7 +3202,7 @@ Uploaded ${successCount} item(s) to Cloud.`);
                 if (status !== 'Ordered') { actionHtml += `<button class="complete-btn" onclick="markRestockOrdered('${item.id}')" style="width:100%; margin-bottom:4px;">✔️ Done</button>`; } else { actionHtml += `<button class="edit-btn" onclick="returnToNotYet('${item.id}')" style="width:100%; margin-bottom:4px;">⏪ Return</button>`; }
                 actionHtml += `<button type="button" class="edit-btn" onclick="v742aReAddFromHistory(${rowIndex})" style="width:100%; margin-bottom:4px; background:#2563eb;color:white;">➕ Re-Add</button>`;
                 actionHtml += `<button class="edit-btn" onclick="editRestock('${item.id}')" style="width:100%; margin-bottom:4px;">✏️ Edit</button>`;
-                actionHtml += `<button class="delete-btn" onclick="deleteRestock('${item.id}')" style="width:100%;">✖ Del</button>`; 
+                actionHtml += `<button class="delete-btn" onclick="deleteRestock('${item.id}')" style="width:100%;">${isAdmin ? "✖ Del" : "📝 Request Delete"}</button>`; 
             }
             let suppHtml = !item.offlinePending ? `<input type="text" class="pos-input" value="${escapeAttr(item.supp||'')}" placeholder="Type..." style="width:100px; font-size:12px; background:#fffbeb; color:#b45309; font-weight:bold;" list="supplierList" onchange="updateRestockSupplier('${item.id}', this.value)">` : escapeHTML(item.supp || '-');
             let costHtml = `<td style="text-align:center; font-weight:bold; color:#059669;">RM ${parseFloat(item.unitCost||0).toFixed(2)}</td><td style="text-align:center; font-weight:bold; color:#059669;">RM ${parseFloat(item.totalCost||0).toFixed(2)}</td>`;
@@ -3224,18 +3301,21 @@ Uploaded ${successCount} item(s) to Cloud.`);
     }
 
     function v742bUnverifiedItems() {
-        return currentRestockView.filter(i=>!i.offlinePending && !v742cSupplier(i).verified);
+        return currentRestockView.filter(i=>!i.offlinePending && !String(i.supp||'').trim());
     }
     function v742bVerifyPOAction() {
         const unknown=v742bUnverifiedItems();
         if(!unknown.length)return true;
         const names=[...new Set(unknown.map(i=>i.supp||'Unknown Supplier'))];
-        alert('Formal PO blocked: '+unknown.length+' item(s) have unverified suppliers: '+names.join(', ')+'. Boss must confirm the supplier alias or approve the new supplier.');
+        alert('Cannot generate PO: '+unknown.length+' item(s) have no Supplier name. Please fill in Supplier first.');
         return false;
     }
     function printRestock(outputMode = 'print', poMode = 'supplier') {
         if (poMode === 'boss' && !isAdmin) return alert('Boss/Admin only.');
         if(!v742bVerifyPOAction())return;
+        const supplierGroups=new Set(currentRestockView.filter(i=>!i.offlinePending).map(i=>v742cSupplier(i).key));
+        if(supplierGroups.size>1 && !v75PrintingSupplierName)
+            return alert('Multiple suppliers in this view. Filter to one supplier or use Selected Supplier POs.');
         if (currentRestockView.filter(i => !i.offlinePending).length === 0) return alert('No cloud records found for this PO view.');
         const documentTitle = getRestockPDFTitle(poMode);
         const html = `<html><head><title>${escapeHTML(documentTitle)}</title></head><body>${getRestockHTML(poMode)}</body></html>`;
@@ -3275,6 +3355,121 @@ Date Filter: ${dateText}
 *Total Pending Order:* ${notYetCount}`;
         window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank');
     }
+
+// V75.2 Battery modules. Existing Restock, Supplier Master and historical records are not rewritten.
+const BAT_DEFAULT_BRANDS=['Yokohama','Tuflong Hitachi','Amaron','Yokocharge'];
+let batBrands={},batClaims={},batTrades={},batStaffVisible=true,batListeners=[],batStarted=false,batClaimReady=false,batTradeReady=false,batBrandReady=false,batAccessReady=false;
+const batEl=id=>document.getElementById(id);
+const batSafe=s=>escapeHTML(String(s==null?'':s));
+const batSerial=s=>String(s||'').trim().toUpperCase().replace(/\s+/g,'');
+const batNorm=s=>String(s||'').trim().replace(/\s+/g,' ').toUpperCase();
+function batLocalDate(){const d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');}
+function batListen(path,fn,onError){const ref=db.ref(path);ref.on('value',fn,e=>{console.warn('Battery data read failed:',path,e);if(onError)onError(e);});batListeners.push([ref,fn]);}
+function batStop(){batListeners.forEach(([ref,fn])=>ref.off('value',fn));batListeners=[];batStarted=false;batClaims={};batTrades={};batBrands={};batStaffVisible=true;batClaimReady=false;batTradeReady=false;batBrandReady=false;batAccessReady=false;}
+function batStart(){
+ batStop();batStarted=true;batEl('batTradeDate').value=batLocalDate();
+ batListen('batteryBrands',s=>{batBrandReady=true;batBrands=s.val()||{};batRenderBrands();},e=>{batBrandReady=false;batEl('batClaimStatus').textContent='Battery brand database unavailable: '+e.message;});
+ if(isAdmin)batListen('batteryClaimRegistry',s=>{batClaimReady=true;const v=s.val()||{};batClaims=v.claims||{};batRenderClaims();},e=>{batClaimReady=false;batEl('batClaimStatus').textContent='Claim database unavailable: '+e.message;});
+ if(isAdmin)batListen('batteryTradeIn',s=>{batTradeReady=true;batTrades=s.val()||{};batRenderTrades();},e=>{batTradeReady=false;batEl('batTradeStatus').textContent='Trade-In database unavailable: '+e.message;});
+ batListen('settings/batteryTradeStaffVisible',s=>{batAccessReady=true;batStaffVisible=s.val()!==false;batApplyVisibility();},e=>{batAccessReady=false;batStaffVisible=false;batApplyVisibility();batEl('batTradeStatus').textContent='Staff visibility settings unavailable: '+e.message;});
+ if(!isAdmin){batClaimReady=false;batEl('batClaimStatus').textContent='Staff Claim save requires a trusted backend. Please ask Boss.';}
+ batEl('batBossSummary').style.display=isAdmin?'block':'none';
+ batEl('batEmergency').style.display=isAdmin?'block':'none';
+}
+function batRenderBrands(){
+ const sel=batEl('batBrand'),prev=sel.value;
+ const all=[...BAT_DEFAULT_BRANDS,...Object.values(batBrands).map(b=>b.name).filter(Boolean)];
+ const seen=new Set();const names=all.filter(n=>{const k=batNorm(n);if(seen.has(k))return false;seen.add(k);return true;});
+ sel.innerHTML=names.map(n=>'<option value="'+batSafe(n)+'">'+batSafe(n)+'</option>').join('');
+ if(names.includes(prev))sel.value=prev;
+}
+async function batAddBrand(){
+ const name=(prompt('New Battery Brand Name:')||'').trim().replace(/\s+/g,' ');
+ if(!name)return;if(!batBrandReady)return alert('Brand list not loaded. Try again online.');if(name.length>80)return alert('Brand name too long.');
+ const all=[...BAT_DEFAULT_BRANDS,...Object.values(batBrands).map(b=>b.name)];
+ const existing=all.find(n=>batNorm(n)===batNorm(name));if(existing){batEl('batBrand').value=existing;return alert('Brand already exists.');}
+ if(!isAdmin){ try{await db.ref('batteryBrandRequests').push({name,requestedBy:auth.currentUser.email,status:'pending',requestedAt:firebase.database.ServerValue.TIMESTAMP});alert('Brand request sent to Boss. It will appear after approval.');}catch(e){alert('Brand request failed: '+e.message);}return;}
+ const btn=batEl('batBrand');
+ try{await db.ref('batteryBrands/'+encodeURIComponent(batNorm(name)).replace(/\./g,'%2E')).transaction(current=>current||{name,createdBy:auth.currentUser.email,createdAt:firebase.database.ServerValue.TIMESTAMP},undefined,false);batRenderBrands();setTimeout(()=>{btn.value=name;},50);}catch(e){alert('Brand save failed: '+e.message);}
+}
+function batClaimList(){return Object.entries(batClaims).map(([id,r])=>({id,...r})).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));}
+function batRenderClaims(){
+ const q=batNorm(batEl('batClaimSearch').value);
+ const rows=batClaimList().filter(r=>!q||[r.oldSerial,r.newSerial,r.brand,r.customer].some(v=>batNorm(v).includes(q))).slice(0,150);
+ batEl('batClaimHistory').innerHTML=rows.length?'<div class="table-responsive"><table><thead><tr><th>Date</th><th>Brand</th><th>Old Serial</th><th>Replacement Serial</th><th>Reference</th></tr></thead><tbody>'+rows.map(r=>'<tr><td>'+batSafe(r.date)+'</td><td>'+batSafe(r.brand)+'</td><td>'+batSafe(r.oldSerial)+'</td><td>'+batSafe(r.newSerial)+'</td><td>'+batSafe(r.customer)+'</td></tr>').join('')+'</tbody></table></div>':'<p>No matching claim records.</p>';
+}
+async function batSaveClaim(){
+ if(!isAdmin)return alert('Staff battery claim saving is temporarily disabled until a trusted Cloud Function is deployed. Ask Boss to record the claim.');
+ const old=batSerial(batEl('batOld').value),fresh=batSerial(batEl('batNew').value);
+ const brand=batEl('batBrand').value,size=batEl('batSize').value.trim(),customer=batEl('batCustomer').value.trim(),notes=batEl('batNotes').value.trim();
+ if(!old||!fresh||!brand)return alert('Brand, Old Serial and New Serial are required.');
+ if(!batClaimReady||!batBrandReady)return alert('Claim database is not ready. Please reconnect and try again.');
+ if(old===fresh)return alert('Old and New Serial cannot be the same.');
+ if(old.length>120||fresh.length>120)return alert('Serial too long.');
+ if(!navigator.onLine)return alert('Internet connection required to check claims safely.');
+ if(!confirm('Confirm one-time replacement? This claim cannot be repeated.'))return;
+ const btn=batEl('batClaimSave');if(btn.disabled)return;btn.disabled=true;batEl('batClaimStatus').textContent='Checking and saving...';
+ const id=db.ref('batteryClaimRegistry/claims').push().key;
+ const entry={brand,size,oldSerial:old,newSerial:fresh,customer,notes,date:batLocalDate(),createdAt:firebase.database.ServerValue.TIMESTAMP,createdBy:auth.currentUser.email};
+ let collision=false;
+ try{
+  const result=await db.ref('batteryClaimRegistry').transaction(current=>{
+   collision=false;current=current||{};current.serials=current.serials||{};current.claims=current.claims||{};
+   // A serial used in either role cannot be reused in another free claim.
+   const oldKey=encodeURIComponent(old).replace(/\./g,'%2E'),newKey=encodeURIComponent(fresh).replace(/\./g,'%2E');
+   if(current.serials[oldKey]||current.serials[newKey]){collision=true;return;}
+   current.serials[oldKey]={claimId:id,role:'old'};current.serials[newKey]={claimId:id,role:'replacement'};
+   current.claims[id]=entry;return current;
+  },undefined,false);
+  if(!result.committed){batEl('batClaimStatus').textContent=collision?'BLOCKED: Serial already claimed or issued as a replacement.':'Claim was not saved.';return;}
+  batEl('batOld').value='';batEl('batNew').value='';batEl('batCustomer').value='';batEl('batNotes').value='';
+  batEl('batClaimStatus').textContent='Battery claim saved successfully.';
+ }catch(e){batEl('batClaimStatus').textContent='Save failed: '+e.message;}
+ finally{btn.disabled=false;}
+}
+function batTradeList(){return Object.entries(batTrades).map(([id,r])=>({id,...r})).sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))||(b.createdAt||0)-(a.createdAt||0));}
+let batSelectedDates=new Set();
+function batRenderTrades(){
+ const rows=batTradeList();
+ const dates=[...new Set(rows.map(r=>r.date).filter(Boolean))].sort().reverse();
+ batEl('batDateChoices').innerHTML=dates.map(d=>'<label style="display:block;padding:5px"><input type="checkbox" class="bat-date-check" value="'+batSafe(d)+'" '+(batSelectedDates.has(d)?'checked':'')+' onchange="batSelectDate(this.value,this.checked)"> '+batSafe(d)+'</label>').join('');
+ batRecalc();
+ // Staff sees individual records, never date totals or aggregate amount.
+ batEl('batTradeHistory').innerHTML=!isAdmin?'<p>History with private buy prices is Boss only.</p>':rows.length?'<div class="table-responsive"><table><thead><tr><th>Date</th><th>Size</th><th>Buy Price</th></tr></thead><tbody>'+rows.slice(0,150).map(r=>'<tr><td>'+batSafe(r.date)+'</td><td>'+batSafe(r.size)+'</td><td>RM '+Number(r.amount||0).toFixed(2)+'</td></tr>').join('')+'</tbody></table></div>':'<p>No trade-in records.</p>';
+}
+function batSelectDate(date,checked){if(checked)batSelectedDates.add(date);else batSelectedDates.delete(date);batRecalc();}
+function batSelectAllDates(checked){if(!isAdmin)return;batSelectedDates=new Set(checked?batTradeList().map(r=>r.date):[]);batRenderTrades();}
+function batRecalc(){if(!isAdmin)return;const selected=batTradeList().filter(r=>batSelectedDates.has(r.date));const cents=selected.reduce((sum,r)=>sum+Math.round(Number(r.amount||0)*100),0);batEl('batSummaryTotal').textContent='RM '+(cents/100).toFixed(2);batEl('batSummaryCount').textContent=selected.length+' batteries · '+batSelectedDates.size+' dates';}
+async function batSaveTrade(){
+ if(!isAdmin)return alert('Staff Trade-In saving is temporarily disabled until private price storage and secure backend are ready. Ask Boss to record it.');
+ if(!batTradeReady||!batAccessReady)return alert('Trade-In database or visibility settings are not ready.');
+ if(!isAdmin&&!batStaffVisible)return alert('Trade-In is temporarily hidden for staff.');
+ const size=batEl('batTradeSize').value.trim(),date=batEl('batTradeDate').value,amountText=batEl('batTradeAmount').value.trim(),amount=Number(amountText);
+ if(!size||size.length>80||!/^\d{4}-\d{2}-\d{2}$/.test(date)||!/^\d+(?:\.\d{1,2})?$/.test(amountText)||!Number.isFinite(amount)||amount<=0)return alert('Enter valid Size, Date and Buy Price (2 decimal places).');
+ if(!navigator.onLine)return alert('Internet connection required to save Trade-In.');
+ const btn=batEl('batTradeSave');if(btn.disabled)return;btn.disabled=true;
+ try{
+  if(!isAdmin){const allowed=await db.ref('settings/batteryTradeStaffVisible').once('value');if(allowed.val()===false)throw Error('Staff access is currently hidden.');}
+  await db.ref('batteryTradeIn').push({size,date,amount:Math.round(amount*100)/100,createdAt:firebase.database.ServerValue.TIMESTAMP,createdBy:auth.currentUser.email});
+  batEl('batTradeAmount').value='';batEl('batTradeSize').value='';batEl('batTradeStatus').textContent='Trade-In saved successfully.';
+ }catch(e){batEl('batTradeStatus').textContent='Save failed: '+e.message;}
+ finally{btn.disabled=false;}
+}
+function batApplyVisibility(){
+ const nav=batEl('tabBtnBatteryTrade');if(!nav)return;
+ nav.style.display=(isAdmin||(batAccessReady&&batStaffVisible))?'':'none';
+ if(!isAdmin&&(!batAccessReady||!batStaffVisible)&&batEl('batteryTradeTab').classList.contains('active'))switchTab('ordersTab',batEl('tabBtnOrder'));
+ batEl('batVisibilityLabel').textContent=batStaffVisible?'Staff access enabled (normal).':'Staff Trade-In tab hidden. All records are retained.';
+ batEl('batVisibilityButton').textContent=batStaffVisible?'Hide Staff Trade-In Tab':'Unhide Staff Trade-In Tab';
+}
+async function batToggleStaffAccess(){
+ if(!isAdmin)return alert('Boss only.');
+ if(!batAccessReady)return alert('Access settings are not ready.');
+ const next=!batStaffVisible;
+ if(!confirm(next?'Restore Trade-In tab for all staff?':'Emergency: hide Trade-In tab from all staff? Existing records will NOT be deleted.'))return;
+ try{await db.ref('settings/batteryTradeStaffVisible').set(next);}catch(e){alert('Setting failed: '+e.message);}
+}
+
 </script>
 </body>
 </html>
