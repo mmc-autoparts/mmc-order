@@ -16,12 +16,12 @@
             navigator.serviceWorker.addEventListener('controllerchange', () => { if (!refreshing) { window.location.reload(); refreshing = true; }});
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js').then(reg => {
-                    setInterval(() => { console.log("Checking server for V75.5 updates..."); reg.update(); }, 5 * 60 * 1000);
+                    setInterval(() => { console.log("Checking server for V75.5.2 updates..."); reg.update(); }, 5 * 60 * 1000);
                     reg.onupdatefound = () => {
                         const installingWorker = reg.installing;
                         installingWorker.onstatechange = () => {
                             if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                if (confirm("🔄 New system version (V75.5) available! Click OK to apply.")) { installingWorker.postMessage('SKIP_WAITING'); }
+                                if (confirm("🔄 New system version (V75.5.2) available! Click OK to apply.")) { installingWorker.postMessage('SKIP_WAITING'); }
                             }
                         };
                     };
@@ -198,7 +198,7 @@
 <div id="mainApp" class="container">
     <div class="header-flex">
         <div>
-            <h2>Malaysia Motor Company <span class="version-badge">V75.5 Security Candidate</span> <span id="adminBadge">👑 Boss View</span></h2>
+            <h2>Malaysia Motor Company <span class="version-badge">V75.5.2 Staff Trade-In Test</span> <span id="adminBadge">👑 Boss View</span></h2>
             <div style="margin-top:8px;">
                 <span id="networkBadge" class="net-online">🟢 Online (Live Cloud Sync)</span>
             </div>
@@ -414,6 +414,7 @@
   <div><label>Battery Size / Model (Optional)</label><input id="batSize" maxlength="80"></div>
   <div><label>Old Battery Serial Number</label><input id="batOld" maxlength="120" autocomplete="off"></div>
   <div><label>New Replacement Serial Number</label><input id="batNew" maxlength="120" autocomplete="off"></div>
+  <div><label>Claim Date</label><input id="batClaimDate" type="date" required></div>
   <div><label>Car Plate / Customer Reference (Optional)</label><input id="batCustomer" maxlength="120"></div>
   <div><label>Remarks (Optional)</label><input id="batNotes" maxlength="250"></div>
  </div>
@@ -3367,10 +3368,10 @@ function batLocalDate(){const d=new Date();return [d.getFullYear(),String(d.getM
 function batListen(path,fn,onError){const ref=db.ref(path);ref.on('value',fn,e=>{console.warn('Battery data read failed:',path,e);if(onError)onError(e);});batListeners.push([ref,fn]);}
 function batStop(){batListeners.forEach(([ref,fn])=>ref.off('value',fn));batListeners=[];batStarted=false;batClaims={};batTrades={};batBrands={};batStaffVisible=true;batClaimReady=false;batTradeReady=false;batBrandReady=false;batAccessReady=false;}
 function batStart(){
- batStop();batStarted=true;batEl('batTradeDate').value=batLocalDate();
+ batStop();batStarted=true;batEl('batTradeDate').value=batLocalDate();batEl('batClaimDate').value=batLocalDate();
  batListen('batteryBrands',s=>{batBrandReady=true;batBrands=s.val()||{};batRenderBrands();},e=>{batBrandReady=false;batEl('batClaimStatus').textContent='Battery brand database unavailable: '+e.message;});
  if(isAdmin)batListen('batteryClaimRegistry',s=>{batClaimReady=true;const v=s.val()||{};batClaims=v.claims||{};batRenderClaims();},e=>{batClaimReady=false;batEl('batClaimStatus').textContent='Claim database unavailable: '+e.message;});
- if(isAdmin)batListen('batteryTradeIn',s=>{batTradeReady=true;batTrades=s.val()||{};batRenderTrades();},e=>{batTradeReady=false;batEl('batTradeStatus').textContent='Trade-In database unavailable: '+e.message;});
+ batListen('batteryTradeIn',s=>{batTradeReady=true;batTrades=s.val()||{};batRenderTrades();},e=>{batTradeReady=false;batEl('batTradeStatus').textContent='Trade-In database unavailable: '+e.message;});
  batListen('settings/batteryTradeStaffVisible',s=>{batAccessReady=true;batStaffVisible=s.val()!==false;batApplyVisibility();},e=>{batAccessReady=false;batStaffVisible=false;batApplyVisibility();batEl('batTradeStatus').textContent='Staff visibility settings unavailable: '+e.message;});
  if(!isAdmin){batClaimReady=false;batEl('batClaimStatus').textContent='Staff Claim save requires a trusted backend. Please ask Boss.';}
  batEl('batBossSummary').style.display=isAdmin?'block':'none';
@@ -3401,8 +3402,11 @@ function batRenderClaims(){
 async function batSaveClaim(){
  if(!isAdmin)return alert('Staff battery claim saving is temporarily disabled until a trusted Cloud Function is deployed. Ask Boss to record the claim.');
  const old=batSerial(batEl('batOld').value),fresh=batSerial(batEl('batNew').value);
- const brand=batEl('batBrand').value,size=batEl('batSize').value.trim(),customer=batEl('batCustomer').value.trim(),notes=batEl('batNotes').value.trim();
+ const brand=batEl('batBrand').value,size=batEl('batSize').value.trim(),customer=batEl('batCustomer').value.trim(),notes=batEl('batNotes').value.trim(),claimDate=batEl('batClaimDate').value;
  if(!old||!fresh||!brand)return alert('Brand, Old Serial and New Serial are required.');
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(claimDate)||Number.isNaN(Date.parse(claimDate+'T12:00:00'))||new Date(claimDate+'T12:00:00').toLocaleDateString('en-CA')==='invalid')return alert('Select a valid Claim Date.');
+ const dateParts=claimDate.split('-').map(Number),checkedDate=new Date(dateParts[0],dateParts[1]-1,dateParts[2]);
+ if(checkedDate.getFullYear()!==dateParts[0]||checkedDate.getMonth()!==dateParts[1]-1||checkedDate.getDate()!==dateParts[2])return alert('Select a valid Claim Date.');
  if(!batClaimReady||!batBrandReady)return alert('Claim database is not ready. Please reconnect and try again.');
  if(old===fresh)return alert('Old and New Serial cannot be the same.');
  if(old.length>120||fresh.length>120)return alert('Serial too long.');
@@ -3410,7 +3414,7 @@ async function batSaveClaim(){
  if(!confirm('Confirm one-time replacement? This claim cannot be repeated.'))return;
  const btn=batEl('batClaimSave');if(btn.disabled)return;btn.disabled=true;batEl('batClaimStatus').textContent='Checking and saving...';
  const id=db.ref('batteryClaimRegistry/claims').push().key;
- const entry={brand,size,oldSerial:old,newSerial:fresh,customer,notes,date:batLocalDate(),createdAt:firebase.database.ServerValue.TIMESTAMP,createdBy:auth.currentUser.email};
+ const entry={brand,size,oldSerial:old,newSerial:fresh,customer,notes,date:claimDate,createdAt:firebase.database.ServerValue.TIMESTAMP,createdBy:auth.currentUser.email};
  let collision=false;
  try{
   const result=await db.ref('batteryClaimRegistry').transaction(current=>{
@@ -3434,14 +3438,14 @@ function batRenderTrades(){
  const dates=[...new Set(rows.map(r=>r.date).filter(Boolean))].sort().reverse();
  batEl('batDateChoices').innerHTML=dates.map(d=>'<label style="display:block;padding:5px"><input type="checkbox" class="bat-date-check" value="'+batSafe(d)+'" '+(batSelectedDates.has(d)?'checked':'')+' onchange="batSelectDate(this.value,this.checked)"> '+batSafe(d)+'</label>').join('');
  batRecalc();
- // Staff sees individual records, never date totals or aggregate amount.
- batEl('batTradeHistory').innerHTML=!isAdmin?'<p>History with private buy prices is Boss only.</p>':rows.length?'<div class="table-responsive"><table><thead><tr><th>Date</th><th>Size</th><th>Buy Price</th></tr></thead><tbody>'+rows.slice(0,150).map(r=>'<tr><td>'+batSafe(r.date)+'</td><td>'+batSafe(r.size)+'</td><td>RM '+Number(r.amount||0).toFixed(2)+'</td></tr>').join('')+'</tbody></table></div>':'<p>No trade-in records.</p>';
+ // Staff may view individual buy prices; only Boss sees date selection and aggregate summary.
+ batEl('batTradeHistory').innerHTML=rows.length?'<div class="table-responsive"><table><thead><tr><th>Date</th><th>Size</th><th>Buy Price</th></tr></thead><tbody>'+rows.slice(0,150).map(r=>'<tr><td>'+batSafe(r.date)+'</td><td>'+batSafe(r.size)+'</td><td>RM '+Number(r.amount||0).toFixed(2)+'</td></tr>').join('')+'</tbody></table></div>':'<p>No trade-in records.</p>';
 }
 function batSelectDate(date,checked){if(checked)batSelectedDates.add(date);else batSelectedDates.delete(date);batRecalc();}
 function batSelectAllDates(checked){if(!isAdmin)return;batSelectedDates=new Set(checked?batTradeList().map(r=>r.date):[]);batRenderTrades();}
 function batRecalc(){if(!isAdmin)return;const selected=batTradeList().filter(r=>batSelectedDates.has(r.date));const cents=selected.reduce((sum,r)=>sum+Math.round(Number(r.amount||0)*100),0);batEl('batSummaryTotal').textContent='RM '+(cents/100).toFixed(2);batEl('batSummaryCount').textContent=selected.length+' batteries · '+batSelectedDates.size+' dates';}
 async function batSaveTrade(){
- if(!isAdmin)return alert('Staff Trade-In saving is temporarily disabled until private price storage and secure backend are ready. Ask Boss to record it.');
+ // Staff may save Trade-In when Boss has not hidden the tab; Firebase rules enforce this too.
  if(!batTradeReady||!batAccessReady)return alert('Trade-In database or visibility settings are not ready.');
  if(!isAdmin&&!batStaffVisible)return alert('Trade-In is temporarily hidden for staff.');
  const size=batEl('batTradeSize').value.trim(),date=batEl('batTradeDate').value,amountText=batEl('batTradeAmount').value.trim(),amount=Number(amountText);
